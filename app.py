@@ -7,6 +7,9 @@ import pandas as pd
 import firebase_admin
 from firebase_admin import credentials, firestore
 from flask import Flask, render_template, request, jsonify, send_file
+import yt_dlp
+import tempfile
+import shutil
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
@@ -98,6 +101,26 @@ def upload_image_from_url(url, item_id, index):
         return f"{PUBLIC_ENDPOINT}/{BUCKET_NAME}/{s3_key}"
     except Exception as ex:
         print(f"Rasm yuklanmadi ({url}): {ex}")
+        return None
+
+def download_social_video(url, item_id):
+    """
+    YouTube, Instagram, FB kabi saytlardan videoni yuklab vaqtinchalik faylga saqlaydi.
+    """
+    tmp_dir = tempfile.gettempdir()
+    ydl_opts = {
+        'format': 'bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best',
+        'outtmpl': os.path.join(tmp_dir, f'social_{item_id}_%(id)s.%(ext)s'),
+        'noplaylist': True,
+        'quiet': True,
+        'max_filesize': 200 * 1024 * 1024 # 200MB limit
+    }
+    try:
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            return ydl.prepare_filename(info)
+    except Exception as e:
+        print(f"yt-dlp error: {e}")
         return None
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -449,7 +472,30 @@ def upload_image():
 
         elif 'url' in request.form:
             url  = request.form.get('url')
-            resp = requests.get(url, timeout=10)
+            
+            # Ijtimoiy tarmoq ekanligini tekshirish
+            social_domains = ['youtube.com', 'youtu.be', 'instagram.com', 'facebook.com', 'fb.watch', 'tiktok.com']
+            is_social = any(d in url.lower() for d in social_domains)
+            
+            if is_social:
+                video_path = download_social_video(url, item_id)
+                if video_path and os.path.exists(video_path):
+                    ext = os.path.splitext(video_path)[1]
+                    filename = os.path.basename(video_path)
+                    s3_key = f"images/{item_id}/{filename}"
+                    
+                    with open(video_path, 'rb') as f:
+                        s3_client.upload_fileobj(
+                            f, BUCKET_NAME, s3_key,
+                            ExtraArgs={'ACL': 'public-read', 'ContentType': 'video/mp4'}
+                        )
+                    os.remove(video_path) # Vaqtinchalik faylni o'chirish
+                    return jsonify({'success': True, 'url': f"{PUBLIC_ENDPOINT}/{BUCKET_NAME}/{s3_key}"})
+                else:
+                    return jsonify({'error': "Video yuklab bo'lmadi. Havola noto'g'ri yoki cheklov mavjud."}), 400
+
+            # Oddiy havola (Rasm yoki to'g'ridan-to'g'ri video)
+            resp = requests.get(url, timeout=15)
             if resp.status_code == 200:
                 content_type = resp.headers.get('content-type', '')
                 if 'png' in content_type: ext = '.png'
