@@ -874,10 +874,15 @@
                         <input type="text" id="newBrand">
                     </div>
                     <div class="form-group">
-                        <label>Kategoriya</label>
-                        <input type="text" id="newCategory" list="cat-list">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                            <label style="margin-bottom: 0;">Kategoriya</label>
+                            <button type="button" onclick="promptNewCategory()" style="background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer; padding: 0 5px;" title="Yangi kategoriya qo'shish">+</button>
+                        </div>
+                        <input type="text" id="newCategory" list="cat-list" placeholder="Tanlang yoki kiriting">
                         <datalist id="cat-list">
-                            <option value="Elektronika">
+                            <!-- Dynamic options -->
+                        </datalist>
+                    </div>
                             <option value="Aksessuarlar">
                             <option value="Maishiy Texnika">
                             <option value="Go'zallik">
@@ -945,21 +950,58 @@
                 const response = await fetch('/api/products');
                 allProducts = await response.json();
                 loader.style.display = 'none';
-                updateCategoryChips();
+                
+                await fetchCategories(); // Kategoriyalarni yuklash
                 renderProducts(allProducts);
             } catch (error) {
                 loader.innerHTML = `<div style="color:red; text-align:center; padding:20px;">Xatolik yuz berdi.</div>`;
             }
         }
 
-        function updateCategoryChips() {
+        async function fetchCategories() {
+            try {
+                const res = await fetch('/api/categories');
+                const categories = await res.json();
+                
+                // Update datalist
+                const list = document.getElementById('cat-list');
+                list.innerHTML = categories.map(c => `<option value="${c}">`).join('');
+                
+                // Update Chips (using categories from products to maintain filter state, or use all cats)
+                updateCategoryChips(categories);
+            } catch (e) { console.error("Kategoriyalar yuklanmadi", e); }
+        }
+
+        function updateCategoryChips(catList) {
             const container = document.getElementById('category-container');
-            const categories = ['Barchasi', ...new Set(allProducts.map(p => p.category || 'Boshqa'))];
+            // Use all categories or just those derived from products? 
+            // Better to use derived from products + Barchasi for better UX, 
+            // but since user wants to "Create", let's show all registered categories.
+            const categories = ['Barchasi', ...catList];
             container.innerHTML = categories.map(cat => `
                 <div class="cat-chip ${cat === currentCategory ? 'active' : ''}" onclick="filterByCategory('${cat}')">
                     ${cat}
                 </div>
             `).join('');
+        }
+
+        async function promptNewCategory() {
+            const name = prompt("Yangi kategoriya nomini kiriting:");
+            if (!name) return;
+            
+            try {
+                const res = await fetch('/api/add_category', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name})
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("Kategoriya qo'shildi!");
+                    await fetchCategories();
+                    document.getElementById('newCategory').value = name;
+                } else showToast(data.error, 'error');
+            } catch (e) { showToast("Xato!", 'error'); }
         }
 
         function filterByCategory(cat) {

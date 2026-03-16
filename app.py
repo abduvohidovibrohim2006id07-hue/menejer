@@ -182,6 +182,42 @@ def get_products():
         traceback.print_exc()
         return jsonify({'error': str(e), 'failed_at_step': step}), 500
 
+# ---------- CATEGORIES ----------
+@app.route('/api/categories', methods=['GET'])
+def get_categories():
+    try:
+        db = get_db()
+        docs = db.collection('categories').stream()
+        cats = [doc.to_dict().get('name') for doc in docs]
+        if not cats:
+            # Seed default categories if empty
+            defaults = ["Elektronika", "Aksessuarlar", "Maishiy Texnika", "Go'zallik", "Kiyim-kechak"]
+            for c in defaults:
+                db.collection('categories').add({'name': c})
+            return jsonify(defaults)
+        return jsonify(sorted(cats))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/add_category', methods=['POST'])
+def add_category():
+    try:
+        data = request.json
+        name = data.get('name', '').strip()
+        if not name:
+            return jsonify({'error': 'Nom kiritilmadi'}), 400
+        
+        db = get_db()
+        # Check if exists
+        exists = db.collection('categories').where('name', '==', name).limit(1).get()
+        if exists:
+            return jsonify({'error': 'Bu kategoriya allaqachon mavjud'}), 400
+            
+        db.collection('categories').add({'name': name})
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/add_product', methods=['POST'])
 def add_product():
     try:
@@ -217,6 +253,13 @@ def add_product():
 
         doc_ref.set(fields)
         
+        # Ensure category exists in categories collection
+        cat_name = fields.get('category')
+        if cat_name:
+            db_cat = db.collection('categories').where('name', '==', cat_name).limit(1).get()
+            if not db_cat:
+                db.collection('categories').add({'name': cat_name})
+
         fields['local_images'] = []
         # SERVER_TIMESTAMP JSON'ga o'girilmaydi, shuning uchun o'chiramiz/yoki matn qilamiz
         if 'created_at' in fields: del fields['created_at']
@@ -276,6 +319,13 @@ def update_product_details():
             update_data['updated_at'] = firestore.SERVER_TIMESTAMP
             db = get_db()
             db.collection('products').document(item_id).update(update_data)
+            
+            # Ensure category exists
+            cat_name = update_data.get('category')
+            if cat_name:
+                db_cat = db.collection('categories').where('name', '==', cat_name).limit(1).get()
+                if not db_cat:
+                    db.collection('categories').add({'name': cat_name})
             
         return jsonify({'success': True})
     except Exception as e:
@@ -432,6 +482,9 @@ def import_excel():
         df = pd.read_excel(file)
 
         db    = get_db()
+        # Pre-fetch existing categories to avoid redundant writes
+        existing_cats = {doc.to_dict().get('name') for doc in db.collection('categories').stream()}
+        
         batch = db.batch()
         count = 0
         imported = 0
@@ -471,6 +524,12 @@ def import_excel():
 
                 doc_ref = db.collection('products').document(item_id)
                 batch.set(doc_ref, data, merge=True)
+                
+                # Register new category if found in excel
+                cat_name = data['category']
+                if cat_name and cat_name not in existing_cats:
+                    db.collection('categories').add({'name': cat_name})
+                    existing_cats.add(cat_name)
                 
                 count   += 1
                 imported += 1
