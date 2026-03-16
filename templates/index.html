@@ -765,8 +765,11 @@
             <button class="search-photo-btn" onclick="document.getElementById('photoSearchInput').click()" title="Rasm fayli orqali qidirish">📷</button>
             <input type="file" id="photoSearchInput" style="display:none" accept="image/*" onchange="searchByPhoto(this)">
         </div>
-        <div style="display: flex; gap: 10px;">
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
             <button class="btn btn-primary" style="background: var(--bg-color); color: var(--text-muted); border: 1px solid var(--border);" onclick="fetchProducts()" title="Ma'lumotlarni yangilash">🔄 Yangilash</button>
+            <button class="btn btn-primary" style="background: #10b981; border-color: #10b981;" onclick="downloadExcel()" title="Excel faylni yuklab olish">📥 Excel Yuklab olish</button>
+            <button class="btn btn-primary" style="background: #f59e0b; border-color: #f59e0b;" onclick="document.getElementById('excelInput').click()" title="Excel orqali mahsulotlar qo'shish">📤 Excel Yuklash</button>
+            <input type="file" id="excelInput" style="display:none" accept=".xlsx, .xls" onchange="handleExcelUpload(this)">
             <button class="btn btn-primary" onclick="openAddModal()">+ Yangi qo'shish</button>
         </div>
     </nav>
@@ -1362,6 +1365,37 @@
                         </div>`;
                 }
             }
+        }
+        async function downloadExcel() {
+            window.location.href = '/api/download_excel';
+            showToast("Excel fayl tayyorlanmoqda...");
+        }
+
+        async function handleExcelUpload(input) {
+            if (!input.files || !input.files[0]) return;
+            
+            const file = input.files[0];
+            const formData = new FormData();
+            formData.append('file', file);
+
+            showToast("Ecel yuklanmoqda...", "info");
+            
+            try {
+                const res = await fetch('/api/upload_excel', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("Ma'lumotlar Exceldan muvaffaqiyatli qo'shildi!");
+                    fetchProducts(); // Refresh list
+                } else {
+                    showToast(data.error || "Excel yuklashda xatolik", "error");
+                }
+            } catch (err) {
+                showToast("Tarmoq xatosi", "error");
+            }
+            input.value = ''; // Reset
         }
     </script>
 </body>

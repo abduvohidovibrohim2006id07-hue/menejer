@@ -2,7 +2,7 @@ import os
 import requests
 import boto3
 import pandas as pd
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify, send_from_directory, send_file
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 
@@ -32,6 +32,41 @@ EXCEL_FILE = 'natijalar.xlsx'
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/api/download_excel')
+def download_excel():
+    try:
+        return send_file(EXCEL_FILE, as_attachment=True, download_name='natijalar.xlsx')
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/upload_excel', methods=['POST'])
+def upload_excel():
+    try:
+        if 'file' not in request.files:
+            return jsonify({'error': 'Fayl tanlanmagan'}), 400
+        
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'Fayl nomi bo\'sh'}), 400
+            
+        # Read the uploaded Excel. Use openpyxl for engine to be safe.
+        # We assume first column is ID, second is Name, fourth is Price.
+        new_df = pd.read_excel(file, header=None)
+        
+        # Read current data
+        current_df = pd.read_excel(EXCEL_FILE, header=None)
+        
+        # Combine and remove duplicates based on the ID column (index 0)
+        # We keep the old one or new one? Usually new one for updates.
+        # Let's say we keep the one already in the system unless it's new.
+        # Or better: drop duplicates and keep='last' to allow updates from Excel.
+        combined_df = pd.concat([current_df, new_df]).drop_duplicates(subset=[0], keep='last')
+        
+        combined_df.to_excel(EXCEL_FILE, index=False, header=False)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/products')
 def get_products():
