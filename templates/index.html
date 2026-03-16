@@ -1166,12 +1166,13 @@
                 
                 const imgs = product.local_images || [];
                 const galleryHtml = imgs.length > 0 ? imgs.map(img => {
-                    const fname = img.split('/').pop().toLowerCase();
-                    const isVideo = fname.endsWith('.mp4') || fname.endsWith('.webm') || fname.endsWith('.mov') || fname.endsWith('.avi') || fname.endsWith('.ogg');
+                    const fname = img.split('/').pop();
+                    const fnameLower = fname.toLowerCase();
+                    const isVideo = fnameLower.endsWith('.mp4') || fnameLower.endsWith('.webm') || fnameLower.endsWith('.mov') || fnameLower.endsWith('.avi') || fnameLower.endsWith('.ogg');
                     
                     if (isVideo) {
                         return `
-                        <div class="img-card" id="img-${product.id}-${fname}">
+                        <div class="img-card" id="img-${product.id}-${btoa(fname)}">
                             <video src="${img}" style="width:100%; height:100%; object-fit:cover;" muted loop onmouseover="this.play()" onmouseout="this.pause()" onclick="openImageOverlay('${img}', true)"></video>
                             ${isManage ? `<div class="img-overlay"><button class="del-img-btn" onclick="deleteImage('${product.id}', '${fname}')">🗑️</button></div>` : ''}
                         </div>
@@ -1179,7 +1180,7 @@
                     }
 
                     return `
-                        <div class="img-card" id="img-${product.id}-${fname}">
+                        <div class="img-card" id="img-${product.id}-${btoa(fname)}">
                             <div style="position: absolute; top:0; left:0; z-index:60; display:flex; gap:4px; padding:6px;">
                                 <a href="https://www.google.com/search?q=${encodeURIComponent(product.name)}&tbm=isch" target="_blank" class="google-search-btn">🔍</a>
                                 <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(img)}" target="_blank" class="lens-search-btn">📷</a>
@@ -1339,8 +1340,8 @@
                     body: JSON.stringify({id, filename})
                 });
                 if ((await res.json()).success) {
-                    document.getElementById(`img-${id}-${filename}`).remove();
                     showToast("O'chirildi");
+                    fetchProducts(); // Refresh list to sync with S3
                 }
             } catch (err) { showToast("Xato", 'error'); }
         }
