@@ -521,7 +521,7 @@ def ai_generate_full():
         vision_text = ""
         if image_url:
             v_model  = config.get('vision_model', 'llama-3.2-11b-vision-preview')
-            v_prompt = config.get('vision_prompt', '').replace('{{image_url}}', image_url)
+            v_prompt = config.get('vision_prompt', 'Identify and describe this product in detail.').replace('{{image_url}}', image_url)
             v_payload = {
                 "model": v_model,
                 "messages": [{
@@ -539,7 +539,7 @@ def ai_generate_full():
 
         # Step 2: Search (Compound)
         s_model  = config.get('search_model', 'groq/compound')
-        s_prompt = config.get('search_prompt', '')\
+        s_prompt = config.get('search_prompt', 'Search specifications for: {{name}} {{brand}} {{model}}')\
             .replace('{{name}}', name)\
             .replace('{{brand}}', brand)\
             .replace('{{model}}', model_val)\
@@ -555,7 +555,11 @@ def ai_generate_full():
 
         # Step 3: Synthesis (Uzbek)
         syn_model = config.get('synthesis_model', 'llama-3.3-70b-versatile')
-        syn_prompt = config.get('synthesis_prompt', '')\
+        syn_prompt_base = config.get('synthesis_prompt', 'Generate a professional product description for "{{name}}". Output format JSON: {"name": "...", "short": "...", "full": "..."}')
+        if "json" not in syn_prompt_base.lower():
+            syn_prompt_base += " Respond in JSON format."
+            
+        syn_prompt = syn_prompt_base\
             .replace('{{name}}', name)\
             .replace('{{vision_text}}', vision_text)\
             .replace('{{search_text}}', search_text)
@@ -570,11 +574,16 @@ def ai_generate_full():
         if syn_res.status_code != 200:
             return jsonify({'error': f"Synthesis Error: {syn_res.text}"}), 400
         
-        result_uz = json.loads(syn_res.json()['choices'][0]['message']['content'])
+        result_content = syn_res.json()['choices'][0]['message']['content']
+        result_uz = json.loads(result_content)
 
         # Step 4: Translation (Russian)
         tr_model = config.get('translate_model', 'llama-3.3-70b-versatile')
-        tr_prompt = config.get('translate_prompt', '').replace('{{json}}', json.dumps(result_uz))
+        tr_prompt_base = config.get('translate_prompt', 'Translate this JSON fields "name", "short", "full" to Russian. Output ONLY the JSON. JSON: {{json}}')
+        if "json" not in tr_prompt_base.lower():
+            tr_prompt_base += " Output must be in JSON."
+
+        tr_prompt = tr_prompt_base.replace('{{json}}', json.dumps(result_uz))
         
         tr_payload = {
             "model": tr_model,
@@ -583,7 +592,14 @@ def ai_generate_full():
             "response_format": {"type": "json_object"}
         }
         tr_res = requests.post(base_url, headers=headers, json=tr_payload)
-        result_ru = json.loads(tr_res.json()['choices'][0]['message']['content']) if tr_res.status_code == 200 else result_uz
+        
+        if tr_res.status_code == 200:
+            result_ru = json.loads(tr_res.json()['choices'][0]['message']['content'])
+        else:
+            result_ru = result_uz
+
+        result_uz = result_uz
+        result_ru = result_ru
 
         return jsonify({
             'success': True,
