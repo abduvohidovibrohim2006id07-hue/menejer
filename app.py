@@ -1,7 +1,8 @@
 import os
 import requests
 import boto3
-import pandas as pd
+import firebase_admin
+from firebase_admin import credentials, firestore
 from flask import Flask, render_template, request, jsonify, send_from_directory, send_file
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
@@ -10,6 +11,25 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__)
+
+# Firebase Configuration
+# On Vercel, we can put the JSON content in an environment variable
+firebase_key_path = os.path.join(os.path.dirname(__file__), 'firebase-key.json')
+if os.path.exists(firebase_key_path):
+    cred = credentials.Certificate(firebase_key_path)
+    firebase_admin.initialize_app(cred)
+else:
+    # Fallback for Vercel: Read from environment variable
+    import json
+    fb_content = os.getenv("FIREBASE_SERVICE_ACCOUNT")
+    if fb_content:
+        cred_dict = json.loads(fb_content)
+        cred = credentials.Certificate(cred_dict)
+        firebase_admin.initialize_app(cred)
+
+db = firestore.client()
+
+# Yandex Cloud S3 Configuration
 
 # Yandex Cloud S3 Configuration
 YANDEX_ACCESS_KEY = os.getenv("YANDEX_ACCESS_KEY")
@@ -27,53 +47,16 @@ s3_client = boto3.client(
     endpoint_url=S3_ENDPOINT
 )
 
-EXCEL_FILE = 'natijalar.xlsx'
-
 @app.route('/')
 def index():
     return render_template('index.html')
 
-@app.route('/api/download_excel')
-def download_excel():
-    try:
-        return send_file(EXCEL_FILE, as_attachment=True, download_name='natijalar.xlsx')
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@app.route('/api/upload_excel', methods=['POST'])
-def upload_excel():
-    try:
-        if 'file' not in request.files:
-            return jsonify({'error': 'Fayl tanlanmagan'}), 400
-        
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({'error': 'Fayl nomi bo\'sh'}), 400
-            
-        # Read the uploaded Excel. Use openpyxl for engine to be safe.
-        # We assume first column is ID, second is Name, fourth is Price.
-        new_df = pd.read_excel(file, header=None)
-        
-        # Read current data
-        current_df = pd.read_excel(EXCEL_FILE, header=None)
-        
-        # Combine and remove duplicates based on the ID column (index 0)
-        # We keep the old one or new one? Usually new one for updates.
-        # Let's say we keep the one already in the system unless it's new.
-        # Or better: drop duplicates and keep='last' to allow updates from Excel.
-        combined_df = pd.concat([current_df, new_df]).drop_duplicates(subset=[0], keep='last')
-        
-        combined_df.to_excel(EXCEL_FILE, index=False, header=False)
-        return jsonify({'success': True})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
 @app.route('/api/products')
 def get_products():
     try:
-        df = pd.read_excel(EXCEL_FILE)
-        products = []
+        docs = db.collection('products').stream()
         
+        products = []
         # Get all images from S3 once to optimize
         try:
             s3_objects = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix='images/')
@@ -81,16 +64,9 @@ def get_products():
         except Exception:
             all_files = []
 
-        for _, row in df.iterrows():
-            item_id = str(row.iloc[0]).split('.')[0]
-            name = str(row.iloc[1])
-            try:
-                price = str(row.iloc[3])
-                if price == 'nan':
-                    price = 'Narx kiritilmagan'
-            except IndexError:
-                price = 'Ma\'lumot yo\'q'
-            
+        for doc in docs:
+            product_data = doc.to_dict()
+            item_id = product_data.get('id')
             
             # Filter S3 images for this product
             prefix = f"images/{item_id}/"
@@ -98,8 +74,8 @@ def get_products():
             
             products.append({
                 'id': item_id,
-                'name': name,
-                'price': price,
+                'name': product_data.get('name'),
+                'price': product_data.get('price'),
                 'local_images': sorted(product_images)
             })
         return jsonify(products)
@@ -182,7 +158,6 @@ def delete_product():
         if not item_id:
             return jsonify({'error': 'ID missing'}), 400
         
-        # Helper logic to perform deletion
         return perform_delete([item_id])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -201,47 +176,35 @@ def bulk_delete():
 
 def perform_delete(item_ids):
     try:
-        # Read Excel
-        df = pd.read_excel(EXCEL_FILE, header=None)
-        temp_col = df[0].astype(str).str.split('.').str[0]
-        
-        # Filter out the IDs
-        mask = ~temp_col.isin([str(i) for i in item_ids])
-        df_filtered = df[mask]
-        
-        # Save back
-        df_filtered.to_excel(EXCEL_FILE, index=False, header=False)
-        
-        # Delete from S3
+        batch = db.batch()
         for item_id in item_ids:
+            doc_ref = db.collection('products').document(str(item_id))
+            batch.delete(doc_ref)
+            
+            # Delete from S3
             prefix = f"images/{item_id}/"
             objects_to_delete = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=prefix)
             if 'Contents' in objects_to_delete:
                 delete_keys = [{'Key': obj['Key']} for obj in objects_to_delete['Contents']]
                 s3_client.delete_objects(Bucket=BUCKET_NAME, Delete={'Objects': delete_keys})
         
+        batch.commit()
         return jsonify({'success': True})
     except Exception as e:
-        raise e
+        return jsonify({'error': str(e)}), 500
 
 @app.route('/api/update_product_name', methods=['POST'])
 def update_product_name():
     try:
         data = request.json
-        item_id = data.get('id')
+        item_id = str(data.get('id'))
         new_name = data.get('name')
         
         if not item_id or not new_name:
             return jsonify({'error': 'ID or name missing'}), 400
             
-        df = pd.read_excel(EXCEL_FILE, header=None)
-        temp_col = df[0].astype(str).str.split('.').str[0]
-        mask = temp_col == str(item_id)
-        if len(df[mask]) == 0:
-            return jsonify({'error': 'Product not found'}), 404
-            
-        df.loc[mask, 1] = new_name
-        df.to_excel(EXCEL_FILE, index=False, header=False)
+        doc_ref = db.collection('products').document(item_id)
+        doc_ref.update({'name': new_name})
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -250,22 +213,14 @@ def update_product_name():
 def update_product_price():
     try:
         data = request.json
-        item_id = data.get('id')
+        item_id = str(data.get('id'))
         new_price = data.get('price')
         
         if not item_id or new_price is None:
             return jsonify({'error': 'ID or price missing'}), 400
             
-        df = pd.read_excel(EXCEL_FILE, header=None)
-        temp_col = df[0].astype(str).str.split('.').str[0]
-        
-        mask = temp_col == str(item_id)
-        if len(df[mask]) == 0:
-            return jsonify({'error': 'Product not found'}), 404
-            
-        df.loc[mask, 3] = new_price
-        
-        df.to_excel(EXCEL_FILE, index=False, header=False)
+        doc_ref = db.collection('products').document(item_id)
+        doc_ref.update({'price': new_price})
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -274,33 +229,26 @@ def update_product_price():
 def add_product():
     try:
         data = request.json
-        item_id = data.get('id')
+        item_id = str(data.get('id'))
         name = data.get('name', 'Nomsiz Mahsulot')
         price = data.get('price', 'Narx kiritilmagan')
         
         if not item_id:
             return jsonify({'error': 'ID kiritish majburiy'}), 400
             
-        df = pd.read_excel(EXCEL_FILE, header=None)
-        
-        # Check if ID already exists
-        temp_col = df[0].astype(str).str.split('.').str[0]
-        mask = temp_col == str(item_id)
-        if len(df[mask]) > 0:
+        doc_ref = db.collection('products').document(item_id)
+        if doc_ref.get().exists:
             return jsonify({'error': 'Bu ID ga ega mahsulot allaqachon mavjud'}), 400
             
-        # Create new row
-        new_row = [item_id, name, '', price]
-        
-        # Pad with empty strings if the dataframe has more columns
-        if len(df.columns) > 4:
-            new_row.extend([''] * (len(df.columns) - 4))
-            
-        df.loc[len(df)] = new_row
-        df.to_excel(EXCEL_FILE, index=False, header=False)
+        doc_ref.set({
+            'id': item_id,
+            'name': name,
+            'price': price,
+            'created_at': firestore.SERVER_TIMESTAMP
+        })
         
         return jsonify({'success': True, 'product': {
-            'id': str(item_id),
+            'id': item_id,
             'name': name,
             'price': price,
             'local_images': []

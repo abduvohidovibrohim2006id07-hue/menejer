@@ -1,7 +1,6 @@
 flask
-pandas
-openpyxl
 requests
 werkzeug
 boto3
 python-dotenv
+firebase-admin

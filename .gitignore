@@ -4,6 +4,6 @@ __pycache__/
 venv/
 .venv/
 yuklab_olingan_rasmlar/
-# *.xlsx
-# .gitigore da natijalar.xlsx ni qoldirish kerakmi? 
-# Foydalanuvchi Excelni bazani sifatida ishlatyapti, shuning uchun u bo'lishi kerak.
+# .xlsx
+*.xlsx
+firebase-key.json
