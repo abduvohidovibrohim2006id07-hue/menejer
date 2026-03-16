@@ -1066,6 +1066,11 @@
                             </label>
                             <textarea id="newFullDesc" class="form-input" maxlength="5000" style="min-height: 100px;"></textarea>
                         </div>
+                        <div class="form-group form-full" style="text-align: center; margin: 10px 0;">
+                            <button type="button" class="btn btn-primary" id="btnAIGenerate" onclick="generateFullAI()" style="background: linear-gradient(135deg, #4f46e5, #9333ea); border: none; width: 100%; font-weight: 700;">
+                                ✨ AI orqali to'liq yaratish (Rasm + Internet)
+                            </button>
+                        </div>
                         <hr style="grid-column: span 2; width: 100%; border: 0.5px solid var(--border); margin: 10px 0;">
                         <div class="form-group form-full">
                             <label style="display: flex; justify-content: space-between;">
@@ -1721,26 +1726,40 @@
                     'translate_uz_ru': 'Uzbek -> Rus (Nomi)',
                     'translate_ru_uz': 'Rus -> Uzbek (Nomi)',
                     'translate_desc_uz_ru': 'Uzbek -> Rus (Tavsiflar)',
-                    'translate_desc_ru_uz': 'Rus -> Uzbek (Tavsiflar)'
+                    'translate_desc_ru_uz': 'Rus -> Uzbek (Tavsiflar)',
+                    'generate_full': 'To\'liq Tavsif Yaratish (Workflow)'
                 };
 
                 for (const [actionId, label] of Object.entries(actions)) {
-                    const config = settings[actionId] || { model: 'llama-3.3-70b-versatile', prompt: '' };
+                    const config = settings[actionId] || {};
                     const card = document.createElement('div');
                     card.className = 'ai-card';
-                    card.innerHTML = `
-                        <h4>🤖 ${label}</h4>
-                        <div class="ai-field">
-                            <label>Model</label>
-                            <select id="ai-model-${actionId}">
-                                ${models.map(m => `<option value="${m}" ${m === config.model ? 'selected' : ''}>${m}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="ai-field">
-                            <label>Promt ({{text}} mahsulot nomi bilan almashadi)</label>
-                            <textarea id="ai-prompt-${actionId}" style="min-height: 100px;">${config.prompt}</textarea>
-                        </div>
-                    `;
+                    
+                    if (actionId === 'generate_full') {
+                        card.innerHTML = `
+                            <h4>🤖 ${label}</h4>
+                            <div class="ai-field"><label>Vision Model</label><input type="text" id="ai-vision_model-${actionId}" value="${config.vision_model || ''}"></div>
+                            <div class="ai-field"><label>Vision Promt</label><textarea id="ai-vision_prompt-${actionId}">${config.vision_prompt || ''}</textarea></div>
+                            <div class="ai-field"><label>Search Model</label><input type="text" id="ai-search_model-${actionId}" value="${config.search_model || ''}"></div>
+                            <div class="ai-field"><label>Search Promt</label><textarea id="ai-search_prompt-${actionId}">${config.search_prompt || ''}</textarea></div>
+                            <div class="ai-field"><label>Synthesis Model</label><input type="text" id="ai-synthesis_model-${actionId}" value="${config.synthesis_model || ''}"></div>
+                            <div class="ai-field"><label>Synthesis Promt</label><textarea id="ai-synthesis_prompt-${actionId}">${config.synthesis_prompt || ''}</textarea></div>
+                        `;
+                    } else {
+                        card.innerHTML = `
+                            <h4>🤖 ${label}</h4>
+                            <div class="ai-field">
+                                <label>Model</label>
+                                <select id="ai-model-${actionId}">
+                                    ${models.map(m => `<option value="${m}" ${m === config.model ? 'selected' : ''}>${m}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="ai-field">
+                                <label>Promt ({{text}} mahsulot nomi bilan almashadi)</label>
+                                <textarea id="ai-prompt-${actionId}" style="min-height: 100px;">${config.prompt || ''}</textarea>
+                            </div>
+                        `;
+                    }
                     container.appendChild(card);
                 }
             } catch (err) {
@@ -1755,14 +1774,25 @@
             btn.disabled = true;
             btn.innerHTML = '⏳ Saqlanmoqda...';
 
-            const actions = ['translate_uz_ru', 'translate_ru_uz', 'translate_desc_uz_ru', 'translate_desc_ru_uz'];
+            const actions = ['translate_uz_ru', 'translate_ru_uz', 'translate_desc_uz_ru', 'translate_desc_ru_uz', 'generate_full'];
             const settings = {};
 
             actions.forEach(actionId => {
-                settings[actionId] = {
-                    model: document.getElementById(`ai-model-${actionId}`).value,
-                    prompt: document.getElementById(`ai-prompt-${actionId}`).value
-                };
+                if (actionId === 'generate_full') {
+                    settings[actionId] = {
+                        vision_model: document.getElementById(`ai-vision_model-${actionId}`).value,
+                        vision_prompt: document.getElementById(`ai-vision_prompt-${actionId}`).value,
+                        search_model: document.getElementById(`ai-search_model-${actionId}`).value,
+                        search_prompt: document.getElementById(`ai-search_prompt-${actionId}`).value,
+                        synthesis_model: document.getElementById(`ai-synthesis_model-${actionId}`).value,
+                        synthesis_prompt: document.getElementById(`ai-synthesis_prompt-${actionId}`).value
+                    };
+                } else {
+                    settings[actionId] = {
+                        model: document.getElementById(`ai-model-${actionId}`).value,
+                        prompt: document.getElementById(`ai-prompt-${actionId}`).value
+                    };
+                }
             });
 
             try {
@@ -1783,35 +1813,52 @@
         }
 
         async function callAI(action, sourceId, targetId) {
-            const sourceEl = document.getElementById(sourceId);
-            const targetEl = document.getElementById(targetId);
-            const text = sourceEl.value.trim();
+            // ... (unchanged)
+        }
+
+        async function generateFullAI() {
+            const btn = document.getElementById('btnAIGenerate');
+            const originalHtml = btn.innerHTML;
             
-            if (!text) {
-                showToast("Avval matn kiritiling", 'error');
+            const name = document.getElementById('newName').value;
+            const brand = document.getElementById('newBrand').value;
+            const model = document.getElementById('newModel').value;
+            
+            // Get first image from the grid
+            const imgEl = document.querySelector('#upload-grid img');
+            const image_url = imgEl ? imgEl.src : '';
+
+            if (!name) {
+                showToast("Avval mahsulot nomini kiring", 'error');
                 return;
             }
 
-            const btn = event.currentTarget;
-            const originalHtml = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '⏳';
+            btn.innerHTML = '⏳ AI ishlamoqda (Rasm + Qidiruv + Yozish)...';
 
             try {
-                const res = await fetch('/api/ai_call', {
+                const res = await fetch('/api/ai_generate_full', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ action, text })
+                    body: JSON.stringify({ name, brand, model, image_url })
                 });
                 const data = await res.json();
-                if (data.result) {
-                    targetEl.value = data.result;
-                    showToast("AI tarjima tugadi");
+                
+                if (data.uz && data.ru) {
+                    document.getElementById('newName').value = data.uz.name || name;
+                    document.getElementById('newShortDesc').value = data.uz.short || '';
+                    document.getElementById('newFullDesc').value = data.uz.full || '';
+                    
+                    document.getElementById('newNameRU').value = data.ru.name || '';
+                    document.getElementById('newShortDescRU').value = data.ru.short || '';
+                    document.getElementById('newFullDescRU').value = data.ru.full || '';
+                    
+                    showToast("Ma'lumotlar muvaffaqiyatli generatsiya qilindi ✨");
                 } else {
-                    showToast(data.error || "AI xatosi", 'error');
+                    showToast(data.error || "Xatolik yuz berdi", 'error');
                 }
             } catch (err) {
-                showToast("Server bilan ulanishda xato", 'error');
+                showToast("Server xatosi", 'error');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalHtml;

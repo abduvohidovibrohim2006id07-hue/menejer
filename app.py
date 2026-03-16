@@ -466,6 +466,16 @@ def get_ai_settings():
                 'translate_desc_ru_uz': {
                     'model': 'llama-3.3-70b-versatile',
                     'prompt': 'Translate the following product description from Russian to Uzbek. Return ONLY the translated text without quotes or explanations. Text: {{text}}'
+                },
+                'generate_full': {
+                    'vision_model': 'llama-3.2-11b-vision-preview',
+                    'vision_prompt': 'Identify and describe this product in detail. Focus on visible features, colors, and design. Image: {{image_url}}',
+                    'search_model': 'groq/compound',
+                    'search_prompt': 'Search the internet and find technical specifications and key selling points for: {{name}} {{brand}} {{model}}. Visual context: {{vision_text}}',
+                    'synthesis_model': 'llama-3.3-70b-versatile',
+                    'synthesis_prompt': 'Generate a professional product description in Uzbek based on vision data: {{vision_text}} and research: {{search_text}}. Product: {{name}}. Output format JSON: {"name": "...", "short": "...", "full": "..."}',
+                    'translate_model': 'llama-3.3-70b-versatile',
+                    'translate_prompt': 'Translate this JSON fields "name", "short", "full" to Russian. Output ONLY the JSON. JSON: {{json}}'
                 }
             }
             db.collection('ai_settings').document('general').set(defaults)
@@ -483,51 +493,139 @@ def update_ai_settings():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/ai_generate_full', methods=['POST'])
+def ai_generate_full():
+    try:
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            return jsonify({'error': 'Groq API key topilmadi'}), 400
+        
+        data      = request.json
+        name      = data.get('name', '')
+        brand     = data.get('brand', '')
+        model_val = data.get('model', '')
+        image_url = data.get('image_url', '')
+
+        db = get_db()
+        settings_doc = db.collection('ai_settings').document('general').get()
+        settings = settings_doc.to_dict() if settings_doc.exists else {}
+        config = settings.get('generate_full', {})
+
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        base_url = "https://api.groq.com/openai/v1/chat/completions"
+
+        # Step 1: Vision
+        vision_text = ""
+        if image_url:
+            v_model  = config.get('vision_model', 'llama-3.2-11b-vision-preview')
+            v_prompt = config.get('vision_prompt', '').replace('{{image_url}}', image_url)
+            v_payload = {
+                "model": v_model,
+                "messages": [{
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": v_prompt},
+                        {"type": "image_url", "image_url": {"url": image_url}}
+                    ]
+                }],
+                "temperature": 0.1
+            }
+            v_res = requests.post(base_url, headers=headers, json=v_payload)
+            if v_res.status_code == 200:
+                vision_text = v_res.json()['choices'][0]['message']['content']
+
+        # Step 2: Search (Compound)
+        s_model  = config.get('search_model', 'groq/compound')
+        s_prompt = config.get('search_prompt', '')\
+            .replace('{{name}}', name)\
+            .replace('{{brand}}', brand)\
+            .replace('{{model}}', model_val)\
+            .replace('{{vision_text}}', vision_text)
+        
+        s_payload = {
+            "model": s_model,
+            "messages": [{"role": "user", "content": s_prompt}],
+            "temperature": 0.1
+        }
+        s_res = requests.post(base_url, headers=headers, json=s_payload)
+        search_text = s_res.json()['choices'][0]['message']['content'] if s_res.status_code == 200 else ""
+
+        # Step 3: Synthesis (Uzbek)
+        syn_model = config.get('synthesis_model', 'llama-3.3-70b-versatile')
+        syn_prompt = config.get('synthesis_prompt', '')\
+            .replace('{{name}}', name)\
+            .replace('{{vision_text}}', vision_text)\
+            .replace('{{search_text}}', search_text)
+        
+        syn_payload = {
+            "model": syn_model,
+            "messages": [{"role": "user", "content": syn_prompt}],
+            "temperature": 0.1,
+            "response_format": {"type": "json_object"}
+        }
+        syn_res = requests.post(base_url, headers=headers, json=syn_payload)
+        if syn_res.status_code != 200:
+            return jsonify({'error': f"Synthesis Error: {syn_res.text}"}), 400
+        
+        result_uz = json.loads(syn_res.json()['choices'][0]['message']['content'])
+
+        # Step 4: Translation (Russian)
+        tr_model = config.get('translate_model', 'llama-3.3-70b-versatile')
+        tr_prompt = config.get('translate_prompt', '').replace('{{json}}', json.dumps(result_uz))
+        
+        tr_payload = {
+            "model": tr_model,
+            "messages": [{"role": "user", "content": tr_prompt}],
+            "temperature": 0.1,
+            "response_format": {"type": "json_object"}
+        }
+        tr_res = requests.post(base_url, headers=headers, json=tr_payload)
+        result_ru = json.loads(tr_res.json()['choices'][0]['message']['content']) if tr_res.status_code == 200 else result_uz
+
+        return jsonify({
+            'success': True,
+            'uz': result_uz,
+            'ru': result_ru
+        })
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/ai_call', methods=['POST'])
 def ai_call():
     try:
         api_key = os.getenv("GROQ_API_KEY")
         if not api_key:
-            return jsonify({'error': 'Groq API key topilmadi. Environment Variable tekshiring.'}), 400
-        
+            return jsonify({'error': 'Groq API key topilmadi'}), 400
         data    = request.json
         text    = data.get('text', '')
-        action  = data.get('action') # e.g. 'translate_uz_ru'
-        
+        action  = data.get('action')
         if not text or not action:
             return jsonify({'error': 'Tekst yoki amal kiritilmadi'}), 400
-
         db = get_db()
         settings_doc = db.collection('ai_settings').document('general').get()
         settings = settings_doc.to_dict() if settings_doc.exists else {}
-        
         config = settings.get(action)
         if not config:
             return jsonify({'error': f'AI sozlamalari topilmadi: {action}'}), 400
-        
         model  = config.get('model', 'llama-3.3-70b-versatile')
         prompt_tmpl = config.get('prompt', 'Translate: {{text}}')
         prompt = prompt_tmpl.replace('{{text}}', text)
-
         url = "https://api.groq.com/openai/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json"
-        }
+        headers = { "Authorization": f"Bearer {api_key}", "Content-Type": "application/json" }
         payload = {
             "model": model,
             "messages": [{"role": "user", "content": prompt}],
             "temperature": 0.1
         }
-        
         response = requests.post(url, headers=headers, json=payload)
         if response.status_code == 200:
-            result = response.json()
-            reply = result['choices'][0]['message']['content'].strip()
-            return jsonify({'result': reply})
+            return jsonify({'result': response.json()['choices'][0]['message']['content'].strip()})
         else:
-            return jsonify({'error': f"Groq Error: {response.status_code} - {response.text}"}), 400
-            
+            return jsonify({'error': f"Groq Error: {response.status_code}"}), 400
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
