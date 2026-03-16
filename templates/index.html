@@ -649,11 +649,48 @@
             width: 95%;
             max-width: 650px;
             max-height: 90vh;
-            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Header and Footer will be fixed, body scrolls */
             box-shadow: var(--shadow-lg);
             transform: translateY(20px);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
+
+        .modal-body {
+            padding: 20px 30px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .modal-footer {
+            padding: 20px 30px;
+            border-top: 1px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* Fullscreen Image Overlay */
+        #imageOverlay {
+            position: fixed;
+            top:0; left:0; width:100%; height:100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: zoom-out;
+        }
+        #imageOverlay img {
+            max-width: 95%;
+            max-height: 95%;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 0 30px rgba(0,0,0,0.5);
+        }
+        #imageOverlay.show { display: flex; }
 
         .form-grid {
             display: grid;
@@ -846,6 +883,11 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
+    <!-- Image Overlay -->
+    <div id="imageOverlay" onclick="this.classList.remove('show')">
+        <img id="overlayImg" src="" alt="Full Sized">
+    </div>
+
     <!-- Details Modal -->
     <div class="modal-overlay" id="detailsModal">
         <div class="modal-card" style="max-width: 800px;">
@@ -866,69 +908,67 @@
                 <h3 class="modal-title" id="modalTitle">Mahsulot ma'lumotlari</h3>
                 <button class="close-modal" onclick="closeAddModal()">&times;</button>
             </div>
-            <form id="addProductForm" onsubmit="handleAddProduct(event)">
-                <div class="form-grid">
-                    <div class="form-group form-full">
-                        <label>ID (Majburiy)*</label>
-                        <input type="text" id="newId" required placeholder="Masalan: 10020">
-                    </div>
-                    <div class="form-group form-full">
-                        <label>Mahsulot Nomi*</label>
-                        <input type="text" id="newName" required placeholder="Nomi">
-                    </div>
-                    <div class="form-group">
-                        <label>Model</label>
-                        <input type="text" id="newModel">
-                    </div>
-                    <div class="form-group">
-                        <label>Brend</label>
-                        <input type="text" id="newBrand">
-                    </div>
-                    <div class="form-group">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
-                            <label style="margin-bottom: 0;">Kategoriya</label>
-                            <button type="button" onclick="promptNewCategory()" style="background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer; padding: 0 5px;" title="Yangi kategoriya qo'shish">+</button>
+            <form id="addProductForm" onsubmit="handleAddProduct(event)" style="display: flex; flex-direction: column; flex: 1; overflow: hidden;">
+                <div class="modal-body">
+                    <div class="form-grid">
+                        <div class="form-group form-full">
+                            <label>ID (Majburiy)*</label>
+                            <input type="text" id="newId" required placeholder="Masalan: 10020">
                         </div>
-                        <input type="text" id="newCategory" list="cat-list" placeholder="Tanlang yoki kiriting">
-                        <datalist id="cat-list">
-                            <!-- Dynamic options -->
-                        </datalist>
-                    </div>
-                            <option value="Aksessuarlar">
-                            <option value="Maishiy Texnika">
-                            <option value="Go'zallik">
-                        </datalist>
-                    </div>
-                    <div class="form-group">
-                        <label>Narxi (So'm)</label>
-                        <input type="text" id="newPrice" placeholder="0">
-                    </div>
-                    <div class="form-group">
-                        <label>SKU Kod</label>
-                        <input type="text" id="newSku">
-                    </div>
-                    <div class="form-group">
-                        <label>Grup SKU</label>
-                        <input type="text" id="newGroupSku">
-                    </div>
-                    <div class="form-group">
-                        <label>Rang</label>
-                        <input type="text" id="newColor">
-                    </div>
-                    <div class="form-group">
-                        <label>Yetkazib beruvchi</label>
-                        <input type="text" id="newSupplier">
-                    </div>
-                    <div class="form-group form-full">
-                        <label>Qisqa tavsif (Max 350 belgi)</label>
-                        <textarea id="newShortDesc" class="form-input" maxlength="350"></textarea>
-                    </div>
-                    <div class="form-group form-full">
-                        <label>To'liq tavsif (Max 5000 belgi)</label>
-                        <textarea id="newFullDesc" class="form-input" maxlength="5000" style="min-height: 150px;"></textarea>
+                        <div class="form-group form-full">
+                            <label>Mahsulot Nomi*</label>
+                            <input type="text" id="newName" required placeholder="Nomi">
+                        </div>
+                        <div class="form-group">
+                            <label>Model</label>
+                            <input type="text" id="newModel">
+                        </div>
+                        <div class="form-group">
+                            <label>Brend</label>
+                            <input type="text" id="newBrand">
+                        </div>
+                        <div class="form-group">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                                <label style="margin-bottom: 0;">Kategoriya</label>
+                                <button type="button" onclick="promptNewCategory()" style="background: none; border: none; color: var(--primary); font-size: 1.2rem; cursor: pointer; padding: 0 5px;" title="Yangi kategoriya qo'shish">+</button>
+                            </div>
+                            <input type="text" id="newCategory" list="cat-list" placeholder="Tanlang yoki kiriting">
+                            <datalist id="cat-list"></datalist>
+                        </div>
+                        <div class="form-group">
+                            <label>Narxi (So'm)</label>
+                            <input type="text" id="newPrice" placeholder="0">
+                        </div>
+                        <div class="form-group">
+                            <label>SKU Kod</label>
+                            <input type="text" id="newSku">
+                        </div>
+                        <div class="form-group">
+                            <label>Grup SKU</label>
+                            <input type="text" id="newGroupSku">
+                        </div>
+                        <div class="form-group">
+                            <label>Rang</label>
+                            <input type="text" id="newColor">
+                        </div>
+                        <div class="form-group">
+                            <label>Yetkazib beruvchi</label>
+                            <input type="text" id="newSupplier">
+                        </div>
+                        <div class="form-group form-full">
+                            <label>Qisqa tavsif (Max 350 belgi)</label>
+                            <textarea id="newShortDesc" class="form-input" maxlength="350"></textarea>
+                        </div>
+                        <div class="form-group form-full">
+                            <label>To'liq tavsif (Max 5000 belgi)</label>
+                            <textarea id="newFullDesc" class="form-input" maxlength="5000" style="min-height: 150px;"></textarea>
+                        </div>
                     </div>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;" id="addSubmitBtn">Ma'lumotlarni saqlash</button>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddModal()">Bekor qilish</button>
+                    <button type="submit" class="btn btn-primary" id="addSubmitBtn">Ma'lumotlarni saqlash</button>
+                </div>
             </form>
         </div>
     </div>
@@ -1133,7 +1173,7 @@
                                 <a href="https://www.google.com/search?q=${encodeURIComponent(product.name)}&tbm=isch" target="_blank" class="google-search-btn">🔍</a>
                                 <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(img)}" target="_blank" class="lens-search-btn">📷</a>
                             </div>
-                            <img src="${img}" alt="Rasm" loading="lazy">
+                            <img src="${img}" alt="Rasm" loading="lazy" onclick="openImageOverlay('${img}')" style="cursor: pointer;">
                             ${isManage ? `<div class="img-overlay"><button class="del-img-btn" onclick="deleteImage('${product.id}', '${fname}')">🗑️</button></div>` : ''}
                         </div>
                     `;
@@ -1397,6 +1437,14 @@
 
         function closeDetailsModal() {
             document.getElementById('detailsModal').classList.remove('show');
+        }
+
+        // --- Layout/UI ---
+        function openImageOverlay(src) {
+            const overlay = document.getElementById('imageOverlay');
+            const img = document.getElementById('overlayImg');
+            img.src = src;
+            overlay.classList.add('show');
         }
 
         function downloadExcel() {

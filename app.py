@@ -486,12 +486,24 @@ def download_excel():
     try:
         db   = get_db()
         docs = db.collection('products').stream()
+        # S3 dan barcha rasm manzillarini olish
+        try:
+            s3_resp  = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix='images/')
+            all_keys = [obj['Key'] for obj in s3_resp.get('Contents', [])]
+        except Exception:
+            all_keys = []
 
         rows = []
         for doc in docs:
             p = doc.to_dict()
-            rows.append([
-                p.get('id', ''), 
+            item_id = str(p.get('id', doc.id))
+            
+            # Mahsulotning rasmlarini yig'ish
+            prefix = f"images/{item_id}/"
+            imgs = sorted([f"{PUBLIC_ENDPOINT}/{BUCKET_NAME}/{k}" for k in all_keys if k.startswith(prefix)])
+            
+            row = [
+                item_id, 
                 p.get('name', ''), 
                 p.get('model', ''),
                 p.get('brand', ''),
@@ -503,9 +515,18 @@ def download_excel():
                 p.get('price', ''),
                 p.get('description_short', ''),
                 p.get('description_full', '')
-            ])
+            ]
+            
+            # 10 tagacha rasm URL ini qo'shish
+            for i in range(10):
+                row.append(imgs[i] if i < len(imgs) else '')
+                
+            rows.append(row)
 
         cols = ['ID', 'Nomi', 'Model', 'Brend', 'Yetkazib beruvchi', 'Kategoriya', 'SKU', 'Group SKU', 'Rang', 'Narx', 'Qisqa Tavsif', 'To\'liq Tavsif']
+        for i in range(1, 11):
+            cols.append(f'Rasm {i}')
+            
         df  = pd.DataFrame(rows, columns=cols)
         buf = io.BytesIO()
         with pd.ExcelWriter(buf, engine='openpyxl') as writer:
