@@ -138,21 +138,26 @@ def debug():
 # ---------- PRODUCTS (Firestore) ----------
 @app.route('/api/products')
 def get_products():
+    step = 'init'
     try:
+        step = 'get_db'
         db   = get_db()
-        docs = db.collection('products').stream()
 
-        # S3 dagi barcha fayllarni bir marta olish (optimizatsiya)
+        step = 'firestore_stream'
+        docs = list(db.collection('products').stream())
+
+        step = 's3_list'
         try:
             s3_resp  = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix='images/')
             all_keys = [obj['Key'] for obj in s3_resp.get('Contents', [])]
         except Exception:
             all_keys = []
 
+        step = 'build_list'
         products = []
         for doc in docs:
             p       = doc.to_dict()
-            item_id = p.get('id', '')
+            item_id = str(p.get('id', doc.id))
             prefix  = f"images/{item_id}/"
             imgs    = sorted([f"{PUBLIC_ENDPOINT}/{BUCKET_NAME}/{k}"
                               for k in all_keys if k.startswith(prefix)])
@@ -164,10 +169,9 @@ def get_products():
             })
         return jsonify(products)
     except Exception as e:
-        print(f"API Products Error: {e}")
         import traceback
         traceback.print_exc()
-        return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e), 'failed_at_step': step}), 500
 
 @app.route('/api/add_product', methods=['POST'])
 def add_product():
