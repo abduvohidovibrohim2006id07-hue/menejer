@@ -14,20 +14,32 @@ app = Flask(__name__)
 
 # Firebase Configuration
 # On Vercel, we can put the JSON content in an environment variable
-firebase_key_path = os.path.join(os.path.dirname(__file__), 'firebase-key.json')
-if os.path.exists(firebase_key_path):
-    cred = credentials.Certificate(firebase_key_path)
-    firebase_admin.initialize_app(cred)
-else:
-    # Fallback for Vercel: Read from environment variable
-    import json
-    fb_content = os.getenv("FIREBASE_SERVICE_ACCOUNT")
-    if fb_content:
-        cred_dict = json.loads(fb_content)
-        cred = credentials.Certificate(cred_dict)
+firebase_initialized = False
+try:
+    firebase_key_path = os.path.join(os.path.dirname(__file__), 'firebase-key.json')
+    if os.path.exists(firebase_key_path):
+        cred = credentials.Certificate(firebase_key_path)
         firebase_admin.initialize_app(cred)
+        firebase_initialized = True
+    else:
+        # Fallback for Vercel: Read from environment variable
+        import json
+        fb_content = os.getenv("FIREBASE_SERVICE_ACCOUNT")
+        if fb_content:
+            cred_dict = json.loads(fb_content)
+            cred = credentials.Certificate(cred_dict)
+            firebase_admin.initialize_app(cred)
+            firebase_initialized = True
+        else:
+            print("FIREBASE_SERVICE_ACCOUNT topilmadi!")
+except Exception as e:
+    print(f"Firebase ulanishida xatolik: {e}")
 
-db = firestore.client()
+def get_db():
+    if not firebase_initialized:
+        raise Exception("Firebase ulanishi tozalanmagan yoki API kalitlar xato kiritilgan (Environment Variable tekshiring).")
+    return firestore.client()
+
 
 # Yandex Cloud S3 Configuration
 
@@ -54,6 +66,7 @@ def index():
 @app.route('/api/products')
 def get_products():
     try:
+        db = get_db()
         docs = db.collection('products').stream()
         
         products = []
@@ -176,6 +189,7 @@ def bulk_delete():
 
 def perform_delete(item_ids):
     try:
+        db = get_db()
         batch = db.batch()
         for item_id in item_ids:
             doc_ref = db.collection('products').document(str(item_id))
@@ -203,6 +217,7 @@ def update_product_name():
         if not item_id or not new_name:
             return jsonify({'error': 'ID or name missing'}), 400
             
+        db = get_db()
         doc_ref = db.collection('products').document(item_id)
         doc_ref.update({'name': new_name})
         return jsonify({'success': True})
@@ -219,6 +234,7 @@ def update_product_price():
         if not item_id or new_price is None:
             return jsonify({'error': 'ID or price missing'}), 400
             
+        db = get_db()
         doc_ref = db.collection('products').document(item_id)
         doc_ref.update({'price': new_price})
         return jsonify({'success': True})
@@ -236,6 +252,7 @@ def add_product():
         if not item_id:
             return jsonify({'error': 'ID kiritish majburiy'}), 400
             
+        db = get_db()
         doc_ref = db.collection('products').document(item_id)
         if doc_ref.get().exists:
             return jsonify({'error': 'Bu ID ga ega mahsulot allaqachon mavjud'}), 400
