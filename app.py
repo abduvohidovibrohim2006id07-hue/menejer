@@ -115,12 +115,24 @@ def download_social_video(url, item_id):
         'outtmpl': os.path.join(tmp_dir, f'social_{item_id}_%(id)s.%(ext)s'),
         'noplaylist': True,
         'quiet': True,
+        'merge_output_format': 'mp4',
         'max_filesize': 200 * 1024 * 1024 # 200MB limit
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             info = ydl.extract_info(url, download=True)
-            return ydl.prepare_filename(info)
+            path = ydl.prepare_filename(info)
+            # Ba'zida extension o'zgarishi mumkin (.mkv -> .mp4)
+            if not os.path.exists(path):
+                # .mp4 qidirish
+                base = os.path.splitext(path)[0]
+                if os.path.exists(base + ".mp4"): path = base + ".mp4"
+                elif os.path.exists(base + ".mkv"): path = base + ".mkv"
+                elif os.path.exists(base + ".webm"): path = base + ".webm"
+            
+            if os.path.exists(path) and os.path.getsize(path) > 1000: # Kamida 1KB
+                return path
+            return None
     except Exception as e:
         print(f"yt-dlp error: {e}")
         return None
