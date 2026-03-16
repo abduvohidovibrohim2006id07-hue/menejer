@@ -46,84 +46,53 @@
         /* Top Navigation/Header Bar */
         .navbar {
             background-color: var(--surface);
-            padding: 20px 40px;
+            padding: 15px 40px;
             box-shadow: var(--shadow-sm);
             position: sticky;
             top: 0;
-            z-index: 50;
+            z-index: 100;
             display: flex;
             justify-content: space-between;
             align-items: center;
             border-bottom: 1px solid var(--border);
         }
 
+        .nav-left { display: flex; align-items: center; gap: 40px; }
+        .nav-right { display: flex; align-items: center; gap: 15px; }
+
+        .nav-tabs {
+            display: flex;
+            gap: 5px;
+            background: var(--bg-color);
+            padding: 4px;
+            border-radius: 10px;
+        }
+
+        .nav-tab {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            color: var(--text-muted);
+            border: none;
+            background: none;
+        }
+
+        .nav-tab.active {
+            background: var(--surface);
+            color: var(--primary);
+            box-shadow: var(--shadow-sm);
+        }
+
         .brand h1 {
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: 800;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
-        }
-
-        .brand p {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-            font-weight: 500;
-        }
-
-        .search-container {
-            position: relative;
-            width: 300px;
-        }
-
-        .search-container input {
-            width: 100%;
-            padding: 12px 20px 12px 40px;
-            border-radius: 30px;
-            border: 1px solid var(--border);
-            font-family: inherit;
-            font-size: 0.95rem;
-            background-color: var(--bg-color);
-            transition: var(--transition);
-        }
-
-        .search-container input:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
-            background-color: var(--surface);
-        }
-
-        .search-icon {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            pointer-events: none;
-        }
-
-        .search-photo-btn {
-            position: absolute;
-            right: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            background: none;
-            border: none;
-            cursor: pointer;
-            color: var(--text-muted);
-            font-size: 1.1rem;
-            transition: var(--transition);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .search-photo-btn:hover {
-            color: var(--primary);
-            transform: translateY(-50%) scale(1.1);
         }
 
         .main-container {
@@ -677,11 +646,75 @@
             background: var(--surface);
             padding: 30px;
             border-radius: var(--radius-lg);
-            width: 100%;
-            max-width: 400px;
+            width: 95%;
+            max-width: 650px;
+            max-height: 90vh;
+            overflow-y: auto;
             box-shadow: var(--shadow-lg);
             transform: translateY(20px);
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .form-full { grid-column: 1 / -1; }
+
+        textarea.form-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .category-bar {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+            scrollbar-width: thin;
+        }
+
+        .cat-chip {
+            padding: 8px 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .cat-chip.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .product-meta-badges {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 5px 0;
+        }
+
+        .meta-badge {
+            font-size: 0.75rem;
+            padding: 4px 10px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-weight: 500;
         }
 
         .modal-overlay.show .modal-card {
@@ -755,26 +788,40 @@
 <body>
 
     <nav class="navbar">
-        <div class="brand">
-            <h1>UzStore Studio</h1>
-            <p>Mahsulot media menejeri</p>
+        <div class="nav-left">
+            <div class="brand">
+                <h1>Menejer Pro</h1>
+            </div>
+            <div class="nav-tabs">
+                <button class="nav-tab active" onclick="switchView('store')">🏪 Do'kon</button>
+                <button class="nav-tab" onclick="switchView('manage')">⚙️ Boshqaruv</button>
+            </div>
         </div>
-        <div class="search-container">
-            <span class="search-icon">🔍</span>
-            <input type="text" id="searchInput" placeholder="Nom yoki ID bo'yicha qidirish..." onkeyup="filterProducts()">
-            <button class="search-photo-btn" onclick="document.getElementById('photoSearchInput').click()" title="Rasm fayli orqali qidirish">📷</button>
-            <input type="file" id="photoSearchInput" style="display:none" accept="image/*" onchange="searchByPhoto(this)">
-        </div>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <button class="btn btn-primary" style="background: var(--bg-color); color: var(--text-muted); border: 1px solid var(--border);" onclick="fetchProducts()" title="Ma'lumotlarni yangilash">🔄 Yangilash</button>
-            <button class="btn btn-primary" style="background: #10b981; border-color: #10b981;" onclick="downloadExcel()" title="Firestore ma'lumotlarini Excel sifatida yuklab olish">📥 Excel Eksport</button>
-            <button class="btn btn-primary" style="background: #f59e0b; border-color: #f59e0b;" onclick="document.getElementById('excelInput').click()" title="Exceldan ma'lumot import qilish (ID, Nom, Narx, Rasmlar)">📤 Excel Import</button>
-            <input type="file" id="excelInput" style="display:none" accept=".xlsx, .xls" onchange="handleExcelImport(this)">
-            <button class="btn btn-primary" onclick="openAddModal()">+ Yangi qo'shish</button>
+
+        <div class="nav-right">
+            <div class="search-container">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="searchInput" placeholder="Qidirish (Nom, ID, SKU)..." onkeyup="filterProducts()">
+                <button class="search-photo-btn" onclick="document.getElementById('photoSearchInput').click()">📷</button>
+                <input type="file" id="photoSearchInput" style="display:none" accept="image/*" onchange="searchByPhoto(this)">
+            </div>
+            
+            <div id="manage-actions" style="display: none; gap: 8px;">
+                <button class="btn btn-primary" style="background: var(--bg-color); color: var(--text-muted); border: 1px solid var(--border);" onclick="fetchProducts()" title="Yangilash">🔄</button>
+                <button class="btn btn-primary" style="background: #10b981; border-color: #10b981;" onclick="downloadExcel()" title="Excel Eksport">📥</button>
+                <button class="btn btn-primary" style="background: #f59e0b; border-color: #f59e0b;" onclick="document.getElementById('excelInput').click()" title="Excel Import">📤</button>
+                <input type="file" id="excelInput" style="display:none" accept=".xlsx, .xls" onchange="handleExcelImport(this)">
+                <button class="btn btn-primary" onclick="openAddModal()">+ Yangi</button>
+            </div>
         </div>
     </nav>
 
     <div class="main-container">
+        <!-- Category Filter -->
+        <div id="category-container" class="category-bar">
+            <!-- Chips injected by JS -->
+        </div>
+
         <div id="loader" class="loader-wrapper">
             <div class="spinner"></div>
             <p style="margin-top:20px; color:var(--text-muted); font-weight:500;">Ma'lumotlar yuklanmoqda...</p>
@@ -788,32 +835,93 @@
     <!-- Toast Container -->
     <div id="toast-container"></div>
 
-    <!-- Add Product Modal -->
+    <!-- Details Modal -->
+    <div class="modal-overlay" id="detailsModal">
+        <div class="modal-card" style="max-width: 800px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white;">
+                <h3 class="modal-title" id="detailsTitle">Mahsulot</h3>
+                <button class="close-modal" onclick="closeDetailsModal()" style="color: white; opacity: 0.8;">&times;</button>
+            </div>
+            <div id="detailsContent" style="padding: 24px; color: var(--text-main);">
+                <!-- Dynamic Content -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Add/Edit Product Modal -->
     <div class="modal-overlay" id="addModal">
         <div class="modal-card">
             <div class="modal-header">
-                <h3 class="modal-title">Yangi mahsulot qo'shish</h3>
+                <h3 class="modal-title" id="modalTitle">Mahsulot ma'lumotlari</h3>
                 <button class="close-modal" onclick="closeAddModal()">&times;</button>
             </div>
             <form id="addProductForm" onsubmit="handleAddProduct(event)">
-                <div class="form-group">
-                    <label for="newId">Mahsulot ID (Majburiy)</label>
-                    <input type="text" id="newId" required placeholder="Masalan: 10020">
+                <div class="form-grid">
+                    <div class="form-group form-full">
+                        <label>ID (Majburiy)*</label>
+                        <input type="text" id="newId" required placeholder="Masalan: 10020">
+                    </div>
+                    <div class="form-group form-full">
+                        <label>Mahsulot Nomi*</label>
+                        <input type="text" id="newName" required placeholder="Nomi">
+                    </div>
+                    <div class="form-group">
+                        <label>Model</label>
+                        <input type="text" id="newModel">
+                    </div>
+                    <div class="form-group">
+                        <label>Brend</label>
+                        <input type="text" id="newBrand">
+                    </div>
+                    <div class="form-group">
+                        <label>Kategoriya</label>
+                        <input type="text" id="newCategory" list="cat-list">
+                        <datalist id="cat-list">
+                            <option value="Elektronika">
+                            <option value="Aksessuarlar">
+                            <option value="Maishiy Texnika">
+                            <option value="Go'zallik">
+                        </datalist>
+                    </div>
+                    <div class="form-group">
+                        <label>Narxi (So'm)</label>
+                        <input type="text" id="newPrice" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label>SKU Kod</label>
+                        <input type="text" id="newSku">
+                    </div>
+                    <div class="form-group">
+                        <label>Grup SKU</label>
+                        <input type="text" id="newGroupSku">
+                    </div>
+                    <div class="form-group">
+                        <label>Rang</label>
+                        <input type="text" id="newColor">
+                    </div>
+                    <div class="form-group">
+                        <label>Yetkazib beruvchi</label>
+                        <input type="text" id="newSupplier">
+                    </div>
+                    <div class="form-group form-full">
+                        <label>Qisqa tavsif (Max 350 belgi)</label>
+                        <textarea id="newShortDesc" class="form-input" maxlength="350"></textarea>
+                    </div>
+                    <div class="form-group form-full">
+                        <label>To'liq tavsif (Max 5000 belgi)</label>
+                        <textarea id="newFullDesc" class="form-input" maxlength="5000" style="min-height: 150px;"></textarea>
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="newName">Nomi</label>
-                    <input type="text" id="newName" placeholder="Masalan: Kemei KM-7108">
-                </div>
-                <div class="form-group">
-                    <label for="newPrice">Narxi (So'm)</label>
-                    <input type="text" id="newPrice" placeholder="Masalan: 150000">
-                </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="addSubmitBtn">Mahsulotni yaratish</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 20px;" id="addSubmitBtn">Ma'lumotlarni saqlash</button>
             </form>
         </div>
     </div>
 
     <script>
+        let allProducts = [];
+        let currentView = 'store';
+        let currentCategory = 'Barchasi';
+
         document.addEventListener('DOMContentLoaded', fetchProducts);
 
         function showToast(message, type = 'success') {
@@ -831,567 +939,350 @@
             }, 3000);
         }
 
-        function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showToast("ID ko'chirib olindi!");
-            });
-        }
-
-        function searchByPhoto(input) {
-            if (input.files && input.files[0]) {
-                const file = input.files[0];
-                // Fayl nomidan qidiruv so'zlarini ajratib olish (nuqta va formatni olib tashlash)
-                let term = file.name.split('.')[0];
-                // Belgilarni tozalash
-                term = term.replace(/[_-]/g, ' ');
-                
-                document.getElementById('searchInput').value = term;
-                filterProducts();
-                showToast(`Rasm nomi bo'yicha qidirilmoqda: ${term}`);
-                input.value = ''; // tozalash
-            }
-        }
-
-        let allProducts = [];
-
         async function fetchProducts() {
             const loader = document.getElementById('loader');
-            const grid = document.getElementById('products-grid');
-            
             try {
                 const response = await fetch('/api/products');
                 allProducts = await response.json();
-                
                 loader.style.display = 'none';
-
-                if (allProducts.length === 0) {
-                    grid.innerHTML = `<div class="empty-state" style="padding: 60px;">Xozircha mahsulotlar mavjud emas</div>`;
-                    return;
-                }
-
+                updateCategoryChips();
                 renderProducts(allProducts);
             } catch (error) {
-                loader.innerHTML = `<div style="color:red;">Xatolik: Tarmoqga ulanib bo'lmadi.</div>`;
+                loader.innerHTML = `<div style="color:red; text-align:center; padding:20px;">Xatolik yuz berdi.</div>`;
             }
         }
 
-        // ---------- Add Product Logic ----------
-        function openAddModal() {
-            document.getElementById('addModal').classList.add('show');
-            document.getElementById('newId').focus();
+        function updateCategoryChips() {
+            const container = document.getElementById('category-container');
+            const categories = ['Barchasi', ...new Set(allProducts.map(p => p.category || 'Boshqa'))];
+            container.innerHTML = categories.map(cat => `
+                <div class="cat-chip ${cat === currentCategory ? 'active' : ''}" onclick="filterByCategory('${cat}')">
+                    ${cat}
+                </div>
+            `).join('');
         }
 
-        function closeAddModal() {
-            document.getElementById('addModal').classList.remove('show');
-            document.getElementById('addProductForm').reset();
-        }
-
-        async function handleAddProduct(e) {
-            e.preventDefault();
-            const btn = document.getElementById('addSubmitBtn');
-            const newId = document.getElementById('newId').value.trim();
-            const newName = document.getElementById('newName').value.trim();
-            const newPrice = document.getElementById('newPrice').value.trim();
-
-            if (!newId) {
-                showToast("ID raqami majburiy!", "error");
-                return;
-            }
-
-            btn.textContent = 'Yaratilmoqda...';
-            btn.disabled = true;
-
-            try {
-                const res = await fetch('/api/add_product', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        id: newId, 
-                        name: newName || 'Nomsiz Mahsulot', 
-                        price: newPrice || 'Narx kiritilmagan' 
-                    })
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    showToast("Yangi mahsulot qo'shildi!");
-                    allProducts.push(data.product);
-                    // Rerender products
-                    renderProducts(allProducts);
-                    closeAddModal();
-                    // Scroll to bottom optionally
-                    window.scrollTo(0, document.body.scrollHeight);
-                } else {
-                    showToast(data.error || "Xatolik", "error");
-                }
-            } catch (err) {
-                showToast("Tarmoq xatosi", "error");
-            }
-            btn.textContent = 'Mahsulotni yaratish';
-            btn.disabled = false;
+        function filterByCategory(cat) {
+            currentCategory = cat;
+            updateCategoryChips();
+            filterProducts();
         }
 
         function filterProducts() {
             const query = document.getElementById('searchInput').value.toLowerCase();
-            const filtered = allProducts.filter(p => 
-                p.name.toLowerCase().includes(query) || p.id.toLowerCase().includes(query)
+            let filtered = allProducts;
+            if (currentCategory !== 'Barchasi') {
+                filtered = filtered.filter(p => p.category === currentCategory);
+            }
+            filtered = filtered.filter(p => 
+                p.name.toLowerCase().includes(query) || 
+                p.id.toLowerCase().includes(query) || 
+                (p.sku && p.sku.toLowerCase().includes(query))
             );
             renderProducts(filtered);
+        }
+
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('.nav-tab').forEach(t => {
+                t.classList.toggle('active', t.innerText.toLowerCase().includes(view === 'manage' ? 'boshqaruv' : 'do\'kon'));
+            });
+            document.getElementById('manage-actions').style.display = view === 'manage' ? 'flex' : 'none';
+            renderProducts(allProducts);
         }
 
         function renderProducts(products) {
             const grid = document.getElementById('products-grid');
             grid.innerHTML = '';
-            
-            products.forEach(product => {
-                if (product.id.toLowerCase() === 'id' || product.id === 'nan') return;
+            const isManage = currentView === 'manage';
 
+            products.forEach(product => {
                 const card = document.createElement('div');
                 card.className = 'product-card';
                 card.id = `product-${product.id}`;
                 
-                const nameDisplay = product.name !== 'nan' ? product.name : 'Nomsiz Mahsulot';
-
-                let galleryHtml = '';
-                if (product.local_images && product.local_images.length > 0) {
-                    galleryHtml = product.local_images.map(img => {
-                        const filename = img.split('/').pop();
-                        return `
-                            <div class="img-card" id="img-${product.id}-${filename}">
-                                <div style="position: absolute; top: 0; left: 0; z-index: 60; display: flex; gap: 4px; padding: 6px;">
-                                    <a href="https://www.google.com/search?q=${encodeURIComponent(nameDisplay)}&tbm=isch" target="_blank" class="google-search-btn" style="position: static;" title="Google Images (Matnli)">🔍</a>
-                                    <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(img.startsWith('http') ? img : window.location.origin + img)}" target="_blank" class="lens-search-btn" style="position: static;" title="Photo Search (Google Lens)">📷</a>
-                                </div>
-                                <a href="${img}" target="_blank">
-                                    <img src="${img}" alt="Rasm" loading="lazy">
-                                </a>
-                                <div class="img-overlay">
-                                    <button class="del-img-btn" onclick="deleteImage('${product.id}', '${filename}')" title="O'chirish">🗑️</button>
-                                </div>
+                const imgs = product.local_images || [];
+                const galleryHtml = imgs.length > 0 ? imgs.map(img => {
+                    const fname = img.split('/').pop();
+                    return `
+                        <div class="img-card" id="img-${product.id}-${fname}">
+                            <div style="position: absolute; top:0; left:0; z-index:60; display:flex; gap:4px; padding:6px;">
+                                <a href="https://www.google.com/search?q=${encodeURIComponent(product.name)}&tbm=isch" target="_blank" class="google-search-btn">🔍</a>
+                                <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(img)}" target="_blank" class="lens-search-btn">📷</a>
                             </div>
-                        `;
-                    }).join('');
-                } else {
-                    galleryHtml = `
-                        <div class="empty-state no-img-msg" id="empty-${product.id}">
-                            Hozircha rasmlar yuklanmagan <br><br>
-                            <a href="https://www.google.com/search?q=${encodeURIComponent(nameDisplay)}&tbm=isch" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:5px; text-decoration:none;">
-                                🔍 Google rasmlardan izlash
-                            </a>
-                        </div>`;
-                }
+                            <img src="${img}" alt="Rasm" loading="lazy">
+                            ${isManage ? `<div class="img-overlay"><button class="del-img-btn" onclick="deleteImage('${product.id}', '${fname}')">🗑️</button></div>` : ''}
+                        </div>
+                    `;
+                }).join('') : `<div class="empty-state" style="padding:20px; font-size:0.8rem;">Rasm yo'q</div>`;
 
                 card.innerHTML = `
                     <div class="product-header">
                         <div class="product-title-group">
-                            <h2 class="product-title" id="title-text-${product.id}">${nameDisplay}</h2>
-                            <input type="text" class="edit-input" id="title-input-${product.id}" value="${nameDisplay}">
-                            <button class="icon-btn" id="edit-btn-${product.id}" onclick="toggleEdit('${product.id}')" title="Nomni o'zgartirish">
-                                ✏️
-                            </button>
-                            <button class="btn btn-primary" id="save-btn-${product.id}" style="display:none;" onclick="saveName('${product.id}')">Saqlash</button>
-                        </div>
-                        
-                        <div class="product-actions" style="flex-wrap: wrap;">
-                            <div style="display: flex; align-items: center; gap: 5px;">
-                                <span class="badge" id="price-text-${product.id}" style="background: rgba(16, 185, 129, 0.1); color: var(--success); font-weight: 700; font-size: 1rem;">
-                                    💰 ${product.price || 'Narx kiritilmagan'}
-                                </span>
-                                <input type="text" class="price-input" id="price-input-${product.id}" value="${product.price || ''}">
-                                <button class="icon-btn" id="edit-price-btn-${product.id}" onclick="toggleEditPrice('${product.id}')" title="Narxni o'zgartirish" style="padding: 4px; font-size: 1rem;">
-                                    ✏️
-                                </button>
-                                <button class="btn btn-primary" id="save-price-btn-${product.id}" style="display:none; padding: 4px 10px; font-size: 0.8rem;" onclick="savePrice('${product.id}')">Saqlash</button>
+                            <div>
+                                <h2 class="product-title">${product.name}</h2>
+                                <div class="product-meta-badges">
+                                    <span class="meta-badge">📁 ${product.category}</span>
+                                    <span class="meta-badge">🏷️ ${product.brand || 'Brendsiz'}</span>
+                                    <span class="meta-badge">🆔 ${product.id}</span>
+                                    ${product.sku ? `<span class="meta-badge">SKU: ${product.sku}</span>` : ''}
+                                </div>
                             </div>
-                            <span class="badge" onclick="copyToClipboard('${product.id}')" style="cursor: pointer;" title="ID nusxalash">
-                                🆔 ${product.id} <span style="font-size: 0.7rem; opacity: 0.6;">📋</span>
+                        </div>
+                        <div class="product-actions">
+                            <span class="badge" style="font-size: 1.1rem; background: rgba(16, 185, 129, 0.1); color: var(--success); font-weight:800;">
+                                ${Number(product.price).toLocaleString()} so'm
                             </span>
-                            <button class="btn btn-danger" onclick="deleteProduct('${product.id}')" title="To'liq o'chirish">
-                                🗑️ O'chirish
-                            </button>
+                            ${isManage ? `
+                                <button class="btn btn-primary" onclick="editProductFull('${product.id}')">✏️</button>
+                                <button class="btn btn-danger" onclick="deleteProduct('${product.id}')">🗑️</button>
+                            ` : `
+                                <button class="btn btn-primary" onclick="viewDetails('${product.id}')">ℹ️ Batafsil</button>
+                            `}
                         </div>
                     </div>
-                    
-                    <div class="content-body">
-                        <div class="gallery-wrap">
-                            <h3 id="gallery-title-${product.id}">Mavjud rasmlar (<span class="img-count">${product.local_images.length}</span>)</h3>
-                            <div class="gallery-container">
-                                <button class="scroll-btn scroll-left" onclick="scrollGallery('${product.id}', -1)" title="Orqaga">&#10094;</button>
-                                <div class="gallery-grid" id="gallery-${product.id}">
-                                    ${galleryHtml}
-                                </div>
-                                <button class="scroll-btn scroll-right" onclick="scrollGallery('${product.id}', 1)" title="Oldinga">&#10095;</button>
+                    <div class="product-description" style="font-size:0.9rem; color:var(--text-muted); margin-top:10px;">
+                        ${product.description_short || 'Tavsif yo\'q'}
+                    </div>
+                    <div class="content-body" style="grid-template-columns: ${isManage ? 'minmax(0, 1fr) 250px' : '1fr'}; margin-top:15px;">
+                        <div class="gallery-container">
+                            <button class="scroll-btn scroll-left" onclick="scrollGallery('${product.id}', -1)">&#10094;</button>
+                            <div class="gallery-grid" id="gallery-${product.id}">
+                                ${galleryHtml}
                             </div>
+                            <button class="scroll-btn scroll-right" onclick="scrollGallery('${product.id}', 1)">&#10095;</button>
                         </div>
-                        
+                        ${isManage ? `
                         <div class="upload-section" id="upload-sec-${product.id}">
-                            <div class="uploading-overlay">Yuklanmoqda...</div>
-                            <h3>Yangi rasm qo'shish</h3>
-                            
+                            <div class="uploading-overlay">...</div>
                             <form onsubmit="handleFileUpload(event, '${product.id}')">
                                 <div class="file-drop">
-                                    <input type="file" class="file-input" accept="image/*" onchange="this.form.dispatchEvent(new Event('submit'))">
-                                    <div class="file-drop-text">
-                                        <span>📁</span>
-                                        Faylni tanlang yoki shu yerga tashlang
-                                    </div>
+                                    <input type="file" class="file-input" onchange="this.form.dispatchEvent(new Event('submit'))">
+                                    <div class="file-drop-text" style="font-size:0.75rem;">📁 Yuklash</div>
                                 </div>
                             </form>
-                            
-                            <div class="divider">yoki internetdan</div>
-                            
-                            <form class="url-form" onsubmit="handleUrlUpload(event, '${product.id}')">
-                                <input type="url" name="url" class="url-input" placeholder="http://... (Havola)" required>
-                                <button type="submit" class="btn btn-primary" style="width:100%">Yuklab olish</button>
+                            <form class="url-form" onsubmit="handleUrlUpload(event, '${product.id}')" style="margin-top:8px;">
+                                <input type="url" name="url" class="url-input" placeholder="URL" style="font-size:0.75rem; padding:5px;">
+                                <button type="submit" class="btn btn-primary" style="padding:4px 8px;">OK</button>
                             </form>
-                        </div>
+                        </div>` : ''}
                     </div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        // ---------- Actions ----------
-
-        function scrollGallery(id, direction) {
-            const grid = document.getElementById(`gallery-${id}`);
-            if (grid) {
-                // Yangi o'lchamga qarab scroll qilish (225px width + 15px gap)
-                grid.scrollBy({ left: direction * 480, behavior: 'smooth' });
-            }
+        // --- CRUD ---
+        function openAddModal() { document.getElementById('addModal').classList.add('show'); }
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('show');
+            document.getElementById('addProductForm').reset();
+            document.getElementById('newId').readOnly = false;
         }
 
-        function toggleEditPrice(id) {
-            const priceText = document.getElementById(`price-text-${id}`);
-            const priceInput = document.getElementById(`price-input-${id}`);
-            const editBtn = document.getElementById(`edit-price-btn-${id}`);
-            const saveBtn = document.getElementById(`save-price-btn-${id}`);
-
-            if (priceText.style.display !== 'none') {
-                priceText.style.display = 'none';
-                priceInput.style.display = 'block';
-                editBtn.style.display = 'none';
-                saveBtn.style.display = 'inline-flex';
-                priceInput.focus();
-            } else {
-                priceText.style.display = 'inline-flex';
-                priceInput.style.display = 'none';
-                editBtn.style.display = 'inline-flex';
-                saveBtn.style.display = 'none';
-            }
+        function editProductFull(id) {
+            const p = allProducts.find(x => x.id === id);
+            if (!p) return;
+            document.getElementById('modalTitle').textContent = 'Tahrirlash: ' + p.id;
+            document.getElementById('newId').value = p.id;
+            document.getElementById('newId').readOnly = true;
+            document.getElementById('newName').value = p.name;
+            document.getElementById('newModel').value = p.model || '';
+            document.getElementById('newBrand').value = p.brand || '';
+            document.getElementById('newCategory').value = p.category || '';
+            document.getElementById('newPrice').value = p.price || '';
+            document.getElementById('newSku').value = p.sku || '';
+            document.getElementById('newGroupSku').value = p.group_sku || '';
+            document.getElementById('newColor').value = p.color || '';
+            document.getElementById('newSupplier').value = p.supplier || '';
+            document.getElementById('newShortDesc').value = p.description_short || '';
+            document.getElementById('newFullDesc').value = p.description_full || '';
+            openAddModal();
         }
 
-        async function savePrice(id) {
-            const saveBtn = document.getElementById(`save-price-btn-${id}`);
-            const priceInput = document.getElementById(`price-input-${id}`);
-            const priceText = document.getElementById(`price-text-${id}`);
-            
-            const newPrice = priceInput.value.trim();
-
-            saveBtn.textContent = '...';
-            saveBtn.disabled = true;
-
+        async function handleAddProduct(e) {
+            e.preventDefault();
+            const isEdit = document.getElementById('newId').readOnly;
+            const payload = {
+                id: document.getElementById('newId').value,
+                name: document.getElementById('newName').value,
+                model: document.getElementById('newModel').value,
+                brand: document.getElementById('newBrand').value,
+                category: document.getElementById('newCategory').value,
+                price: document.getElementById('newPrice').value,
+                sku: document.getElementById('newSku').value,
+                group_sku: document.getElementById('newGroupSku').value,
+                color: document.getElementById('newColor').value,
+                supplier: document.getElementById('newSupplier').value,
+                description_short: document.getElementById('newShortDesc').value,
+                description_full: document.getElementById('newFullDesc').value
+            };
             try {
-                const res = await fetch('/api/update_product_price', {
+                const res = await fetch(isEdit ? '/api/update_product_details' : '/api/add_product', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, price: newPrice || 'Narx kiritilmagan' })
+                    body: JSON.stringify(payload)
                 });
-
                 const data = await res.json();
                 if (data.success) {
-                    priceText.innerHTML = `💰 ${newPrice || 'Narx kiritilmagan'}`;
-                    toggleEditPrice(id);
-                    showToast("Narx saqlandi!");
-                    const prod = allProducts.find(p => p.id === id);
-                    if(prod) prod.price = newPrice || 'Narx kiritilmagan';
-                } else {
-                    showToast(data.error || "Xatolik", "error");
-                }
-            } catch (err) {
-                showToast("Tarmoq xatosi", "error");
-            }
-            saveBtn.textContent = 'Saqlash';
-            saveBtn.disabled = false;
-        }
-
-        function toggleEdit(id) {
-            const titleText = document.getElementById(`title-text-${id}`);
-            const titleInput = document.getElementById(`title-input-${id}`);
-            const editBtn = document.getElementById(`edit-btn-${id}`);
-            const saveBtn = document.getElementById(`save-btn-${id}`);
-
-            if (titleText.style.display !== 'none') {
-                titleText.style.display = 'none';
-                titleInput.style.display = 'block';
-                editBtn.style.display = 'none';
-                saveBtn.style.display = 'inline-flex';
-                titleInput.focus();
-            } else {
-                titleText.style.display = 'block';
-                titleInput.style.display = 'none';
-                editBtn.style.display = 'inline-flex';
-                saveBtn.style.display = 'none';
-                titleInput.value = titleText.textContent;
-            }
-        }
-
-        async function saveName(id) {
-            const titleInput = document.getElementById(`title-input-${id}`);
-            const saveBtn = document.getElementById(`save-btn-${id}`);
-            
-            const newName = titleInput.value.trim();
-            if (!newName) {
-                showToast("Nom bo'sh bo'lishi mumkin emas", "error");
-                return;
-            }
-
-            saveBtn.textContent = '...';
-            saveBtn.disabled = true;
-
-            try {
-                const res = await fetch('/api/update_product_name', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, name: newName })
-                });
-
-                const data = await res.json();
-                if (data.success) {
-                    document.getElementById(`title-text-${id}`).textContent = newName;
-                    toggleEdit(id);
-                    showToast("Nom saqlandi!");
-                    // Update main array so search works with new name
-                    const prod = allProducts.find(p => p.id === id);
-                    if(prod) prod.name = newName;
-                } else {
-                    showToast(data.error || "Xatolik", "error");
-                }
-            } catch (err) {
-                showToast("Tarmoq xatosi", "error");
-            }
-            saveBtn.textContent = 'Saqlash';
-            saveBtn.disabled = false;
+                    showToast(isEdit ? "Yangilandi" : "Qo'shildi");
+                    fetchProducts();
+                    closeAddModal();
+                } else showToast(data.error, 'error');
+            } catch (err) { showToast("Xato!", 'error'); }
         }
 
         async function deleteProduct(id) {
-            if (!confirm("Barcha ma'lumotlar, shu jumladan rasmlar ham o'chib ketadi. Ishonchingiz komilmi?")) return;
-
+            if (!confirm("O'chirilsinmi?")) return;
             try {
                 const res = await fetch('/api/delete_product', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id})
                 });
                 const data = await res.json();
                 if (data.success) {
-                    document.getElementById(`product-${id}`).remove();
-                    showToast("Mahsulot to'liq o'chirildi");
                     allProducts = allProducts.filter(p => p.id !== id);
-                } else {
-                    showToast(data.error || "O'chirishda xatolik", "error");
+                    renderProducts(allProducts);
+                    updateCategoryChips();
+                    showToast("O'chirildi");
                 }
-            } catch (err) {
-                showToast("Tarmoq xatosi", "error");
-            }
+            } catch (err) { showToast("Xato", 'error'); }
+        }
+
+        // --- Media ---
+        function scrollGallery(id, dir) {
+            const g = document.getElementById(`gallery-${id}`);
+            if (g) g.scrollBy({left: dir * 400, behavior: 'smooth'});
         }
 
         async function deleteImage(id, filename) {
-            if (!confirm("Rasmni o'chirasizmi?")) return;
-
+            if (!confirm("Rasm o'chirilsinmi?")) return;
             try {
                 const res = await fetch('/api/delete_image', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, filename })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({id, filename})
                 });
-                const data = await res.json();
-                if (data.success) {
+                if ((await res.json()).success) {
                     document.getElementById(`img-${id}-${filename}`).remove();
-                    updateImgCount(id, -1);
-                    showToast("Rasm o'chirildi");
-                } else {
-                    showToast(data.error || "Xato", "error");
+                    showToast("O'chirildi");
                 }
-            } catch (err) {
-                showToast("Tarmoq", "error");
-            }
+            } catch (err) { showToast("Xato", 'error'); }
         }
 
         async function handleFileUpload(e, id) {
             e.preventDefault();
             const input = e.target.querySelector('input[type="file"]');
-            if (!input.files.length) return;
-
-            const file = input.files[0];
+            if (!input.files[0]) return;
+            const fd = new FormData();
+            fd.append('id', id);
+            fd.append('file', input.files[0]);
             const sec = document.getElementById(`upload-sec-${id}`);
             sec.classList.add('loading');
-
             try {
-                // Rasmni siqish (Max 2MB, 1600px)
-                const compressedFile = await compressImage(file, 0.8, 1600);
-                
-                const fd = new FormData();
-                fd.append('id', id);
-                fd.append('file', compressedFile, file.name);
-
-                await uploadData(id, fd);
-            } catch (err) {
-                console.error(err);
-                showToast("Rasmni tayyorlashda xatolik", "error");
-                sec.classList.remove('loading');
-            }
-            input.value = '';
-        }
-
-        function compressImage(file, quality, maxWidth) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = event => {
-                    const img = new Image();
-                    img.src = event.target.result;
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-
-                        if (width > maxWidth) {
-                            height = Math.round((height * maxWidth) / width);
-                            width = maxWidth;
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        canvas.toBlob(blob => {
-                            resolve(new File([blob], file.name, {
-                                type: 'image/jpeg',
-                                lastModified: Date.now()
-                            }));
-                        }, 'image/jpeg', quality);
-                    };
-                    img.onerror = reject;
-                };
-                reader.onerror = reject;
-            });
+                const res = await fetch('/api/upload', {method: 'POST', body: fd});
+                if ((await res.json()).success) {
+                    showToast("Yuklandi");
+                    fetchProducts();
+                }
+            } finally { sec.classList.remove('loading'); input.value = ''; }
         }
 
         async function handleUrlUpload(e, id) {
             e.preventDefault();
             const input = e.target.querySelector('input[type="url"]');
-            
+            if (!input.value) return;
             const fd = new FormData();
             fd.append('id', id);
             fd.append('url', input.value);
-
-            await uploadData(id, fd);
-            input.value = '';
-        }
-
-        async function uploadData(id, formData) {
             const sec = document.getElementById(`upload-sec-${id}`);
             sec.classList.add('loading');
-
             try {
-                const res = await fetch('/api/upload', {
-                    method: 'POST',
-                    body: formData
-                });
-                const data = await res.json();
-                if (data.success) {
-                    addImageToUi(id, data.url);
-                    showToast("Rasm yuklandi!");
-                } else {
-                    showToast(data.error || "Xato", "error");
+                const res = await fetch('/api/upload', {method: 'POST', body: fd});
+                if ((await res.json()).success) {
+                    showToast("Yuklandi");
+                    fetchProducts();
                 }
-            } catch (err) {
-                showToast("Tarmoq xatosi", "error");
-            }
-            sec.classList.remove('loading');
+            } finally { sec.classList.remove('loading'); input.value = ''; }
         }
 
-        function addImageToUi(id, url) {
-            const grid = document.getElementById(`gallery-${id}`);
+        // --- Other ---
+        function viewDetails(id) {
+            const p = allProducts.find(x => x.id === id);
+            if (!p) return;
             
-            // Remove empty state if exists
-            const emptyState = document.getElementById(`empty-${id}`);
-            if (emptyState) emptyState.remove();
-
-            const product = allProducts.find(p => p.id === id);
-            const nameDisplay = product ? (product.name !== 'nan' ? product.name : 'Nomsiz Mahsulot') : 'Mahsulot';
-
-            const filename = url.split('/').pop();
-            const div = document.createElement('div');
-            div.className = 'img-card';
-            div.id = `img-${id}-${filename}`;
-            div.innerHTML = `
-                <div style="position: absolute; top: 0; left: 0; z-index: 60; display: flex; gap: 4px; padding: 6px;">
-                    <a href="https://www.google.com/search?q=${encodeURIComponent(nameDisplay)}&tbm=isch" target="_blank" class="google-search-btn" style="position: static;" title="Google Images">🔍</a>
-                    <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(url.startsWith('http') ? url : window.location.origin + url)}" target="_blank" class="lens-search-btn" style="position: static;" title="Photo Search">📷</a>
+            const modal = document.getElementById('detailsModal');
+            const content = document.getElementById('detailsContent');
+            
+            document.getElementById('detailsTitle').textContent = p.name;
+            
+            content.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px;">
+                    <div style="padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                        <span style="display:block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">ID RAQAMI</span>
+                        <strong style="font-size: 1.1rem;">${p.id}</strong>
+                    </div>
+                    <div style="padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                        <span style="display:block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">KATEGORIYA</span>
+                        <strong style="font-size: 1.1rem;">${p.category || '---'}</strong>
+                    </div>
+                    <div style="padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                        <span style="display:block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">BREND / MODEL</span>
+                        <strong style="font-size: 1.1rem;">${p.brand || ''} ${p.model || ''}</strong>
+                    </div>
+                    <div style="padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px;">
+                        <span style="display:block; font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">SKU KOD</span>
+                        <strong style="font-size: 1.1rem;">${p.sku || '---'}</strong>
+                    </div>
                 </div>
-                <a href="${url}" target="_blank">
-                    <img src="${url}" alt="Rasm">
-                </a>
-                <div class="img-overlay">
-                    <button class="del-img-btn" onclick="deleteImage('${id}', '${filename}')" title="O'chirish">🗑️</button>
+
+                <div style="margin-bottom: 24px;">
+                    <label style="color: var(--primary); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 8px; text-transform: uppercase;">Qisqa Tavsif:</label>
+                    <div style="padding: 15px; background: var(--border); border-radius: 8px; line-height: 1.6;">
+                        ${p.description_short || 'Tavsif mavjud emas.'}
+                    </div>
+                </div>
+
+                <div>
+                    <label style="color: var(--primary); font-weight: bold; font-size: 0.85rem; display: block; margin-bottom: 8px; text-transform: uppercase;">To'liq Tavsif:</label>
+                    <div style="padding: 15px; background: var(--border); border-radius: 8px; line-height: 1.6; max-height: 300px; overflow-y: auto;">
+                        ${p.description_full || 'To\'liq tavsif kiritilmagan.'}
+                    </div>
+                </div>
+
+                <div style="margin-top: 24px; text-align: right;">
+                    <span style="font-size: 1.5rem; color: var(--success); font-weight: 800;">
+                        ${Number(p.price).toLocaleString()} so'm
+                    </span>
                 </div>
             `;
-            grid.insertBefore(div, grid.firstChild);
-            updateImgCount(id, 1);
+            
+            modal.classList.add('show');
         }
 
-        function updateImgCount(id, change) {
-            const card = document.getElementById(`product-${id}`);
-            if (!card) return;
-            const span = card.querySelector('.img-count');
-            if (span) {
-                let current = parseInt(span.textContent) + change;
-                span.textContent = current;
-                
-                if (current === 0) {
-                    const product = allProducts.find(p => p.id === id);
-                    const nameDisplay = product ? (product.name !== 'nan' ? product.name : 'Nomsiz Mahsulot') : 'Mahsulot';
-                    
-                    const grid = document.getElementById(`gallery-${id}`);
-                    grid.innerHTML = `
-                        <div class="empty-state no-img-msg" id="empty-${id}">
-                            Hozircha rasmlar yuklanmagan <br><br>
-                            <a href="https://www.google.com/search?q=${encodeURIComponent(nameDisplay)}&tbm=isch" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:5px; text-decoration:none;">
-                                🔍 Google rasmlardan izlash
-                            </a>
-                        </div>`;
-                }
-            }
+        function closeDetailsModal() {
+            document.getElementById('detailsModal').classList.remove('show');
         }
-        async function downloadExcel() {
-            showToast("Excel eksport tayyorlanmoqda...");
+
+        function downloadExcel() {
+            showToast("Tayyorlanmoqda...");
             window.location.href = '/api/download_excel';
         }
 
         async function handleExcelImport(input) {
-            if (!input.files || !input.files[0]) return;
-
-            const file = input.files[0];
-            const formData = new FormData();
-            formData.append('file', file);
-
-            showToast("Excel import boshlanmoqda... (rasmlar yuklanadi, biroz sabr)", "success");
-
+            if (!input.files[0]) return;
+            const fd = new FormData();
+            fd.append('file', input.files[0]);
+            showToast("Import boshlandi...");
             try {
-                const res  = await fetch('/api/import_excel', { method: 'POST', body: formData });
+                const res = await fetch('/api/import_excel', {method: 'POST', body: fd});
                 const data = await res.json();
                 if (data.success) {
-                    showToast(`✅ Import tugadi! ${data.imported} ta mahsulot qo'shildi/yangilandi. (${data.skipped} ta o'tkazib yuborildi)`);
+                    showToast(`Tayyor: ${data.imported} ta qo'shildi`);
                     fetchProducts();
-                } else {
-                    showToast(data.error || "Import xatolik", "error");
-                }
-            } catch (err) {
-                showToast("Tarmoq xatosi", "error");
-            }
+                } else showToast(data.error, 'error');
+            } catch (err) { showToast("Xato", 'error'); }
             input.value = '';
         }
     </script>

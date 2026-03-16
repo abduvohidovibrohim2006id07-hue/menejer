@@ -162,10 +162,19 @@ def get_products():
             imgs    = sorted([f"{PUBLIC_ENDPOINT}/{BUCKET_NAME}/{k}"
                               for k in all_keys if k.startswith(prefix)])
             products.append({
-                'id':           item_id,
-                'name':         p.get('name', 'Nomsiz'),
-                'price':        p.get('price', 'Narx kiritilmagan'),
-                'local_images': imgs
+                'id':                item_id,
+                'name':              p.get('name', 'Nomsiz'),
+                'price':             p.get('price', '0'),
+                'model':             p.get('model', ''),
+                'brand':             p.get('brand', ''),
+                'supplier':          p.get('supplier', ''),
+                'category':          p.get('category', 'Boshqa'),
+                'sku':               p.get('sku', ''),
+                'group_sku':         p.get('group_sku', ''),
+                'color':             p.get('color', ''),
+                'description_short': p.get('description_short', ''),
+                'description_full':  p.get('description_full', ''),
+                'local_images':      imgs
             })
         return jsonify(products)
     except Exception as e:
@@ -179,7 +188,24 @@ def add_product():
         data    = request.json
         item_id = str(data.get('id', '')).strip()
         name    = data.get('name', 'Nomsiz Mahsulot')
-        price   = data.get('price', 'Narx kiritilmagan')
+        price   = data.get('price', '0')
+        
+        # Yangi maydonlar (default bo'sh)
+        fields = {
+            'id':                item_id,
+            'name':              name,
+            'price':             price,
+            'model':             data.get('model', ''),
+            'brand':             data.get('brand', ''),
+            'supplier':          data.get('supplier', ''),
+            'category':          data.get('category', 'Boshqa'),
+            'sku':               data.get('sku', ''),
+            'group_sku':         data.get('group_sku', ''),
+            'color':             data.get('color', ''),
+            'description_short': data.get('description_short', '')[:350],
+            'description_full':  data.get('description_full', '')[:5000],
+            'created_at':        firestore.SERVER_TIMESTAMP
+        }
 
         if not item_id:
             return jsonify({'error': 'ID kiritish majburiy'}), 400
@@ -189,11 +215,13 @@ def add_product():
         if doc_ref.get().exists:
             return jsonify({'error': 'Bu ID allaqachon mavjud'}), 400
 
-        doc_ref.set({'id': item_id, 'name': name, 'price': price,
-                     'created_at': firestore.SERVER_TIMESTAMP})
-        return jsonify({'success': True, 'product': {
-            'id': item_id, 'name': name, 'price': price, 'local_images': []
-        }})
+        doc_ref.set(fields)
+        
+        fields['local_images'] = []
+        # SERVER_TIMESTAMP JSON'ga o'girilmaydi, shuning uchun o'chiramiz/yoki matn qilamiz
+        if 'created_at' in fields: del fields['created_at']
+        
+        return jsonify({'success': True, 'product': fields})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -221,6 +249,34 @@ def update_product_price():
             return jsonify({'error': 'ID yoki narx yo\'q'}), 400
         db = get_db()
         db.collection('products').document(item_id).update({'price': price})
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/update_product_details', methods=['POST'])
+def update_product_details():
+    try:
+        data    = request.json
+        item_id = str(data.get('id', ''))
+        if not item_id:
+            return jsonify({'error': 'ID yo\'q'}), 400
+        
+        # Faqat mavjud maydonlarni yangilash
+        fields = ['name', 'price', 'model', 'brand', 'supplier', 'category', 
+                  'sku', 'group_sku', 'color', 'description_short', 'description_full']
+        update_data = {}
+        for f in fields:
+            if f in data:
+                val = data[f]
+                if f == 'description_short': val = str(val)[:350]
+                if f == 'description_full':  val = str(val)[:5000]
+                update_data[f] = val
+        
+        if update_data:
+            update_data['updated_at'] = firestore.SERVER_TIMESTAMP
+            db = get_db()
+            db.collection('products').document(item_id).update(update_data)
+            
         return jsonify({'success': True})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -319,7 +375,7 @@ def delete_image():
 def download_excel():
     """
     Firestore dagi barcha mahsulotlarni Excel formatida yuklab beradi.
-    Ustunlar: A=ID  B=Nom  C=(bo'sh)  D=Narx
+    Ustunlar: ID, Nom, Model, Brend, Yetkazib beruvchi, Kategoriya, SKU, GroupSKU, Rang, Narx, Qisqa Tavsif, To'liq Tavsif
     """
     try:
         db   = get_db()
@@ -328,15 +384,29 @@ def download_excel():
         rows = []
         for doc in docs:
             p = doc.to_dict()
-            rows.append([p.get('id', ''), p.get('name', ''), '', p.get('price', '')])
+            rows.append([
+                p.get('id', ''), 
+                p.get('name', ''), 
+                p.get('model', ''),
+                p.get('brand', ''),
+                p.get('supplier', ''),
+                p.get('category', ''),
+                p.get('sku', ''),
+                p.get('group_sku', ''),
+                p.get('color', ''),
+                p.get('price', ''),
+                p.get('description_short', ''),
+                p.get('description_full', '')
+            ])
 
-        df  = pd.DataFrame(rows, columns=['ID', 'Nom', '', 'Narx'])
+        cols = ['ID', 'Nomi', 'Model', 'Brend', 'Yetkazib beruvchi', 'Kategoriya', 'SKU', 'Group SKU', 'Rang', 'Narx', 'Qisqa Tavsif', 'To\'liq Tavsif']
+        df  = pd.DataFrame(rows, columns=cols)
         buf = io.BytesIO()
         with pd.ExcelWriter(buf, engine='openpyxl') as writer:
             df.to_excel(writer, index=False, sheet_name='Mahsulotlar')
         buf.seek(0)
         return send_file(buf, as_attachment=True,
-                         download_name='mahsulotlar.xlsx',
+                         download_name='mahsulotlar_baza.xlsx',
                          mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     except Exception as e:
         return jsonify({'error': str(e)}), 500
@@ -345,13 +415,11 @@ def download_excel():
 @app.route('/api/import_excel', methods=['POST'])
 def import_excel():
     """
-    Excel fayldan mahsulotlarni import qiladi:
-      - A ustun (0): ID
-      - B ustun (1): Nom
-      - D ustun (3): Narx
-      - F..O ustun (5..14): Rasm URL'lari → Yandex S3 ga yuklanadi
-
-    Mavjud mahsulotlar yangilanadi (merge=True), yangilari qo'shiladi.
+    Excel fayldan mahsulotlarni import qiladi.
+    Ustun tartibi (index):
+      0: ID, 1: Nomi, 2: Model, 3: Brend, 4: Yetkazib beruvchi, 5: Kategoriya, 
+      6: SKU, 7: Group SKU, 8: Rang, 9: Narx, 10: Qisqa Tavsif, 11: To'liq Tavsif,
+      12..21: Rasm URL'lari
     """
     try:
         if 'file' not in request.files:
@@ -360,7 +428,8 @@ def import_excel():
         if not file.filename:
             return jsonify({'error': 'Fayl nomi bo\'sh'}), 400
 
-        df = pd.read_excel(file, header=None)
+        # header=0 - birinchi qator ustun nomlari deb hisoblaydi
+        df = pd.read_excel(file)
 
         db    = get_db()
         batch = db.batch()
@@ -371,54 +440,53 @@ def import_excel():
 
         for idx, row in df.iterrows():
             try:
-                # ID
-                raw_id  = str(row.iloc[0]).strip() if len(row) > 0 else ''
-                item_id = raw_id.split('.')[0]
+                # 0: ID
+                item_id = str(row.iloc[0]).strip().split('.')[0]
                 if not item_id or item_id.lower() in ('nan', 'id', ''):
                     skipped += 1
                     continue
 
-                # Nom
-                name = str(row.iloc[1]).strip() if len(row) > 1 else 'Nomsiz'
-                if name.lower() == 'nan':
-                    name = 'Nomsiz'
+                # Maydonlarni yig'ish (xatolikni oldini olish uchun index tekshiruvi bilan)
+                def get_val(i, default=''):
+                    if i < len(row):
+                        v = str(row.iloc[i]).strip()
+                        return '' if v.lower() == 'nan' else v
+                    return default
 
-                # Narx (D ustun = index 3)
-                try:
-                    price = str(row.iloc[3]).strip()
-                    if price.lower() == 'nan':
-                        price = 'Narx kiritilmagan'
-                except:
-                    price = 'Narx kiritilmagan'
+                data = {
+                    'id':                item_id,
+                    'name':              get_val(1, 'Nomsiz'),
+                    'model':             get_val(2),
+                    'brand':             get_val(3),
+                    'supplier':          get_val(4),
+                    'category':          get_val(5, 'Boshqa'),
+                    'sku':               get_val(6),
+                    'group_sku':         get_val(7),
+                    'color':             get_val(8),
+                    'price':             get_val(9, '0'),
+                    'description_short': get_val(10)[:350],
+                    'description_full':  get_val(11)[:5000],
+                    'updated_at':        firestore.SERVER_TIMESTAMP
+                }
 
-                # Firestore ga yozish
                 doc_ref = db.collection('products').document(item_id)
-                batch.set(doc_ref, {
-                    'id':         item_id,
-                    'name':       name,
-                    'price':      price,
-                    'updated_at': firestore.SERVER_TIMESTAMP
-                }, merge=True)
+                batch.set(doc_ref, data, merge=True)
                 
                 count   += 1
                 imported += 1
 
-                # Rasm URL'lari (F..O)
-                for img_idx, col_i in enumerate(range(5, 15)):
-                    try:
-                        if len(row) > col_i:
-                            img_url = str(row.iloc[col_i]).strip()
-                            if img_url and img_url.lower() != 'nan':
-                                upload_image_from_url(img_url, item_id, img_idx + 1)
-                    except:
-                        continue
+                # Rasm URL'lari (12-ustundan boshlab)
+                for img_idx, col_i in enumerate(range(12, 22)):
+                    if col_i < len(row):
+                        img_url = str(row.iloc[col_i]).strip()
+                        if img_url and img_url.lower() != 'nan':
+                            upload_image_from_url(img_url, item_id, img_idx + 1)
 
-                if count % 200 == 0:
+                if count % 100 == 0:
                     batch.commit()
                     batch = db.batch()
             except Exception as row_err:
-                print(f"Row {idx} error: {row_err}")
-                errors.append(str(row_err))
+                errors.append(f"Qator {idx}: {str(row_err)}")
                 skipped += 1
 
         batch.commit()
