@@ -1621,19 +1621,39 @@
             
             try {
                 if (url.includes('.m3u8')) {
-                    showToast("Video brauzerda yig'ilmoqda (bu vaqt olishi mumkin)...", 'info');
+                    showToast("Video brauzerda qayta ishlanmoqda (bu vaqt olishi mumkin)...", 'info');
                     
                     if (!ffmpeg.isLoaded()) await ffmpeg.load();
+
+                    // Progressni kuzatish
+                    ffmpeg.setProgress(({ ratio }) => {
+                        if (ratio > 0) {
+                            showToast(`Yig'ilmoqda: ${Math.round(ratio * 100)}%`, 'info');
+                        }
+                    });
+
+                    // 1. Tashqi faylni yuklab olishga urinish
+                    try {
+                        const fileData = await fetchFile(url);
+                        ffmpeg.FS('writeFile', 'input.m3u8', fileData);
+                    } catch (fErr) {
+                        throw new Error("Video manbasi (CORS) ruxsat bermadi. Iltimos, videoni avval kompyuteringizga yuklab oling.");
+                    }
                     
-                    // FFmpeg bilan m3u8 dan mp4 yaratish
-                    // Eslatma: Bu server CORS ruxsat bergan bo'lsagina ishlaydi
-                    ffmpeg.FS('writeFile', 'input.m3u8', await fetchFile(url));
+                    // 2. FFmpeg ni ishga tushirish
+                    // Eslatma: FFmpeg.wasm m3u8 ichidagi tashqi bo'laklarni brauzer cheklovi tufayli yuklab ololmasligi mumkin
                     await ffmpeg.run('-i', 'input.m3u8', '-c', 'copy', 'output.mp4');
-                    const data = ffmpeg.FS('readFile', 'output.mp4');
                     
+                    // 3. Fayl yaratilganini tekshirish
+                    const list = ffmpeg.FS('readdir', '/');
+                    if (!list.includes('output.mp4')) {
+                        throw new Error("Videoni yig'ib bo'lmadi. Havola formati murakkab yoki ruxsat yo'q.");
+                    }
+
+                    const data = ffmpeg.FS('readFile', 'output.mp4');
                     const file = new File([data.buffer], `video_${Date.now()}.mp4`, { type: 'video/mp4' });
                     
-                    // Presigned URL orqali S3 ga yuklash
+                    // S3 ga yuklash
                     const resUrl = await fetch('/api/get_presigned_url', {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
@@ -1647,25 +1667,33 @@
                         headers: { 'Content-Type': file.type }
                     });
                     
-                    showToast("Video muvaffaqiyatli yig'ildi va yuklandi!");
+                    showToast("Video muvaffaqiyatli yuklandi! ✨");
                     fetchProducts();
                 } else {
-                    // Oddiy URL yuklash (rasmlar yoki to'g'ridan-to'g'ri videolar uchun backend orqali)
+                    // Oddiy havola (rasm yoki tayyor video)
                     const fd = new FormData();
                     fd.append('id', id);
                     fd.append('url', url);
                     const res = await fetch('/api/upload', {method: 'POST', body: fd});
-                    if ((await res.json()).success) {
+                    const resData = await res.json();
+                    if (resData.success) {
                         showToast("Yuklandi");
                         fetchProducts();
+                    } else {
+                        throw new Error(resData.error || "Yuklashda xatolik");
                     }
                 }
             } catch (err) {
-                console.error(err);
-                showToast("URL orqali yuklashda xatolik. Faylni o'zingiz yuklab ko'ring.", 'error');
+                console.error("Upload error:", err);
+                showToast(err.message || "Xatolik yuz berdi", 'error');
             } finally {
                 sec.classList.remove('loading');
                 input.value = '';
+                // Xotirani tozalash
+                try { 
+                    ffmpeg.FS('unlink', 'input.m3u8'); 
+                    ffmpeg.FS('unlink', 'output.mp4'); 
+                } catch(e){}
             }
         }
 
