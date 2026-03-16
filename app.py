@@ -18,6 +18,7 @@ load_dotenv()
 
 app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024  # 200 MB limit
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
 # ── Firebase ──────────────────────────────────────────────────────────────────
 firebase_initialized = False
@@ -436,6 +437,88 @@ def bulk_delete():
         if not ids:
             return jsonify({'error': 'IDlar tanlanmagan'}), 400
         return perform_delete(ids)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# AI ENDPOINTS
+@app.route('/api/get_ai_settings', methods=['GET'])
+def get_ai_settings():
+    try:
+        db = get_db()
+        doc = db.collection('ai_settings').document('general').get()
+        if doc.exists:
+            return jsonify(doc.to_dict())
+        else:
+            # Default settings
+            defaults = {
+                'translate_uz_ru': {
+                    'model': 'llama-3.3-70b-versatile',
+                    'prompt': 'Translate the following product name from Uzbek to Russian. Return ONLY the translated text without quotes or explanations. Text: {{text}}'
+                },
+                'translate_ru_uz': {
+                    'model': 'llama-3.3-70b-versatile',
+                    'prompt': 'Translate the following product name from Russian to Uzbek. Return ONLY the translated text without quotes or explanations. Text: {{text}}'
+                }
+            }
+            db.collection('ai_settings').document('general').set(defaults)
+            return jsonify(defaults)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/update_ai_settings', methods=['POST'])
+def update_ai_settings():
+    try:
+        data = request.json
+        db = get_db()
+        db.collection('ai_settings').document('general').set(data, merge=True)
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/ai_call', methods=['POST'])
+def ai_call():
+    try:
+        if not GROQ_API_KEY:
+            return jsonify({'error': 'Groq API key topilmadi'}), 400
+        
+        data    = request.json
+        text    = data.get('text', '')
+        action  = data.get('action') # e.g. 'translate_uz_ru'
+        
+        if not text or not action:
+            return jsonify({'error': 'Tekst yoki amal kiritilmadi'}), 400
+
+        db = get_db()
+        settings_doc = db.collection('ai_settings').document('general').get()
+        settings = settings_doc.to_dict() if settings_doc.exists else {}
+        
+        config = settings.get(action)
+        if not config:
+            return jsonify({'error': f'AI sozlamalari topilmadi: {action}'}), 400
+        
+        model  = config.get('model', 'llama-3.3-70b-versatile')
+        prompt_tmpl = config.get('prompt', 'Translate: {{text}}')
+        prompt = prompt_tmpl.replace('{{text}}', text)
+
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        payload = {
+            "model": model,
+            "messages": [{"role": "user", "content": prompt}],
+            "temperature": 0.1
+        }
+        
+        response = requests.post(url, headers=headers, json=payload)
+        if response.status_code == 200:
+            result = response.json()
+            reply = result['choices'][0]['message']['content'].strip()
+            return jsonify({'result': reply})
+        else:
+            return jsonify({'error': f"Groq Error: {response.status_code} - {response.text}"}), 400
+            
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

@@ -91,6 +91,7 @@
             font-weight: 800;
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             -webkit-background-clip: text;
+            background-clip: text;
             -webkit-text-fill-color: transparent;
             margin: 0;
         }
@@ -820,6 +821,73 @@
             .search-container { width: 100%; }
             .product-header { flex-direction: column; align-items: flex-start; gap: 15px; }
         }
+
+        /* AI UI Components */
+        .btn-ai-sm {
+            background: linear-gradient(135deg, #6366f1, #a855f7);
+            color: white;
+            border: none;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-ai-sm:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(99, 102, 241, 0.3);
+            filter: brightness(1.1);
+        }
+
+        .btn-ai-sm:disabled {
+            background: var(--border);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .ai-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 20px;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .ai-card h4 {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .ai-field {
+            margin-bottom: 12px;
+        }
+
+        .ai-field label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+            color: var(--text-muted);
+        }
+
+        .ai-field textarea, .ai-field select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
     </style>
 </head>
 <body>
@@ -832,6 +900,7 @@
             <div class="nav-tabs">
                 <button class="nav-tab active" onclick="switchView('manage')">📦 Mahsulotlar</button>
                 <button class="nav-tab" onclick="switchView('categories')">📁 Kategoriyalar</button>
+                <button class="nav-tab" onclick="switchView('ai')">🤖 AI</button>
             </div>
         </div>
 
@@ -878,6 +947,24 @@
                 <!-- Category items injected via JS -->
             </div>
         </div>
+
+        <!-- AI Settings View -->
+        <div id="ai-view" style="display: none;">
+            <div style="margin-bottom: 20px;">
+                <h2 style="color: var(--text-main);">AI Sozlamalari (Groq)</h2>
+                <p style="color: var(--text-muted);">AI tugmalari uchun ishlatiladigan Promt va Modellarni shu yerdan boshqarishingiz mumkin.</p>
+            </div>
+
+            <div id="ai-settings-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+                <!-- Settings items injected via JS -->
+                <div class="loader-wrapper" id="ai-loader">
+                    <div class="spinner"></div>
+                </div>
+            </div>
+            <div style="margin-top: 30px; text-align: right;">
+                <button class="btn btn-primary" id="saveAiSettingsBtn" onclick="saveAiSettings()">💾 Sozlamalarni saqlash</button>
+            </div>
+        </div>
     </div>
 
     <!-- Toast Container -->
@@ -916,11 +1003,17 @@
                             <input type="text" id="newId" required placeholder="Masalan: 10020">
                         </div>
                         <div class="form-group">
-                            <label>Mahsulot Nomi*</label>
+                            <label style="display: flex; justify-content: space-between;">
+                                <span>Mahsulot Nomi*</span>
+                                <button type="button" class="btn-ai-sm" onclick="callAI('translate_uz_ru', 'newName', 'newNameRU')" title="Rus tiliga tarjima">🤖 RU</button>
+                            </label>
                             <input type="text" id="newName" required placeholder="Nomi">
                         </div>
                         <div class="form-group">
-                            <label>Nomi (Rus tilida)</label>
+                            <label style="display: flex; justify-content: space-between;">
+                                <span>Nomi (Rus tilida)</span>
+                                <button type="button" class="btn-ai-sm" onclick="callAI('translate_ru_uz', 'newNameRU', 'newName')" title="Uzbek tiliga tarjima">🤖 UZ</button>
+                            </label>
                             <input type="text" id="newNameRU" placeholder="Название (RU)">
                         </div>
                         <div class="form-group">
@@ -1110,6 +1203,7 @@
             
             const prodGrid = document.getElementById('products-grid');
             const catGrid = document.getElementById('categories-view');
+            const aiView = document.getElementById('ai-view');
             const catBar = document.getElementById('category-container');
             const manageActions = document.getElementById('manage-actions');
             const searchContainer = document.querySelector('.search-container');
@@ -1118,16 +1212,26 @@
                 prodGrid.style.display = 'grid';
                 catGrid.style.display = 'none';
                 catBar.style.display = 'flex';
+                aiView.style.display = 'none';
                 manageActions.style.display = 'flex';
                 searchContainer.style.display = 'flex';
                 renderProducts(allProducts);
-            } else {
+            } else if (view === 'categories') {
                 prodGrid.style.display = 'none';
                 catGrid.style.display = 'block';
                 catBar.style.display = 'none';
+                aiView.style.display = 'none';
                 manageActions.style.display = 'none';
                 searchContainer.style.display = 'none';
                 renderCategoriesAdmin();
+            } else if (view === 'ai') {
+                prodGrid.style.display = 'none';
+                catGrid.style.display = 'none';
+                catBar.style.display = 'none';
+                aiView.style.display = 'block';
+                manageActions.style.display = 'none';
+                searchContainer.style.display = 'none';
+                loadAiSettings();
             }
         }
 
@@ -1582,6 +1686,122 @@
                 } else showToast(data.error, 'error');
             } catch (err) { showToast("Xato", 'error'); }
             input.value = '';
+        }
+        async function loadAiSettings() {
+            const container = document.getElementById('ai-settings-container');
+            const loader = document.getElementById('ai-loader');
+            loader.style.display = 'flex';
+            
+            try {
+                const res = await fetch('/api/get_ai_settings');
+                const settings = await res.json();
+                
+                container.innerHTML = '';
+                const models = [
+                    'llama-3.3-70b-versatile',
+                    'openai/gpt-oss-120b',
+                    'meta-llama/llama-4-scout-17b-16e-instruct',
+                    'qwen/qwen3-32b',
+                    'llama-3.1-8b-instant'
+                ];
+
+                const actions = {
+                    'translate_uz_ru': 'Uzbek -> Rus (Nomi)',
+                    'translate_ru_uz': 'Rus -> Uzbek (Nomi)'
+                };
+
+                for (const [actionId, label] of Object.entries(actions)) {
+                    const config = settings[actionId] || { model: 'llama-3.3-70b-versatile', prompt: '' };
+                    const card = document.createElement('div');
+                    card.className = 'ai-card';
+                    card.innerHTML = `
+                        <h4>🤖 ${label}</h4>
+                        <div class="ai-field">
+                            <label>Model</label>
+                            <select id="ai-model-${actionId}">
+                                ${models.map(m => `<option value="${m}" ${m === config.model ? 'selected' : ''}>${m}</option>`).join('')}
+                            </select>
+                        </div>
+                        <div class="ai-field">
+                            <label>Promt ({{text}} mahsulot nomi bilan almashadi)</label>
+                            <textarea id="ai-prompt-${actionId}" style="min-height: 100px;">${config.prompt}</textarea>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                }
+            } catch (err) {
+                showToast("AI sozlamalarini yuklab bo'lmadi", 'error');
+            } finally {
+                loader.style.display = 'none';
+            }
+        }
+
+        async function saveAiSettings() {
+            const btn = document.getElementById('saveAiSettingsBtn');
+            btn.disabled = true;
+            btn.innerHTML = '⏳ Saqlanmoqda...';
+
+            const actions = ['translate_uz_ru', 'translate_ru_uz'];
+            const settings = {};
+
+            actions.forEach(actionId => {
+                settings[actionId] = {
+                    model: document.getElementById(`ai-model-${actionId}`).value,
+                    prompt: document.getElementById(`ai-prompt-${actionId}`).value
+                };
+            });
+
+            try {
+                const res = await fetch('/api/update_ai_settings', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(settings)
+                });
+                if ((await res.json()).success) {
+                    showToast("AI sozlamalari saqlandi");
+                }
+            } catch (err) {
+                showToast("Saqlashda xatolik", 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '💾 Sozlamalarni saqlash';
+            }
+        }
+
+        async function callAI(action, sourceId, targetId) {
+            const sourceEl = document.getElementById(sourceId);
+            const targetEl = document.getElementById(targetId);
+            const text = sourceEl.value.trim();
+            
+            if (!text) {
+                showToast("Avval matn kiritiling", 'error');
+                return;
+            }
+
+            const btn = event.currentTarget;
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '⏳';
+
+            try {
+                const res = await fetch('/api/ai_call', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ action, text })
+                });
+                const data = await res.json();
+                if (data.result) {
+                    targetEl.value = data.result;
+                    showToast("AI tarjima tugadi");
+                } else {
+                    showToast(data.error || "AI xatosi", 'error');
+                }
+            } catch (err) {
+                showToast("Server bilan ulanishda xato", 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         }
     </script>
 </body>
