@@ -555,11 +555,28 @@ def import_excel():
         if not file.filename:
             return jsonify({'error': 'Fayl nomi bo\'sh'}), 400
 
-        # header=0 - birinchi qator ustun nomlari deb hisoblaydi
+        # Bizga kerakli ustunlar xaritasi (Key -> Excel Column Name)
+        # mahsulotlar_baza.xlsx dagi rasm ustuni "Rasm 10_x000d_" bo'lishi mumkinligi uchun qidirish mantiqini qo'shamiz
+        cols_map = {
+            'ID':                'ID',
+            'name':              'Nomi',
+            'model':             'Model',
+            'brand':             'Brend',
+            'supplier':          'Yetkazib beruvchi',
+            'category':          'Kategoriya',
+            'sku':               'SKU',
+            'group_sku':         'Group SKU',
+            'color':             'Rang',
+            'price':             'Narx',
+            'description_short': 'Qisqa Tavsif',
+            'description_full':  'To\'liq Tavsif'
+        }
+
+        # Mavjud ustun nomlarini aniqlash
         df = pd.read_excel(file)
+        df_cols = df.columns.tolist()
 
         db    = get_db()
-        # Pre-fetch existing categories to avoid redundant writes
         existing_cats = {doc.to_dict().get('name') for doc in db.collection('categories').stream()}
         
         batch = db.batch()
@@ -570,39 +587,39 @@ def import_excel():
 
         for idx, row in df.iterrows():
             try:
-                # 0: ID
-                item_id = str(row.iloc[0]).strip().split('.')[0]
-                if not item_id or item_id.lower() in ('nan', 'id', ''):
-                    skipped += 1
-                    continue
-
-                # Maydonlarni yig'ish (xatolikni oldini olish uchun index tekshiruvi bilan)
-                def get_val(i, default=''):
-                    if i < len(row):
-                        v = str(row.iloc[i]).strip()
+                # Helper function to get value by column name, with stripping and nan handling
+                def get_by_col(col_name, default=''):
+                    if col_name in df_cols:
+                        v = str(row[col_name]).strip()
                         return '' if v.lower() == 'nan' else v
                     return default
 
+                # ID majburiy
+                item_id = get_by_col('ID').split('.')[0]
+                if not item_id or item_id.lower() == 'id':
+                    skipped += 1
+                    continue
+
                 data = {
                     'id':                item_id,
-                    'name':              get_val(1, 'Nomsiz'),
-                    'model':             get_val(2),
-                    'brand':             get_val(3),
-                    'supplier':          get_val(4),
-                    'category':          get_val(5, 'Boshqa'),
-                    'sku':               get_val(6),
-                    'group_sku':         get_val(7),
-                    'color':             get_val(8),
-                    'price':             get_val(9, '0'),
-                    'description_short': get_val(10)[:350],
-                    'description_full':  get_val(11)[:5000],
+                    'name':              get_by_col(cols_map['name'], 'Nomsiz'),
+                    'model':             get_by_col(cols_map['model']),
+                    'brand':             get_by_col(cols_map['brand']),
+                    'supplier':          get_by_col(cols_map['supplier']),
+                    'category':          get_by_col(cols_map['category'], 'Boshqa'),
+                    'sku':               get_by_col(cols_map['sku']),
+                    'group_sku':         get_by_col(cols_map['group_sku']),
+                    'color':             get_by_col(cols_map['color']),
+                    'price':             get_by_col(cols_map['price'], '0'),
+                    'description_short': get_by_col(cols_map['description_short'])[:350],
+                    'description_full':  get_by_col(cols_map['description_full'])[:5000],
                     'updated_at':        firestore.SERVER_TIMESTAMP
                 }
 
                 doc_ref = db.collection('products').document(item_id)
                 batch.set(doc_ref, data, merge=True)
                 
-                # Register new category if found in excel
+                # Category registration
                 cat_name = data['category']
                 if cat_name and cat_name not in existing_cats:
                     db.collection('categories').add({'name': cat_name})
@@ -611,14 +628,17 @@ def import_excel():
                 count   += 1
                 imported += 1
 
-                # Rasm URL'lari (12-ustundan boshlab)
-                for img_idx, col_i in enumerate(range(12, 22)):
-                    if col_i < len(row):
-                        img_url = str(row.iloc[col_i]).strip()
-                        if img_url and img_url.lower() != 'nan':
-                            upload_image_from_url(img_url, item_id, img_idx + 1)
+                # Rasmlar (Ustun nomi bo'yicha qidiramiz)
+                img_num = 1
+                for cname in df_cols:
+                    # "Rasm 1", "Rasm 2" kabi boshlanuvchi yozuvlarni qidiramiz
+                    if cname.startswith('Rasm'):
+                        img_url = str(row[cname]).strip()
+                        if img_url and img_url.lower() != 'nan' and img_url.startswith('http'):
+                            upload_image_from_url(img_url, item_id, img_num)
+                            img_num += 1
 
-                if count % 100 == 0:
+                if count % 50 == 0:
                     batch.commit()
                     batch = db.batch()
             except Exception as row_err:
