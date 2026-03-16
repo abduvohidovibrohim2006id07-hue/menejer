@@ -33,10 +33,12 @@ class VideoDownloaderApp:
         self.status_label = tk.Label(root, text="Tayyor", fg="blue")
         self.status_label.pack(pady=5)
 
-        # Tugma
-        self.download_btn = tk.Button(root, text="YUKLASH VA UPLOAD QILISH", command=self.start_process, 
-                                     bg="#4CAF50", fg="white", font=("Arial", 10, "bold"), padding=10)
-        self.download_btn.pack(pady=20)
+        # Tugma (ttk.Button ishlatamiz, u padding ni boshqacha oladi)
+        self.style = ttk.Style()
+        self.style.configure('TButton', font=('Arial', 10, 'bold'))
+        
+        self.download_btn = ttk.Button(root, text="YUKLASH VA UPLOAD QILISH", command=self.start_process)
+        self.download_btn.pack(pady=20, ipadx=10, ipady=10)
 
     def log(self, text, color="blue"):
         self.status_label.config(text=text, fg=color)
