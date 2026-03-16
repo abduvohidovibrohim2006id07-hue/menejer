@@ -1321,7 +1321,7 @@
                     if (isVideo) {
                         return `
                         <div class="img-card" id="img-${product.id}-${btoa(fname)}">
-                            <video src="${img}" style="width:100%; height:100%; object-fit:cover;" muted loop onmouseover="this.play().catch(e=>{})" onmouseout="this.pause()" onclick="openImageOverlay('${img}', true)" onerror="this.parentElement.innerHTML='<div style=&quot;padding:20px;font-size:0.7rem;text-align:center;&quot;>Video xatosi</div>'"></video>
+                            <video src="${img}" style="width:100%; height:100%; object-fit:cover;" muted loop onmouseover="this.play().catch(e=>{})" onmouseout="this.pause()" onclick="openImageOverlay('${img}', true)" onerror="this.insertAdjacentHTML('afterend', '<div style=&quot;padding:20px;font-size:0.7rem;text-align:center;color:var(--text-muted);&quot;>Video xatosi</div>'); this.remove();"></video>
                             ${isManage ? `<div class="img-overlay"><button class="del-img-btn" onclick="deleteImage('${product.id}', '${fname}')">🗑️</button></div>` : ''}
                         </div>
                         `;
