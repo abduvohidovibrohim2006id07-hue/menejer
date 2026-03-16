@@ -90,8 +90,7 @@ def upload_image():
                 file, 
                 BUCKET_NAME, 
                 s3_key,
-                ACL='public-read',
-                ContentType=file.content_type
+                ExtraArgs={'ACL': 'public-read', 'ContentType': file.content_type}
             )
             url = f"{PUBLIC_ENDPOINT}/{BUCKET_NAME}/{s3_key}"
             return jsonify({'success': True, 'url': url})
