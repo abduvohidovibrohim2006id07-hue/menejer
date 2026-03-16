@@ -478,8 +478,9 @@ def update_ai_settings():
 @app.route('/api/ai_call', methods=['POST'])
 def ai_call():
     try:
-        if not GROQ_API_KEY:
-            return jsonify({'error': 'Groq API key topilmadi'}), 400
+        api_key = os.getenv("GROQ_API_KEY")
+        if not api_key:
+            return jsonify({'error': 'Groq API key topilmadi. Environment Variable tekshiring.'}), 400
         
         data    = request.json
         text    = data.get('text', '')
@@ -502,7 +503,7 @@ def ai_call():
 
         url = "https://api.groq.com/openai/v1/chat/completions"
         headers = {
-            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         }
         payload = {
