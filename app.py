@@ -105,6 +105,36 @@ def upload_image_from_url(url, item_id, index):
 def index():
     return render_template('index.html')
 
+@app.route('/api/debug')
+def debug():
+    """Vercel environment diagnostics"""
+    import traceback
+    result = {
+        'firebase_initialized': firebase_initialized,
+        'firebase_apps_count': len(firebase_admin._apps),
+        'env_FIREBASE_SERVICE_ACCOUNT': bool(os.getenv('FIREBASE_SERVICE_ACCOUNT')),
+        'env_YANDEX_ACCESS_KEY': bool(os.getenv('YANDEX_ACCESS_KEY')),
+        'env_YANDEX_SECRET_KEY': bool(os.getenv('YANDEX_SECRET_KEY')),
+        'env_BUCKET_NAME': os.getenv('BUCKET_NAME', 'savdomarketimag'),
+        'firebase_key_file_exists': os.path.exists(
+            os.path.join(os.path.dirname(__file__), 'firebase-key.json')
+        ),
+    }
+    # Firestore test
+    try:
+        db = get_db()
+        db.collection('_test_').limit(1).stream()
+        result['firestore_connection'] = 'OK'
+    except Exception as e:
+        result['firestore_connection'] = f'ERROR: {e}'
+    # S3 test
+    try:
+        s3_client.list_buckets()
+        result['s3_connection'] = 'OK'
+    except Exception as e:
+        result['s3_connection'] = f'ERROR: {e}'
+    return jsonify(result)
+
 # ---------- PRODUCTS (Firestore) ----------
 @app.route('/api/products')
 def get_products():
