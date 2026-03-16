@@ -458,6 +458,14 @@ def get_ai_settings():
                 'translate_ru_uz': {
                     'model': 'llama-3.3-70b-versatile',
                     'prompt': 'Translate the following product name from Russian to Uzbek. Return ONLY the translated text without quotes or explanations. Text: {{text}}'
+                },
+                'translate_desc_uz_ru': {
+                    'model': 'llama-3.3-70b-versatile',
+                    'prompt': 'Translate the following product description from Uzbek to Russian. Return ONLY the translated text without quotes or explanations. Text: {{text}}'
+                },
+                'translate_desc_ru_uz': {
+                    'model': 'llama-3.3-70b-versatile',
+                    'prompt': 'Translate the following product description from Russian to Uzbek. Return ONLY the translated text without quotes or explanations. Text: {{text}}'
                 }
             }
             db.collection('ai_settings').document('general').set(defaults)

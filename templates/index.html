@@ -1053,20 +1053,32 @@
                             <input type="text" id="newSupplier">
                         </div>
                         <div class="form-group form-full">
-                            <label>Qisqa tavsif (Uzbek - Max 350 belgi)</label>
+                            <label style="display: flex; justify-content: space-between;">
+                                <span>Qisqa tavsif (Uzbek - Max 350 belgi)</span>
+                                <button type="button" class="btn-ai-sm" onclick="callAI('translate_desc_uz_ru', 'newShortDesc', 'newShortDescRU')" title="Rus tiliga tarjima">🤖 RU</button>
+                            </label>
                             <textarea id="newShortDesc" class="form-input" maxlength="350"></textarea>
                         </div>
                         <div class="form-group form-full">
-                            <label>To'liq tavsif (Uzbek - Max 5000 belgi)</label>
+                            <label style="display: flex; justify-content: space-between;">
+                                <span>To'liq tavsif (Uzbek - Max 5000 belgi)</span>
+                                <button type="button" class="btn-ai-sm" onclick="callAI('translate_desc_uz_ru', 'newFullDesc', 'newFullDescRU')" title="Rus tiliga tarjima">🤖 RU</button>
+                            </label>
                             <textarea id="newFullDesc" class="form-input" maxlength="5000" style="min-height: 100px;"></textarea>
                         </div>
                         <hr style="grid-column: span 2; width: 100%; border: 0.5px solid var(--border); margin: 10px 0;">
                         <div class="form-group form-full">
-                            <label>Qisqa tavsif (Rus tilida - Max 350 belgi)</label>
+                            <label style="display: flex; justify-content: space-between;">
+                                <span>Qisqa tavsif (Rus tilida - Max 350 belgi)</span>
+                                <button type="button" class="btn-ai-sm" onclick="callAI('translate_desc_ru_uz', 'newShortDescRU', 'newShortDesc')" title="Uzbek tiliga tarjima">🤖 UZ</button>
+                            </label>
                             <textarea id="newShortDescRU" class="form-input" maxlength="350" placeholder="Краткое описание (RU)"></textarea>
                         </div>
                         <div class="form-group form-full">
-                            <label>To'liq tavsif (Rus tilida - Max 5000 belgi)</label>
+                            <label style="display: flex; justify-content: space-between;">
+                                <span>To'liq tavsif (Rus tilida - Max 5000 belgi)</span>
+                                <button type="button" class="btn-ai-sm" onclick="callAI('translate_desc_ru_uz', 'newFullDescRU', 'newFullDesc')" title="Uzbek tiliga tarjima">🤖 UZ</button>
+                            </label>
                             <textarea id="newFullDescRU" class="form-input" maxlength="5000" style="min-height: 100px;" placeholder="Полное описание (RU)"></textarea>
                         </div>
                     </div>
@@ -1707,7 +1719,9 @@
 
                 const actions = {
                     'translate_uz_ru': 'Uzbek -> Rus (Nomi)',
-                    'translate_ru_uz': 'Rus -> Uzbek (Nomi)'
+                    'translate_ru_uz': 'Rus -> Uzbek (Nomi)',
+                    'translate_desc_uz_ru': 'Uzbek -> Rus (Tavsiflar)',
+                    'translate_desc_ru_uz': 'Rus -> Uzbek (Tavsiflar)'
                 };
 
                 for (const [actionId, label] of Object.entries(actions)) {
@@ -1741,7 +1755,7 @@
             btn.disabled = true;
             btn.innerHTML = '⏳ Saqlanmoqda...';
 
-            const actions = ['translate_uz_ru', 'translate_ru_uz'];
+            const actions = ['translate_uz_ru', 'translate_ru_uz', 'translate_desc_uz_ru', 'translate_desc_ru_uz'];
             const settings = {};
 
             actions.forEach(actionId => {
