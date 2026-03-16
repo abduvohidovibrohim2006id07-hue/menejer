@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mahsulotlar Galereyasi</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --primary: #6366f1; /* Indigo 500 */
+            --primary-hover: #4f46e5;
+            --secondary: #ec4899; /* Pink 500 */
+            --bg-color: #f8fafc;
+            --surface: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --danger: #ef4444;
+            --success: #10b981;
+            --border: #e2e8f0;
+            --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+            --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+            --radius-md: 12px;
+            --radius-lg: 16px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Navigation/Header Bar */
+        .navbar {
+            background-color: var(--surface);
+            padding: 20px 40px;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin: 0;
+        }
+
+        .brand p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .search-container {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-container input {
+            width: 100%;
+            padding: 12px 20px 12px 40px;
+            border-radius: 30px;
+            border: 1px solid var(--border);
+            font-family: inherit;
+            font-size: 0.95rem;
+            background-color: var(--bg-color);
+            transition: var(--transition);
+        }
+
+        .search-container input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+            background-color: var(--surface);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            pointer-events: none;
+        }
+
+        .search-photo-btn {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .search-photo-btn:hover {
+            color: var(--primary);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .main-container {
+            max-width: 1300px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        /* Toast Notifications */
+        #toast-container {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--surface);
+            color: var(--text-dark);
+            padding: 15px 20px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 500;
+            min-width: 250px;
+            transform: translateX(120%);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            border-left: 4px solid var(--primary);
+        }
+
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+
+        .toast.success { border-left-color: var(--success); }
+        .toast.error { border-left-color: var(--danger); }
+
+        /* Loader */
+        .loader-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 40vh;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Product Cards */
+        .products-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }
+
+        .product-card {
+            background: var(--surface);
+            border-radius: var(--radius-lg);
+            padding: 25px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .product-card:hover {
+            box-shadow: var(--shadow-md);
+            border-color: rgba(99, 102, 241, 0.3);
+        }
+
+        .product-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--bg-color);
+        }
+
+        .product-title-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+        }
+
+        .product-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-dark);
+            word-break: break-word;
+        }
+
+        .edit-input {
+            font-size: 1.6rem;
+            font-weight: 700;
+            font-family: inherit;
+            padding: 4px 10px;
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            width: 100%;
+            display: none;
+            background: var(--bg-color);
+            color: var(--text-dark);
+            outline: none;
+        }
+
+        .price-input {
+            font-size: 1rem;
+            font-weight: 700;
+            font-family: inherit;
+            padding: 2px 8px;
+            border: 2px solid var(--success);
+            border-radius: 6px;
+            width: 140px;
+            display: none;
+            background: var(--surface);
+            color: var(--text-dark);
+            outline: none;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            padding: 8px;
+            border-radius: 8px;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-btn:hover {
+            background: var(--bg-color);
+            color: var(--primary);
+            transform: scale(1.05);
+        }
+
+        .product-actions {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .badge {
+            background: rgba(99, 102, 241, 0.1);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition);
+            font-family: inherit;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:active { transform: scale(0.98); }
+
+        .btn-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+        .btn-danger:hover {
+            background: var(--danger);
+            color: white;
+        }
+
+        .content-body {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            align-items: flex-start;
+        }
+
+        /* Gallery */
+        .gallery-wrap {
+            position: relative;
+        }
+
+        .gallery-wrap h3 {
+            font-size: 1.1rem;
+            color: var(--text-muted);
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .gallery-container {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .gallery-grid {
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            width: 100%;
+            padding: 5px;
+            -ms-overflow-style: none; /* IE and Edge */
+            scrollbar-width: none; /* Firefox */
+        }
+        
+        .gallery-grid::-webkit-scrollbar {
+            display: none; /* Chrome, Safari and Opera */
+        }
+
+        .img-card {
+            position: relative;
+            flex: 0 0 225px; /* 3:4 ratio (width) */
+            height: 300px; /* 3:4 ratio (height) */
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .scroll-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--surface);
+            color: var(--text-dark);
+            border: 1px solid var(--border);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            z-index: 10;
+            box-shadow: var(--shadow-md);
+            transition: var(--transition);
+            font-size: 1.2rem;
+            opacity: 0.8;
+        }
+        
+        .scroll-btn:hover {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+            opacity: 1;
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .scroll-left { left: -15px; }
+        .scroll-right { right: -15px; }
+
+        .img-card a {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        .img-card img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+
+        .img-card:hover img {
+            transform: none;
+        }
+
+        /* Image hover overlay for delete button */
+        .img-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: flex-start;
+            justify-content: flex-end;
+            padding: 5px;
+            opacity: 0;
+            transition: var(--transition);
+            pointer-events: none;
+        }
+
+        .img-card:hover .img-overlay {
+            opacity: 1;
+        }
+
+        .del-img-btn {
+            background: rgba(239, 68, 68, 0.9);
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transform: scale(0.9);
+            transition: var(--transition);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            font-size: 0.9rem;
+            pointer-events: auto;
+        }
+
+        .img-card:hover .del-img-btn {
+            transform: scale(1);
+        }
+
+        .del-img-btn:hover {
+            background: #b91c1c;
+            transform: scale(1.1) !important;
+        }
+
+        .google-search-btn {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            color: #4285F4;
+            background: rgba(255, 255, 255, 0.3);
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: none;
+            z-index: 55;
+            transition: var(--transition);
+            opacity: 0.6;
+        }
+
+        .lens-search-btn {
+            position: absolute;
+            top: 6px;
+            left: 28px;
+            color: #ea4335;
+            background: rgba(255, 255, 255, 0.3);
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+            text-decoration: none;
+            z-index: 55;
+            transition: var(--transition);
+            opacity: 0.6;
+        }
+
+        .google-search-btn:hover, .lens-search-btn:hover {
+            opacity: 1;
+            background: rgba(255, 255, 255, 0.9);
+            transform: none !important;
+        }
+
+        .empty-state {
+            grid-column: 1 / -1;
+            padding: 30px;
+            text-align: center;
+            background: var(--bg-color);
+            border-radius: var(--radius-md);
+            border: 2px dashed var(--border);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        /* Upload Section */
+        .upload-section {
+            background: var(--bg-color);
+            padding: 24px;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .upload-section h3 {
+            font-size: 1.1rem;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .file-drop {
+            position: relative;
+            background: var(--surface);
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 20px 10px;
+            text-align: center;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        .file-drop:hover, .file-drop.dragover {
+            border-color: var(--primary);
+            background: rgba(99, 102, 241, 0.03);
+        }
+
+        .file-input {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .file-drop-text {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.95rem;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .file-drop-text span {
+            font-size: 1.5rem;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin: 5px 0;
+        }
+        .divider::before, .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border);
+        }
+        .divider::not(:empty)::before { margin-right: .5em; }
+        .divider::not(:empty)::after { margin-left: .5em; }
+
+        .url-form {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .url-input {
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+
+        .url-input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        .uploading-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(255,255,255,0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 8px;
+            font-weight: 600;
+            color: var(--primary);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s;
+        }
+        .upload-section.loading .uploading-overlay {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* Modal Settings */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-card {
+            background: var(--surface);
+            padding: 30px;
+            border-radius: var(--radius-lg);
+            width: 100%;
+            max-width: 400px;
+            box-shadow: var(--shadow-lg);
+            transform: translateY(20px);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .modal-overlay.show .modal-card {
+            transform: translateY(0);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--text-muted);
+        }
+
+        .close-modal:hover { color: var(--danger); }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        }
+
+        @media (max-width: 900px) {
+            .content-body {
+                grid-template-columns: 1fr;
+            }
+            .upload-section {
+                order: -1;
+            }
+        }
+        @media (max-width: 600px) {
+            .navbar { flex-direction: column; gap: 15px; align-items: flex-start; padding: 15px 20px; }
+            .search-container { width: 100%; }
+            .product-header { flex-direction: column; align-items: flex-start; gap: 15px; }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar">
+        <div class="brand">
+            <h1>UzStore Studio</h1>
+            <p>Mahsulot media menejeri</p>
+        </div>
+        <div class="search-container">
+            <span class="search-icon">🔍</span>
+            <input type="text" id="searchInput" placeholder="Nom yoki ID bo'yicha qidirish..." onkeyup="filterProducts()">
+            <button class="search-photo-btn" onclick="document.getElementById('photoSearchInput').click()" title="Rasm fayli orqali qidirish">📷</button>
+            <input type="file" id="photoSearchInput" style="display:none" accept="image/*" onchange="searchByPhoto(this)">
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn btn-primary" style="background: var(--bg-color); color: var(--text-muted); border: 1px solid var(--border);" onclick="fetchProducts()" title="Ma'lumotlarni yangilash">🔄 Yangilash</button>
+            <button class="btn btn-primary" onclick="openAddModal()">+ Yangi qo'shish</button>
+        </div>
+    </nav>
+
+    <div class="main-container">
+        <div id="loader" class="loader-wrapper">
+            <div class="spinner"></div>
+            <p style="margin-top:20px; color:var(--text-muted); font-weight:500;">Ma'lumotlar yuklanmoqda...</p>
+        </div>
+        
+        <div id="products-grid" class="products-grid">
+            <!-- Cards injected via JS -->
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
+
+    <!-- Add Product Modal -->
+    <div class="modal-overlay" id="addModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 class="modal-title">Yangi mahsulot qo'shish</h3>
+                <button class="close-modal" onclick="closeAddModal()">&times;</button>
+            </div>
+            <form id="addProductForm" onsubmit="handleAddProduct(event)">
+                <div class="form-group">
+                    <label for="newId">Mahsulot ID (Majburiy)</label>
+                    <input type="text" id="newId" required placeholder="Masalan: 10020">
+                </div>
+                <div class="form-group">
+                    <label for="newName">Nomi</label>
+                    <input type="text" id="newName" placeholder="Masalan: Kemei KM-7108">
+                </div>
+                <div class="form-group">
+                    <label for="newPrice">Narxi (So'm)</label>
+                    <input type="text" id="newPrice" placeholder="Masalan: 150000">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 10px;" id="addSubmitBtn">Mahsulotni yaratish</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', fetchProducts);
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            const icon = type === 'success' ? '✅' : '❌';
+            toast.innerHTML = `<span>${icon}</span> <div>${message}</div>`;
+            container.appendChild(toast);
+            void toast.offsetWidth;
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 400);
+            }, 3000);
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast("ID ko'chirib olindi!");
+            });
+        }
+
+        function searchByPhoto(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                // Fayl nomidan qidiruv so'zlarini ajratib olish (nuqta va formatni olib tashlash)
+                let term = file.name.split('.')[0];
+                // Belgilarni tozalash
+                term = term.replace(/[_-]/g, ' ');
+                
+                document.getElementById('searchInput').value = term;
+                filterProducts();
+                showToast(`Rasm nomi bo'yicha qidirilmoqda: ${term}`);
+                input.value = ''; // tozalash
+            }
+        }
+
+        let allProducts = [];
+
+        async function fetchProducts() {
+            const loader = document.getElementById('loader');
+            const grid = document.getElementById('products-grid');
+            
+            try {
+                const response = await fetch('/api/products');
+                allProducts = await response.json();
+                
+                loader.style.display = 'none';
+
+                if (allProducts.length === 0) {
+                    grid.innerHTML = `<div class="empty-state" style="padding: 60px;">Xozircha mahsulotlar mavjud emas</div>`;
+                    return;
+                }
+
+                renderProducts(allProducts);
+            } catch (error) {
+                loader.innerHTML = `<div style="color:red;">Xatolik: Tarmoqga ulanib bo'lmadi.</div>`;
+            }
+        }
+
+        // ---------- Add Product Logic ----------
+        function openAddModal() {
+            document.getElementById('addModal').classList.add('show');
+            document.getElementById('newId').focus();
+        }
+
+        function closeAddModal() {
+            document.getElementById('addModal').classList.remove('show');
+            document.getElementById('addProductForm').reset();
+        }
+
+        async function handleAddProduct(e) {
+            e.preventDefault();
+            const btn = document.getElementById('addSubmitBtn');
+            const newId = document.getElementById('newId').value.trim();
+            const newName = document.getElementById('newName').value.trim();
+            const newPrice = document.getElementById('newPrice').value.trim();
+
+            if (!newId) {
+                showToast("ID raqami majburiy!", "error");
+                return;
+            }
+
+            btn.textContent = 'Yaratilmoqda...';
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/add_product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        id: newId, 
+                        name: newName || 'Nomsiz Mahsulot', 
+                        price: newPrice || 'Narx kiritilmagan' 
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast("Yangi mahsulot qo'shildi!");
+                    allProducts.push(data.product);
+                    // Rerender products
+                    renderProducts(allProducts);
+                    closeAddModal();
+                    // Scroll to bottom optionally
+                    window.scrollTo(0, document.body.scrollHeight);
+                } else {
+                    showToast(data.error || "Xatolik", "error");
+                }
+            } catch (err) {
+                showToast("Tarmoq xatosi", "error");
+            }
+            btn.textContent = 'Mahsulotni yaratish';
+            btn.disabled = false;
+        }
+
+        function filterProducts() {
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = allProducts.filter(p => 
+                p.name.toLowerCase().includes(query) || p.id.toLowerCase().includes(query)
+            );
+            renderProducts(filtered);
+        }
+
+        function renderProducts(products) {
+            const grid = document.getElementById('products-grid');
+            grid.innerHTML = '';
+            
+            products.forEach(product => {
+                if (product.id.toLowerCase() === 'id' || product.id === 'nan') return;
+
+                const card = document.createElement('div');
+                card.className = 'product-card';
+                card.id = `product-${product.id}`;
+                
+                const nameDisplay = product.name !== 'nan' ? product.name : 'Nomsiz Mahsulot';
+
+                let galleryHtml = '';
+                if (product.local_images && product.local_images.length > 0) {
+                    galleryHtml = product.local_images.map(img => {
+                        const filename = img.split('/').pop();
+                        return `
+                            <div class="img-card" id="img-${product.id}-${filename}">
+                                <div style="position: absolute; top: 0; left: 0; z-index: 60; display: flex; gap: 4px; padding: 6px;">
+                                    <a href="https://www.google.com/search?q=${encodeURIComponent(nameDisplay)}&tbm=isch" target="_blank" class="google-search-btn" style="position: static;" title="Google Images (Matnli)">🔍</a>
+                                    <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(window.location.origin + img)}" target="_blank" class="lens-search-btn" style="position: static;" title="Photo Search (Google Lens)">📷</a>
+                                </div>
+                                <a href="${img}" target="_blank">
+                                    <img src="${img}" alt="Rasm" loading="lazy">
+                                </a>
+                                <div class="img-overlay">
+                                    <button class="del-img-btn" onclick="deleteImage('${product.id}', '${filename}')" title="O'chirish">🗑️</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    galleryHtml = `
+                        <div class="empty-state no-img-msg" id="empty-${product.id}">
+                            Hozircha rasmlar yuklanmagan <br><br>
+                            <a href="https://www.google.com/search?q=${encodeURIComponent(nameDisplay)}&tbm=isch" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:5px; text-decoration:none;">
+                                🔍 Google rasmlardan izlash
+                            </a>
+                        </div>`;
+                }
+
+                card.innerHTML = `
+                    <div class="product-header">
+                        <div class="product-title-group">
+                            <h2 class="product-title" id="title-text-${product.id}">${nameDisplay}</h2>
+                            <input type="text" class="edit-input" id="title-input-${product.id}" value="${nameDisplay}">
+                            <button class="icon-btn" id="edit-btn-${product.id}" onclick="toggleEdit('${product.id}')" title="Nomni o'zgartirish">
+                                ✏️
+                            </button>
+                            <button class="btn btn-primary" id="save-btn-${product.id}" style="display:none;" onclick="saveName('${product.id}')">Saqlash</button>
+                        </div>
+                        
+                        <div class="product-actions" style="flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 5px;">
+                                <span class="badge" id="price-text-${product.id}" style="background: rgba(16, 185, 129, 0.1); color: var(--success); font-weight: 700; font-size: 1rem;">
+                                    💰 ${product.price || 'Narx kiritilmagan'}
+                                </span>
+                                <input type="text" class="price-input" id="price-input-${product.id}" value="${product.price || ''}">
+                                <button class="icon-btn" id="edit-price-btn-${product.id}" onclick="toggleEditPrice('${product.id}')" title="Narxni o'zgartirish" style="padding: 4px; font-size: 1rem;">
+                                    ✏️
+                                </button>
+                                <button class="btn btn-primary" id="save-price-btn-${product.id}" style="display:none; padding: 4px 10px; font-size: 0.8rem;" onclick="savePrice('${product.id}')">Saqlash</button>
+                            </div>
+                            <span class="badge" onclick="copyToClipboard('${product.id}')" style="cursor: pointer;" title="ID nusxalash">
+                                🆔 ${product.id} <span style="font-size: 0.7rem; opacity: 0.6;">📋</span>
+                            </span>
+                            <button class="btn btn-danger" onclick="deleteProduct('${product.id}')" title="To'liq o'chirish">
+                                🗑️ O'chirish
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="content-body">
+                        <div class="gallery-wrap">
+                            <h3 id="gallery-title-${product.id}">Mavjud rasmlar (<span class="img-count">${product.local_images.length}</span>)</h3>
+                            <div class="gallery-container">
+                                <button class="scroll-btn scroll-left" onclick="scrollGallery('${product.id}', -1)" title="Orqaga">&#10094;</button>
+                                <div class="gallery-grid" id="gallery-${product.id}">
+                                    ${galleryHtml}
+                                </div>
+                                <button class="scroll-btn scroll-right" onclick="scrollGallery('${product.id}', 1)" title="Oldinga">&#10095;</button>
+                            </div>
+                        </div>
+                        
+                        <div class="upload-section" id="upload-sec-${product.id}">
+                            <div class="uploading-overlay">Yuklanmoqda...</div>
+                            <h3>Yangi rasm qo'shish</h3>
+                            
+                            <form onsubmit="handleFileUpload(event, '${product.id}')">
+                                <div class="file-drop">
+                                    <input type="file" class="file-input" accept="image/*" onchange="this.form.dispatchEvent(new Event('submit'))">
+                                    <div class="file-drop-text">
+                                        <span>📁</span>
+                                        Faylni tanlang yoki shu yerga tashlang
+                                    </div>
+                                </div>
+                            </form>
+                            
+                            <div class="divider">yoki internetdan</div>
+                            
+                            <form class="url-form" onsubmit="handleUrlUpload(event, '${product.id}')">
+                                <input type="url" name="url" class="url-input" placeholder="http://... (Havola)" required>
+                                <button type="submit" class="btn btn-primary" style="width:100%">Yuklab olish</button>
+                            </form>
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // ---------- Actions ----------
+
+        function scrollGallery(id, direction) {
+            const grid = document.getElementById(`gallery-${id}`);
+            if (grid) {
+                // Yangi o'lchamga qarab scroll qilish (225px width + 15px gap)
+                grid.scrollBy({ left: direction * 480, behavior: 'smooth' });
+            }
+        }
+
+        function toggleEditPrice(id) {
+            const priceText = document.getElementById(`price-text-${id}`);
+            const priceInput = document.getElementById(`price-input-${id}`);
+            const editBtn = document.getElementById(`edit-price-btn-${id}`);
+            const saveBtn = document.getElementById(`save-price-btn-${id}`);
+
+            if (priceText.style.display !== 'none') {
+                priceText.style.display = 'none';
+                priceInput.style.display = 'block';
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-flex';
+                priceInput.focus();
+            } else {
+                priceText.style.display = 'inline-flex';
+                priceInput.style.display = 'none';
+                editBtn.style.display = 'inline-flex';
+                saveBtn.style.display = 'none';
+            }
+        }
+
+        async function savePrice(id) {
+            const saveBtn = document.getElementById(`save-price-btn-${id}`);
+            const priceInput = document.getElementById(`price-input-${id}`);
+            const priceText = document.getElementById(`price-text-${id}`);
+            
+            const newPrice = priceInput.value.trim();
+
+            saveBtn.textContent = '...';
+            saveBtn.disabled = true;
+
+            try {
+                const res = await fetch('/api/update_product_price', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, price: newPrice || 'Narx kiritilmagan' })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    priceText.innerHTML = `💰 ${newPrice || 'Narx kiritilmagan'}`;
+                    toggleEditPrice(id);
+                    showToast("Narx saqlandi!");
+                    const prod = allProducts.find(p => p.id === id);
+                    if(prod) prod.price = newPrice || 'Narx kiritilmagan';
+                } else {
+                    showToast(data.error || "Xatolik", "error");
+                }
+            } catch (err) {
+                showToast("Tarmoq xatosi", "error");
+            }
+            saveBtn.textContent = 'Saqlash';
+            saveBtn.disabled = false;
+        }
+
+        function toggleEdit(id) {
+            const titleText = document.getElementById(`title-text-${id}`);
+            const titleInput = document.getElementById(`title-input-${id}`);
+            const editBtn = document.getElementById(`edit-btn-${id}`);
+            const saveBtn = document.getElementById(`save-btn-${id}`);
+
+            if (titleText.style.display !== 'none') {
+                titleText.style.display = 'none';
+                titleInput.style.display = 'block';
+                editBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-flex';
+                titleInput.focus();
+            } else {
+                titleText.style.display = 'block';
+                titleInput.style.display = 'none';
+                editBtn.style.display = 'inline-flex';
+                saveBtn.style.display = 'none';
+                titleInput.value = titleText.textContent;
+            }
+        }
+
+        async function saveName(id) {
+            const titleInput = document.getElementById(`title-input-${id}`);
+            const saveBtn = document.getElementById(`save-btn-${id}`);
+            
+            const newName = titleInput.value.trim();
+            if (!newName) {
+                showToast("Nom bo'sh bo'lishi mumkin emas", "error");
+                return;
+            }
+
+            saveBtn.textContent = '...';
+            saveBtn.disabled = true;
+
+            try {
+                const res = await fetch('/api/update_product_name', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, name: newName })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById(`title-text-${id}`).textContent = newName;
+                    toggleEdit(id);
+                    showToast("Nom saqlandi!");
+                    // Update main array so search works with new name
+                    const prod = allProducts.find(p => p.id === id);
+                    if(prod) prod.name = newName;
+                } else {
+                    showToast(data.error || "Xatolik", "error");
+                }
+            } catch (err) {
+                showToast("Tarmoq xatosi", "error");
+            }
+            saveBtn.textContent = 'Saqlash';
+            saveBtn.disabled = false;
+        }
+
+        async function deleteProduct(id) {
+            if (!confirm("Barcha ma'lumotlar, shu jumladan rasmlar ham o'chib ketadi. Ishonchingiz komilmi?")) return;
+
+            try {
+                const res = await fetch('/api/delete_product', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById(`product-${id}`).remove();
+                    showToast("Mahsulot to'liq o'chirildi");
+                    allProducts = allProducts.filter(p => p.id !== id);
+                } else {
+                    showToast(data.error || "O'chirishda xatolik", "error");
+                }
+            } catch (err) {
+                showToast("Tarmoq xatosi", "error");
+            }
+        }
+
+        async function deleteImage(id, filename) {
+            if (!confirm("Rasmni o'chirasizmi?")) return;
+
+            try {
+                const res = await fetch('/api/delete_image', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, filename })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    document.getElementById(`img-${id}-${filename}`).remove();
+                    updateImgCount(id, -1);
+                    showToast("Rasm o'chirildi");
+                } else {
+                    showToast(data.error || "Xato", "error");
+                }
+            } catch (err) {
+                showToast("Tarmoq", "error");
+            }
+        }
+
+        async function handleFileUpload(e, id) {
+            e.preventDefault();
+            const input = e.target.querySelector('input[type="file"]');
+            if (!input.files.length) return;
+
+            const fd = new FormData();
+            fd.append('id', id);
+            fd.append('file', input.files[0]);
+
+            await uploadData(id, fd);
+            input.value = '';
+        }
+
+        async function handleUrlUpload(e, id) {
+            e.preventDefault();
+            const input = e.target.querySelector('input[type="url"]');
+            
+            const fd = new FormData();
+            fd.append('id', id);
+            fd.append('url', input.value);
+
+            await uploadData(id, fd);
+            input.value = '';
+        }
+
+        async function uploadData(id, formData) {
+            const sec = document.getElementById(`upload-sec-${id}`);
+            sec.classList.add('loading');
+
+            try {
+                const res = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (data.success) {
+                    addImageToUi(id, data.url);
+                    showToast("Rasm yuklandi!");
+                } else {
+                    showToast(data.error || "Xato", "error");
+                }
+            } catch (err) {
+                showToast("Tarmoq xatosi", "error");
+            }
+            sec.classList.remove('loading');
+        }
+
+        function addImageToUi(id, url) {
+            const grid = document.getElementById(`gallery-${id}`);
+            
+            // Remove empty state if exists
+            const emptyState = document.getElementById(`empty-${id}`);
+            if (emptyState) emptyState.remove();
+
+            const product = allProducts.find(p => p.id === id);
+            const nameDisplay = product ? (product.name !== 'nan' ? product.name : 'Nomsiz Mahsulot') : 'Mahsulot';
+
+            const filename = url.split('/').pop();
+            const div = document.createElement('div');
+            div.className = 'img-card';
+            div.id = `img-${id}-${filename}`;
+            div.innerHTML = `
+                <div style="position: absolute; top: 0; left: 0; z-index: 60; display: flex; gap: 4px; padding: 6px;">
+                    <a href="https://www.google.com/search?q=${encodeURIComponent(nameDisplay)}&tbm=isch" target="_blank" class="google-search-btn" style="position: static;" title="Google Images">🔍</a>
+                    <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(window.location.origin + url)}" target="_blank" class="lens-search-btn" style="position: static;" title="Photo Search">📷</a>
+                </div>
+                <a href="${url}" target="_blank">
+                    <img src="${url}" alt="Rasm">
+                </a>
+                <div class="img-overlay">
+                    <button class="del-img-btn" onclick="deleteImage('${id}', '${filename}')" title="O'chirish">🗑️</button>
+                </div>
+            `;
+            grid.insertBefore(div, grid.firstChild);
+            updateImgCount(id, 1);
+        }
+
+        function updateImgCount(id, change) {
+            const card = document.getElementById(`product-${id}`);
+            if (!card) return;
+            const span = card.querySelector('.img-count');
+            if (span) {
+                let current = parseInt(span.textContent) + change;
+                span.textContent = current;
+                
+                if (current === 0) {
+                    const product = allProducts.find(p => p.id === id);
+                    const nameDisplay = product ? (product.name !== 'nan' ? product.name : 'Nomsiz Mahsulot') : 'Mahsulot';
+                    
+                    const grid = document.getElementById(`gallery-${id}`);
+                    grid.innerHTML = `
+                        <div class="empty-state no-img-msg" id="empty-${id}">
+                            Hozircha rasmlar yuklanmagan <br><br>
+                            <a href="https://www.google.com/search?q=${encodeURIComponent(nameDisplay)}&tbm=isch" target="_blank" class="btn btn-primary" style="display:inline-flex; align-items:center; gap:5px; text-decoration:none;">
+                                🔍 Google rasmlardan izlash
+                            </a>
+                        </div>`;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
