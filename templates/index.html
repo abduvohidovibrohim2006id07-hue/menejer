@@ -957,7 +957,7 @@
                             <div class="img-card" id="img-${product.id}-${filename}">
                                 <div style="position: absolute; top: 0; left: 0; z-index: 60; display: flex; gap: 4px; padding: 6px;">
                                     <a href="https://www.google.com/search?q=${encodeURIComponent(nameDisplay)}&tbm=isch" target="_blank" class="google-search-btn" style="position: static;" title="Google Images (Matnli)">🔍</a>
-                                    <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(window.location.origin + img)}" target="_blank" class="lens-search-btn" style="position: static;" title="Photo Search (Google Lens)">📷</a>
+                                    <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(img.startsWith('http') ? img : window.location.origin + img)}" target="_blank" class="lens-search-btn" style="position: static;" title="Photo Search (Google Lens)">📷</a>
                                 </div>
                                 <a href="${img}" target="_blank">
                                     <img src="${img}" alt="Rasm" loading="lazy">
@@ -1279,7 +1279,7 @@
             div.innerHTML = `
                 <div style="position: absolute; top: 0; left: 0; z-index: 60; display: flex; gap: 4px; padding: 6px;">
                     <a href="https://www.google.com/search?q=${encodeURIComponent(nameDisplay)}&tbm=isch" target="_blank" class="google-search-btn" style="position: static;" title="Google Images">🔍</a>
-                    <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(window.location.origin + url)}" target="_blank" class="lens-search-btn" style="position: static;" title="Photo Search">📷</a>
+                    <a href="https://lens.google.com/uploadbyurl?url=${encodeURIComponent(url.startsWith('http') ? url : window.location.origin + url)}" target="_blank" class="lens-search-btn" style="position: static;" title="Photo Search">📷</a>
                 </div>
                 <a href="${url}" target="_blank">
                     <img src="${url}" alt="Rasm">

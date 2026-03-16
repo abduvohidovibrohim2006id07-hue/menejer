@@ -15,13 +15,16 @@ app = Flask(__name__)
 YANDEX_ACCESS_KEY = os.getenv("YANDEX_ACCESS_KEY")
 YANDEX_SECRET_KEY = os.getenv("YANDEX_SECRET_KEY")
 BUCKET_NAME = os.getenv("BUCKET_NAME", "savdomarketimag")
-ENDPOINT_URL = "https://s3.yandexcloud.net"
+# API Endpoint for boto3
+S3_ENDPOINT = "https://s3.yandexcloud.net"
+# Public URL endpoint for browser
+PUBLIC_ENDPOINT = "https://storage.yandexcloud.net"
 
 s3_client = boto3.client(
     "s3",
     aws_access_key_id=YANDEX_ACCESS_KEY,
     aws_secret_access_key=YANDEX_SECRET_KEY,
-    endpoint_url=ENDPOINT_URL
+    endpoint_url=S3_ENDPOINT
 )
 
 EXCEL_FILE = 'natijalar.xlsx'
@@ -53,9 +56,10 @@ def get_products():
             except IndexError:
                 price = 'Ma\'lumot yo\'q'
             
+            
             # Filter S3 images for this product
             prefix = f"images/{item_id}/"
-            product_images = [f"{ENDPOINT_URL}/{BUCKET_NAME}/{f}" for f in all_files if f.startswith(prefix)]
+            product_images = [f"{PUBLIC_ENDPOINT}/{BUCKET_NAME}/{f}" for f in all_files if f.startswith(prefix)]
             
             products.append({
                 'id': item_id,
@@ -86,9 +90,10 @@ def upload_image():
                 file, 
                 BUCKET_NAME, 
                 s3_key,
-                ExtraArgs={'ACL': 'public-read', 'ContentType': file.content_type}
+                ACL='public-read',
+                ContentType=file.content_type
             )
-            url = f"{ENDPOINT_URL}/{BUCKET_NAME}/{s3_key}"
+            url = f"{PUBLIC_ENDPOINT}/{BUCKET_NAME}/{s3_key}"
             return jsonify({'success': True, 'url': url})
             
         elif 'url' in request.form:
@@ -113,7 +118,7 @@ def upload_image():
                     ACL='public-read',
                     ContentType=content_type
                 )
-                res_url = f"{ENDPOINT_URL}/{BUCKET_NAME}/{s3_key}"
+                res_url = f"{PUBLIC_ENDPOINT}/{BUCKET_NAME}/{s3_key}"
                 return jsonify({'success': True, 'url': res_url})
                 
         return jsonify({'error': 'No file or URL provided'}), 400
