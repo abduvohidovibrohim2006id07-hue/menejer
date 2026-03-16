@@ -218,6 +218,62 @@ def add_category():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/update_category', methods=['POST'])
+def update_category():
+    try:
+        data = request.json
+        old_name = data.get('old_name')
+        new_name = data.get('new_name', '').strip()
+        if not old_name or not new_name:
+            return jsonify({'error': 'Nomlar yetishmayapti'}), 400
+        
+        db = get_db()
+        # Find category doc
+        docs = db.collection('categories').where('name', '==', old_name).limit(1).get()
+        if not docs:
+            return jsonify({'error': 'Kategoriya topilmadi'}), 404
+        
+        # Update category doc
+        docs[0].reference.update({'name': new_name})
+        
+        # Update all products with this category
+        products = db.collection('products').where('category', '==', old_name).stream()
+        batch = db.batch()
+        for p in products:
+            batch.update(p.reference, {'category': new_name})
+        batch.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/delete_category', methods=['POST'])
+def delete_category():
+    try:
+        data = request.json
+        name = data.get('name')
+        if not name:
+            return jsonify({'error': 'Nom kiritilmadi'}), 400
+        
+        db = get_db()
+        docs = db.collection('categories').where('name', '==', name).limit(1).get()
+        if not docs:
+            return jsonify({'error': 'Kategoriya topilmadi'}), 404
+        
+        # Delete category doc
+        docs[0].reference.delete()
+        
+        # Update products to "Boshqa" category
+        products = db.collection('products').where('category', '==', name).stream()
+        batch = db.batch()
+        for p in products:
+            batch.update(p.reference, {'category': 'Boshqa'})
+        batch.commit()
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 @app.route('/api/add_product', methods=['POST'])
 def add_product():
     try:

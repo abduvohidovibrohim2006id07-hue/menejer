@@ -793,8 +793,8 @@
                 <h1>Menejer Pro</h1>
             </div>
             <div class="nav-tabs">
-                <button class="nav-tab active" onclick="switchView('store')">🏪 Do'kon</button>
-                <button class="nav-tab" onclick="switchView('manage')">⚙️ Boshqaruv</button>
+                <button class="nav-tab active" onclick="switchView('manage')">📦 Mahsulotlar</button>
+                <button class="nav-tab" onclick="switchView('categories')">📁 Kategoriyalar</button>
             </div>
         </div>
 
@@ -829,6 +829,17 @@
         
         <div id="products-grid" class="products-grid">
             <!-- Cards injected via JS -->
+        </div>
+
+        <!-- Categories Management View -->
+        <div id="categories-view" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: var(--text-main);">Kategoriyalarni boshqarish</h2>
+                <button class="btn btn-primary" onclick="promptNewCategory()">+ Yangi Kategoriya</button>
+            </div>
+            <div id="categories-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 15px;">
+                <!-- Category items injected via JS -->
+            </div>
         </div>
     </div>
 
@@ -924,8 +935,8 @@
 
     <script>
         let allProducts = [];
-        let allCategories = []; // Global categories
-        let currentView = 'store';
+        let allCategories = [];
+        let currentView = 'manage';
         let currentCategory = 'Barchasi';
 
         document.addEventListener('DOMContentLoaded', fetchProducts);
@@ -1025,16 +1036,88 @@
         function switchView(view) {
             currentView = view;
             document.querySelectorAll('.nav-tab').forEach(t => {
-                t.classList.toggle('active', t.innerText.toLowerCase().includes(view === 'manage' ? 'boshqaruv' : 'do\'kon'));
+                const isMatch = (view === 'manage' && t.innerText.includes('Mahsulotlar')) || 
+                              (view === 'categories' && t.innerText.includes('Kategoriyalar'));
+                t.classList.toggle('active', isMatch);
             });
-            document.getElementById('manage-actions').style.display = view === 'manage' ? 'flex' : 'none';
-            renderProducts(allProducts);
+            
+            const prodGrid = document.getElementById('products-grid');
+            const catGrid = document.getElementById('categories-view');
+            const catBar = document.getElementById('category-container');
+            const manageActions = document.getElementById('manage-actions');
+            const searchContainer = document.querySelector('.search-container');
+
+            if (view === 'manage') {
+                prodGrid.style.display = 'grid';
+                catGrid.style.display = 'none';
+                catBar.style.display = 'flex';
+                manageActions.style.display = 'flex';
+                searchContainer.style.display = 'flex';
+                renderProducts(allProducts);
+            } else {
+                prodGrid.style.display = 'none';
+                catGrid.style.display = 'block';
+                catBar.style.display = 'none';
+                manageActions.style.display = 'none';
+                searchContainer.style.display = 'none';
+                renderCategoriesAdmin();
+            }
+        }
+
+        function renderCategoriesAdmin() {
+            const list = document.getElementById('categories-list');
+            list.innerHTML = allCategories.map(cat => `
+                <div style="background: var(--card-bg); border: 1px solid var(--border); padding: 20px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: 600; font-size: 1.1rem; color: var(--text-main);">${cat}</span>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-primary" style="padding: 6px 10px;" onclick="editCategory('${cat.replace(/'/g, "\\'")}')">✏️</button>
+                        <button class="btn btn-danger" style="padding: 6px 10px;" onclick="deleteCategoryAdmin('${cat.replace(/'/g, "\\'")}')">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function editCategory(oldName) {
+            const newName = prompt("Kategoriya uchun yangi nom kiriting:", oldName);
+            if (!newName || newName === oldName) return;
+            
+            try {
+                const res = await fetch('/api/update_category', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({old_name: oldName, new_name: newName})
+                });
+                if ((await res.json()).success) {
+                    showToast("Yangilandi");
+                    await fetchCategories();
+                    renderCategoriesAdmin();
+                    fetchProducts(); // Refresh product data since category names changed
+                }
+            } catch (e) { showToast("Xato", 'error'); }
+        }
+
+        async function deleteCategoryAdmin(name) {
+            if (!confirm(`"${name}" kategoriyasi o'chirilsinmi? Ushbu kategoriyadagi barcha mahsulotlar "Boshqa" ga o'tkaziladi.`)) return;
+            
+            try {
+                const res = await fetch('/api/delete_category', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({name})
+                });
+                if ((await res.json()).success) {
+                    showToast("O'chirildi");
+                    await fetchCategories();
+                    renderCategoriesAdmin();
+                    fetchProducts();
+                }
+            } catch (e) { showToast("Xato", 'error'); }
         }
 
         function renderProducts(products) {
             const grid = document.getElementById('products-grid');
             grid.innerHTML = '';
-            const isManage = currentView === 'manage';
+            const isManage = true; // Always manage mode now
 
             products.forEach(product => {
                 const card = document.createElement('div');
