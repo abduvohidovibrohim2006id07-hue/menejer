@@ -685,9 +685,9 @@ def upload_image():
         elif 'url' in request.form:
             url  = request.form.get('url')
             
-            # Ijtimoiy tarmoq ekanligini tekshirish
-            social_domains = ['youtube.com', 'youtu.be', 'instagram.com', 'facebook.com', 'fb.watch', 'tiktok.com']
-            is_social = any(d in url.lower() for d in social_domains)
+            # Ijtimoiy tarmoq yoki HLS (.m3u8) ekanligini tekshirish
+            social_domains = ['youtube.com', 'youtu.be', 'instagram.com', 'facebook.com', 'fb.watch', 'tiktok.com', '.m3u8']
+            is_social = any(d in url.lower() for d in social_domains) or url.lower().endswith('.m3u8')
             
             if is_social:
                 video_path = download_social_video(url, item_id)
