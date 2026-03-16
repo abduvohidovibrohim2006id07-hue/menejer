@@ -182,21 +182,47 @@ def delete_product():
         if not item_id:
             return jsonify({'error': 'ID missing'}), 400
         
-        df = pd.read_excel(EXCEL_FILE, header=None)
-        temp_col = df[0].astype(str).str.split('.').str[0]
-        df_filtered = df[temp_col != str(item_id)]
-        df_filtered.to_excel(EXCEL_FILE, index=False, header=False)
-        
-        # Delete folder in S3
-        prefix = f"images/{item_id}/"
-        objects_to_delete = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=prefix)
-        if 'Contents' in objects_to_delete:
-            delete_keys = [{'Key': obj['Key']} for obj in objects_to_delete['Contents']]
-            s3_client.delete_objects(Bucket=BUCKET_NAME, Delete={'Objects': delete_keys})
-            
-        return jsonify({'success': True})
+        # Helper logic to perform deletion
+        return perform_delete([item_id])
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/bulk_delete', methods=['POST'])
+def bulk_delete():
+    try:
+        data = request.json
+        ids = data.get('ids', [])
+        if not ids:
+            return jsonify({'error': 'IDlar tanlanmagan'}), 400
+        
+        return perform_delete(ids)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def perform_delete(item_ids):
+    try:
+        # Read Excel
+        df = pd.read_excel(EXCEL_FILE, header=None)
+        temp_col = df[0].astype(str).str.split('.').str[0]
+        
+        # Filter out the IDs
+        mask = ~temp_col.isin([str(i) for i in item_ids])
+        df_filtered = df[mask]
+        
+        # Save back
+        df_filtered.to_excel(EXCEL_FILE, index=False, header=False)
+        
+        # Delete from S3
+        for item_id in item_ids:
+            prefix = f"images/{item_id}/"
+            objects_to_delete = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=prefix)
+            if 'Contents' in objects_to_delete:
+                delete_keys = [{'Key': obj['Key']} for obj in objects_to_delete['Contents']]
+                s3_client.delete_objects(Bucket=BUCKET_NAME, Delete={'Objects': delete_keys})
+        
+        return jsonify({'success': True})
+    except Exception as e:
+        raise e
 
 @app.route('/api/update_product_name', methods=['POST'])
 def update_product_name():
