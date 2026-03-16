@@ -915,9 +915,13 @@
                             <label>ID (Majburiy)*</label>
                             <input type="text" id="newId" required placeholder="Masalan: 10020">
                         </div>
-                        <div class="form-group form-full">
+                        <div class="form-group">
                             <label>Mahsulot Nomi*</label>
                             <input type="text" id="newName" required placeholder="Nomi">
+                        </div>
+                        <div class="form-group">
+                            <label>Nomi (Rus tilida)</label>
+                            <input type="text" id="newNameRU" placeholder="Название (RU)">
                         </div>
                         <div class="form-group">
                             <label>Model</label>
@@ -956,12 +960,21 @@
                             <input type="text" id="newSupplier">
                         </div>
                         <div class="form-group form-full">
-                            <label>Qisqa tavsif (Max 350 belgi)</label>
+                            <label>Qisqa tavsif (Uzbek - Max 350 belgi)</label>
                             <textarea id="newShortDesc" class="form-input" maxlength="350"></textarea>
                         </div>
                         <div class="form-group form-full">
-                            <label>To'liq tavsif (Max 5000 belgi)</label>
-                            <textarea id="newFullDesc" class="form-input" maxlength="5000" style="min-height: 150px;"></textarea>
+                            <label>To'liq tavsif (Uzbek - Max 5000 belgi)</label>
+                            <textarea id="newFullDesc" class="form-input" maxlength="5000" style="min-height: 100px;"></textarea>
+                        </div>
+                        <hr style="grid-column: span 2; width: 100%; border: 0.5px solid var(--border); margin: 10px 0;">
+                        <div class="form-group form-full">
+                            <label>Qisqa tavsif (Rus tilida - Max 350 belgi)</label>
+                            <textarea id="newShortDescRU" class="form-input" maxlength="350" placeholder="Краткое описание (RU)"></textarea>
+                        </div>
+                        <div class="form-group form-full">
+                            <label>To'liq tavsif (Rus tilida - Max 5000 belgi)</label>
+                            <textarea id="newFullDescRU" class="form-input" maxlength="5000" style="min-height: 100px;" placeholder="Полное описание (RU)"></textarea>
                         </div>
                     </div>
                 </div>
@@ -1286,6 +1299,9 @@
             document.getElementById('newSupplier').value = p.supplier || '';
             document.getElementById('newShortDesc').value = p.description_short || '';
             document.getElementById('newFullDesc').value = p.description_full || '';
+            document.getElementById('newNameRU').value = p.name_ru || '';
+            document.getElementById('newShortDescRU').value = p.description_short_ru || '';
+            document.getElementById('newFullDescRU').value = p.description_full_ru || '';
             openAddModal();
         }
 
@@ -1304,7 +1320,10 @@
                 color: document.getElementById('newColor').value,
                 supplier: document.getElementById('newSupplier').value,
                 description_short: document.getElementById('newShortDesc').value,
-                description_full: document.getElementById('newFullDesc').value
+                description_full: document.getElementById('newFullDesc').value,
+                name_ru: document.getElementById('newNameRU').value,
+                description_short_ru: document.getElementById('newShortDescRU').value,
+                description_full_ru: document.getElementById('newFullDescRU').value
             };
             try {
                 const res = await fetch(isEdit ? '/api/update_product_details' : '/api/add_product', {

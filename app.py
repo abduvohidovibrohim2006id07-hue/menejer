@@ -321,7 +321,11 @@ def add_product():
             'color':             data.get('color', ''),
             'description_short': data.get('description_short', '')[:350],
             'description_full':  data.get('description_full', '')[:5000],
-            'created_at':        firestore.SERVER_TIMESTAMP
+            'name_ru':           data.get('name_ru', ''),
+            'description_short_ru': data.get('description_short_ru', '')[:350],
+            'description_full_ru':  data.get('description_full_ru', '')[:5000],
+            'created_at':        firestore.SERVER_TIMESTAMP,
+            'updated_at':        firestore.SERVER_TIMESTAMP
         }
 
         if not item_id:
@@ -387,13 +391,14 @@ def update_product_details():
         
         # Faqat mavjud maydonlarni yangilash
         fields = ['name', 'price', 'model', 'brand', 'supplier', 'category', 
-                  'sku', 'group_sku', 'color', 'description_short', 'description_full']
+                  'sku', 'group_sku', 'color', 'description_short', 'description_full',
+                  'name_ru', 'description_short_ru', 'description_full_ru']
         update_data = {}
         for f in fields:
             if f in data:
                 val = data[f]
-                if f == 'description_short': val = str(val)[:350]
-                if f == 'description_full':  val = str(val)[:5000]
+                if f in ['description_short', 'description_short_ru']: val = str(val)[:350]
+                if f in ['description_full', 'description_full_ru']:  val = str(val)[:5000]
                 update_data[f] = val
         
         if update_data:
@@ -568,7 +573,10 @@ def download_excel():
                 p.get('color', ''),
                 p.get('price', ''),
                 p.get('description_short', ''),
-                p.get('description_full', '')
+                p.get('description_full', ''),
+                p.get('name_ru', ''),
+                p.get('description_short_ru', ''),
+                p.get('description_full_ru', '')
             ]
             
             # 10 tagacha rasm URL ini qo'shish
@@ -577,7 +585,7 @@ def download_excel():
                 
             rows.append(row)
 
-        cols = ['ID', 'Nomi', 'Model', 'Brend', 'Yetkazib beruvchi', 'Kategoriya', 'SKU', 'Group SKU', 'Rang', 'Narx', 'Qisqa Tavsif', 'To\'liq Tavsif']
+        cols = ['ID', 'Nomi', 'Model', 'Brend', 'Yetkazib beruvchi', 'Kategoriya', 'SKU', 'Group SKU', 'Rang', 'Narx', 'Qisqa Tavsif', 'To\'liq Tavsif', 'Nomi (RU)', 'Qisqa Tavsif (RU)', 'To\'liq Tavsif (RU)']
         for i in range(1, 11):
             cols.append(f'Rasm {i}')
             
@@ -623,7 +631,10 @@ def import_excel():
             'color':             'Rang',
             'price':             'Narx',
             'description_short': 'Qisqa Tavsif',
-            'description_full':  'To\'liq Tavsif'
+            'description_full':  'To\'liq Tavsif',
+            'name_ru':           'Nomi (RU)',
+            'description_short_ru': 'Qisqa Tavsif (RU)',
+            'description_full_ru':  'To\'liq Tavsif (RU)'
         }
 
         # Mavjud ustun nomlarini aniqlash
@@ -667,6 +678,9 @@ def import_excel():
                     'price':             get_by_col(cols_map['price'], '0'),
                     'description_short': get_by_col(cols_map['description_short'])[:350],
                     'description_full':  get_by_col(cols_map['description_full'])[:5000],
+                    'name_ru':           get_by_col(cols_map['name_ru']),
+                    'description_short_ru': get_by_col(cols_map['description_short_ru'])[:350],
+                    'description_full_ru':  get_by_col(cols_map['description_full_ru'])[:5000],
                     'updated_at':        firestore.SERVER_TIMESTAMP
                 }
 
