@@ -974,10 +974,11 @@
     </div>
 
     <script>
+        // Brauzer hotirasidan holatni yuklash
         let allProducts = [];
         let allCategories = [];
-        let currentView = 'manage';
-        let currentCategory = 'Barchasi';
+        let currentView = localStorage.getItem('currentView') || 'manage';
+        let currentCategory = localStorage.getItem('currentCategory') || 'Barchasi';
 
         document.addEventListener('DOMContentLoaded', fetchProducts);
 
@@ -1004,7 +1005,16 @@
                 loader.style.display = 'none';
                 
                 await fetchCategories(); // Kategoriyalarni yuklash
-                renderProducts(allProducts);
+                
+                // Saqlangan qidiruvni tiklash
+                const savedSearch = localStorage.getItem('searchQuery') || '';
+                document.getElementById('searchInput').value = savedSearch;
+                
+                // Ko'rinishni tiklash
+                switchView(currentView);
+                
+                // Filtrni qo'llash
+                filterProducts();
             } catch (error) {
                 loader.innerHTML = `<div style="color:red; text-align:center; padding:20px;">Xatolik yuz berdi.</div>`;
             }
@@ -1055,12 +1065,15 @@
 
         function filterByCategory(cat) {
             currentCategory = cat;
+            localStorage.setItem('currentCategory', cat);
             updateCategoryChips();
             filterProducts();
         }
 
         function filterProducts() {
             const query = document.getElementById('searchInput').value.toLowerCase();
+            localStorage.setItem('searchQuery', query);
+            
             let filtered = allProducts;
             if (currentCategory !== 'Barchasi') {
                 filtered = filtered.filter(p => p.category === currentCategory);
@@ -1075,6 +1088,7 @@
 
         function switchView(view) {
             currentView = view;
+            localStorage.setItem('currentView', view);
             document.querySelectorAll('.nav-tab').forEach(t => {
                 const isMatch = (view === 'manage' && t.innerText.includes('Mahsulotlar')) || 
                               (view === 'categories' && t.innerText.includes('Kategoriyalar'));
