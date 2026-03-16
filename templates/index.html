@@ -1345,6 +1345,48 @@
             } catch (err) { showToast("Xato", 'error'); }
         }
 
+        async function compressImage(file) {
+            return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.src = event.target.result;
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        
+                        // Maksimal o'lchamni cheklash (masalan, 2500px) sifatni saqlash uchun
+                        const maxSide = 2500;
+                        if (width > maxSide || height > maxSide) {
+                            if (width > height) {
+                                height = (height / width) * maxSide;
+                                width = maxSide;
+                            } else {
+                                width = (width / height) * maxSide;
+                                height = maxSide;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        // JPG formatida 0.7 sifat bilan siqish
+                        canvas.toBlob((blob) => {
+                            const compressedFile = new File([blob], file.name.replace(/\.[^/.]+$/, ".jpg"), {
+                                type: 'image/jpeg',
+                                lastModified: Date.now()
+                            });
+                            resolve(compressedFile);
+                        }, 'image/jpeg', 0.75);
+                    };
+                };
+            });
+        }
+
         async function handleFileUpload(e, id) {
             e.preventDefault();
             const input = e.target.querySelector('input[type="file"]');
@@ -1360,9 +1402,23 @@
                 return;
             }
 
+            let fileToUpload = file;
+
+            // Agar rasm 4MB dan katta bo'lsa yoki PNG bo'lsa - SIQISH
+            if (!isVideo && (file.size > 4 * 1024 * 1024 || file.type === 'image/png')) {
+                showToast("Optimallashtirilmoqda...", 'info');
+                fileToUpload = await compressImage(file);
+                // Agar siqilgandan keyin ham limitdan katta bo'lsa (Vercel cheklovi)
+                if (fileToUpload.size > 4.5 * 1024 * 1024) {
+                    showToast("Fayl hali ham juda katta. Iltimos URL orqali yuklang.", 'error');
+                    input.value = '';
+                    return;
+                }
+            }
+
             const fd = new FormData();
             fd.append('id', id);
-            fd.append('file', input.files[0]);
+            fd.append('file', fileToUpload);
             const sec = document.getElementById(`upload-sec-${id}`);
             sec.classList.add('loading');
             try {
