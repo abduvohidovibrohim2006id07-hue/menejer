@@ -1,6 +1,7 @@
 import os
 import io
 import json
+import time
 import requests
 import boto3
 import pandas as pd
@@ -680,24 +681,28 @@ def get_presigned_url():
     try:
         data = request.json
         item_id = data.get('id')
-        filename = secure_filename(data.get('filename'))
+        orig_filename = data.get('filename', 'file.dat')
         content_type = data.get('contentType', 'application/octet-stream')
         
-        if not item_id or not filename:
-             return jsonify({'error': 'ID yoki fayl nomi yo\'q'}), 400
+        if not item_id:
+             return jsonify({'error': 'ID yo\'q'}), 400
 
-        s3_key = f"images/{item_id}/{filename}"
+        # Fayl nomini xavfsiz qilish va unikal qilish
+        ext = os.path.splitext(orig_filename)[1].lower() or '.jpg'
+        clean_name = secure_filename(os.path.splitext(orig_filename)[0]) or 'file'
+        unique_name = f"{int(time.time())}_{clean_name}{ext}"
         
-        # To'g'ridan-to'g'ri S3 ga yuklash uchun vaqtinchalik havola yaratish
+        s3_key = f"images/{item_id}/{unique_name}"
+        
+        # Presigned URL yaratish (PUT uchun)
         url = s3_client.generate_presigned_url(
             'put_object',
             Params={
                 'Bucket': BUCKET_NAME,
                 'Key': s3_key,
-                'ContentType': content_type,
-                'ACL': 'public-read'
+                'ContentType': content_type
             },
-            ExpiresIn=600 # 10 daqiqa amal qiladi
+            ExpiresIn=600 
         )
         
         return jsonify({
@@ -706,6 +711,7 @@ def get_presigned_url():
             'publicUrl': f"{PUBLIC_ENDPOINT}/{BUCKET_NAME}/{s3_key}"
         })
     except Exception as e:
+        print(f"Presigned error: {e}")
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/upload', methods=['POST'])
