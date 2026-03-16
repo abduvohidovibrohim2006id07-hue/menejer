@@ -18,22 +18,28 @@ app = Flask(__name__)
 # ── Firebase ──────────────────────────────────────────────────────────────────
 firebase_initialized = False
 try:
-    firebase_key_path = os.path.join(os.path.dirname(__file__), 'firebase-key.json')
-    if os.path.exists(firebase_key_path):
-        cred = credentials.Certificate(firebase_key_path)
-        firebase_admin.initialize_app(cred)
-        firebase_initialized = True
-    else:
-        fb_content = os.getenv("FIREBASE_SERVICE_ACCOUNT")
-        if fb_content:
-            cred_dict = json.loads(fb_content)
-            cred = credentials.Certificate(cred_dict)
+    if not firebase_admin._apps:
+        firebase_key_path = os.path.join(os.path.dirname(__file__), 'firebase-key.json')
+        if os.path.exists(firebase_key_path):
+            cred = credentials.Certificate(firebase_key_path)
             firebase_admin.initialize_app(cred)
             firebase_initialized = True
         else:
-            print("FIREBASE_SERVICE_ACCOUNT topilmadi!")
+            fb_content = os.getenv("FIREBASE_SERVICE_ACCOUNT")
+            if fb_content:
+                cred_dict = json.loads(fb_content)
+                cred = credentials.Certificate(cred_dict)
+                firebase_admin.initialize_app(cred)
+                firebase_initialized = True
+            else:
+                print("FIREBASE_SERVICE_ACCOUNT topilmadi!")
+    else:
+        firebase_initialized = True
 except Exception as e:
     print(f"Firebase xatolik: {e}")
+    # Agar biron-bir ilova mavjud bo'lsa, uni True deb hisoblaymiz
+    if firebase_admin._apps:
+        firebase_initialized = True
 
 def get_db():
     if not firebase_initialized:
@@ -128,6 +134,9 @@ def get_products():
             })
         return jsonify(products)
     except Exception as e:
+        print(f"API Products Error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/add_product', methods=['POST'])
@@ -324,55 +333,66 @@ def import_excel():
         count = 0
         imported = 0
         skipped  = 0
+        errors   = []
 
-        for _, row in df.iterrows():
-            # ID
-            raw_id  = str(row.iloc[0]).strip() if len(row) > 0 else ''
-            item_id = raw_id.split('.')[0]
-            if not item_id or item_id.lower() in ('nan', 'id', ''):
-                skipped += 1
-                continue
-
-            # Nom
-            name = str(row.iloc[1]).strip() if len(row) > 1 else 'Nomsiz'
-            if name.lower() == 'nan':
-                name = 'Nomsiz'
-
-            # Narx (D ustun = index 3)
+        for idx, row in df.iterrows():
             try:
-                price = str(row.iloc[3]).strip()
-                if price.lower() == 'nan':
-                    price = 'Narx kiritilmagan'
-            except (IndexError, KeyError):
-                price = 'Narx kiritilmagan'
+                # ID
+                raw_id  = str(row.iloc[0]).strip() if len(row) > 0 else ''
+                item_id = raw_id.split('.')[0]
+                if not item_id or item_id.lower() in ('nan', 'id', ''):
+                    skipped += 1
+                    continue
 
-            # Firestore ga yozish (mavjud bo'lsa merge)
-            doc_ref = db.collection('products').document(item_id)
-            batch.set(doc_ref, {
-                'id':         item_id,
-                'name':       name,
-                'price':      price,
-                'updated_at': firestore.SERVER_TIMESTAMP
-            }, merge=True)
-            count   += 1
-            imported += 1
+                # Nom
+                name = str(row.iloc[1]).strip() if len(row) > 1 else 'Nomsiz'
+                if name.lower() == 'nan':
+                    name = 'Nomsiz'
 
-            # Rasm URL'larini yuklab olish (F..O ustunlari = index 5..14)
-            for img_idx, col_i in enumerate(range(5, 15)):
+                # Narx (D ustun = index 3)
                 try:
-                    img_url = str(row.iloc[col_i]).strip()
-                except (IndexError, KeyError):
-                    break
-                upload_image_from_url(img_url, item_id, img_idx + 1)
+                    price = str(row.iloc[3]).strip()
+                    if price.lower() == 'nan':
+                        price = 'Narx kiritilmagan'
+                except:
+                    price = 'Narx kiritilmagan'
 
-            # Firestore 500 ta limitga yaqinlashganda commit qilib yangi batch ochamiz
-            if count % 400 == 0:
-                batch.commit()
-                batch = db.batch()
+                # Firestore ga yozish
+                doc_ref = db.collection('products').document(item_id)
+                batch.set(doc_ref, {
+                    'id':         item_id,
+                    'name':       name,
+                    'price':      price,
+                    'updated_at': firestore.SERVER_TIMESTAMP
+                }, merge=True)
+                
+                count   += 1
+                imported += 1
+
+                # Rasm URL'lari (F..O)
+                for img_idx, col_i in enumerate(range(5, 15)):
+                    try:
+                        if len(row) > col_i:
+                            img_url = str(row.iloc[col_i]).strip()
+                            if img_url and img_url.lower() != 'nan':
+                                upload_image_from_url(img_url, item_id, img_idx + 1)
+                    except:
+                        continue
+
+                if count % 200 == 0:
+                    batch.commit()
+                    batch = db.batch()
+            except Exception as row_err:
+                print(f"Row {idx} error: {row_err}")
+                errors.append(str(row_err))
+                skipped += 1
 
         batch.commit()
-        return jsonify({'success': True, 'imported': imported, 'skipped': skipped})
+        return jsonify({'success': True, 'imported': imported, 'skipped': skipped, 'row_errors': errors[:10]})
     except Exception as e:
+        print(f"Import Excel Error: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'error': str(e)}), 500
 
 
