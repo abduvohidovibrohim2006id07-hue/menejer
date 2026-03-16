@@ -1549,43 +1549,52 @@
             
             const file = input.files[0];
             const isVideo = file.type.startsWith('video/');
-            const limit = isVideo ? 200 * 1024 * 1024 : 20 * 1024 * 1024; // 200MB for video, 20MB for image
+            const limit = isVideo ? 200 * 1024 * 1024 : 30 * 1024 * 1024; // 200MB video, 30MB image
 
             if (file.size > limit) {
-                showToast(`Fayl juda katta (max ${isVideo ? '200MB' : '20MB'})`, 'error');
+                showToast(`Fayl juda katta (max ${isVideo ? '200MB' : '30MB'})`, 'error');
                 input.value = '';
                 return;
             }
 
-            let fileToUpload = file;
-
-            // Agar rasm 4MB dan katta bo'lsa yoki PNG bo'lsa - SIQISH
-            if (!isVideo && (file.size > 4 * 1024 * 1024 || file.type === 'image/png')) {
-                showToast("Optimallashtirilmoqda...", 'info');
-                fileToUpload = await compressImage(file);
-                // Agar siqilgandan keyin ham limitdan katta bo'lsa (Vercel cheklovi)
-                if (fileToUpload.size > 4.5 * 1024 * 1024) {
-                    showToast("Fayl hali ham juda katta. Iltimos URL orqali yuklang.", 'error');
-                    input.value = '';
-                    return;
-                }
-            }
-
-            const fd = new FormData();
-            fd.append('id', id);
-            fd.append('file', fileToUpload);
             const sec = document.getElementById(`upload-sec-${id}`);
             sec.classList.add('loading');
+            
             try {
-                const res = await fetch('/api/upload', {method: 'POST', body: fd});
-                if (res.status === 413) throw new Error("Fayl hajmi juda katta!");
-                const data = await res.json();
-                if (data.success) {
-                    showToast("Yuklandi");
-                    fetchProducts();
-                } else showToast(data.error || "Xato", 'error');
-            } catch (err) { showToast(err.message || "Xato", 'error'); }
-            finally { sec.classList.remove('loading'); input.value = ''; }
+                // 1. Backenddan xavfsiz yuklash havolasini olish (Presigned URL)
+                const resUrl = await fetch('/api/get_presigned_url', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        id: id,
+                        filename: file.name,
+                        contentType: file.type
+                    })
+                });
+                
+                const urlData = await resUrl.json();
+                if (!urlData.success) throw new Error(urlData.error || "Havola olishda xato");
+
+                // 2. To'g'ridan-to'g'ri S3 ga yuklash (Vercel cheklovlarini chetlab o'tamiz)
+                showToast(isVideo ? "Video yuklanmoqda (Direct S3)..." : "Rasm yuklanmoqda...", 'info');
+                
+                const uploadRes = await fetch(urlData.uploadUrl, {
+                    method: 'PUT',
+                    body: file,
+                    headers: { 'Content-Type': file.type }
+                });
+
+                if (!uploadRes.ok) throw new Error("S3 ga yuklashda xatolik yuz berdi");
+
+                showToast("Muvaffaqiyatli yuklandi!");
+                fetchProducts();
+            } catch (err) { 
+                console.error(err);
+                showToast(err.message || "Xato yuz berdi", 'error'); 
+            } finally { 
+                sec.classList.remove('loading'); 
+                input.value = ''; 
+            }
         }
 
         async function handleUrlUpload(e, id) {
