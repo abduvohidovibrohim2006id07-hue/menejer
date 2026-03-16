@@ -1321,7 +1321,7 @@
                     if (isVideo) {
                         return `
                         <div class="img-card" id="img-${product.id}-${btoa(fname)}">
-                            <video src="${img}" style="width:100%; height:100%; object-fit:cover;" muted loop onmouseover="this.play().catch(e=>{})" onmouseout="this.pause()" onclick="openImageOverlay('${img}', true)" onerror="this.parentElement.innerHTML='<div style=\'padding:20px;font-size:0.7rem;text-align:center;\'>Video xatosi</div>'"></video>
+                            <video src="${img}" style="width:100%; height:100%; object-fit:cover;" muted loop onmouseover="this.play().catch(e=>{})" onmouseout="this.pause()" onclick="openImageOverlay('${img}', true)" onerror="this.parentElement.innerHTML='<div style=&quot;padding:20px;font-size:0.7rem;text-align:center;&quot;>Video xatosi</div>'"></video>
                             ${isManage ? `<div class="img-overlay"><button class="del-img-btn" onclick="deleteImage('${product.id}', '${fname}')">🗑️</button></div>` : ''}
                         </div>
                         `;
@@ -1671,7 +1671,7 @@
             if (isVideo) {
                 overlay.innerHTML = `
                     <div style="position:relative; width:95%; height:95%; display:flex; align-items:center; justify-content:center;">
-                        <video src="${src}" controls autoplay style="max-width:100%; max-height:100%; outline:none;" onerror="this.outerHTML='<div style=\'color:white;text-align:center;\'><h2>Video yuklab bo\\\'lmadi</h2><p>Brauzer ushbu formatni qo\\\'llab-quvvatlamasligi mumkin.</p></div>'"></video>
+                        <video src="${src}" controls autoplay style="max-width:100%; max-height:100%; outline:none;" onerror="this.outerHTML='<div style=&quot;color:white;text-align:center;&quot;><h2>Video yuklab bo\\\'lmadi</h2><p>Brauzer ushbu formatni qo\\\'llab-quvvatlamasligi mumkin.</p></div>'"></video>
                         <button style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); border:none; color:white; font-size:2rem; cursor:pointer;" onclick="document.getElementById('imageOverlay').classList.remove('show')">&times;</button>
                     </div>`;
             } else {
