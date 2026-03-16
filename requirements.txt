@@ -6,3 +6,4 @@ werkzeug
 boto3
 python-dotenv
 firebase-admin
+yt-dlp
