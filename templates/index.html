@@ -924,6 +924,7 @@
 
     <script>
         let allProducts = [];
+        let allCategories = []; // Global categories
         let currentView = 'store';
         let currentCategory = 'Barchasi';
 
@@ -961,25 +962,22 @@
         async function fetchCategories() {
             try {
                 const res = await fetch('/api/categories');
-                const categories = await res.json();
+                allCategories = await res.json();
                 
                 // Update datalist
                 const list = document.getElementById('cat-list');
-                list.innerHTML = categories.map(c => `<option value="${c}">`).join('');
+                list.innerHTML = allCategories.map(c => `<option value="${c}">`).join('');
                 
-                // Update Chips (using categories from products to maintain filter state, or use all cats)
-                updateCategoryChips(categories);
+                // Update Chips
+                updateCategoryChips();
             } catch (e) { console.error("Kategoriyalar yuklanmadi", e); }
         }
 
-        function updateCategoryChips(catList) {
+        function updateCategoryChips() {
             const container = document.getElementById('category-container');
-            // Use all categories or just those derived from products? 
-            // Better to use derived from products + Barchasi for better UX, 
-            // but since user wants to "Create", let's show all registered categories.
-            const categories = ['Barchasi', ...catList];
+            const categories = ['Barchasi', ...allCategories];
             container.innerHTML = categories.map(cat => `
-                <div class="cat-chip ${cat === currentCategory ? 'active' : ''}" onclick="filterByCategory('${cat}')">
+                <div class="cat-chip ${cat === currentCategory ? 'active' : ''}" onclick="filterByCategory('${cat.replace(/'/g, "\\'")}')">
                     ${cat}
                 </div>
             `).join('');
@@ -1217,6 +1215,14 @@
             e.preventDefault();
             const input = e.target.querySelector('input[type="file"]');
             if (!input.files[0]) return;
+            
+            // Size Check (4.5 MB limit for Vercel/Server)
+            if (input.files[0].size > 4.5 * 1024 * 1024) {
+                showToast("Fayl juda katta (max 4.5MB)", 'error');
+                input.value = '';
+                return;
+            }
+
             const fd = new FormData();
             fd.append('id', id);
             fd.append('file', input.files[0]);
@@ -1224,11 +1230,14 @@
             sec.classList.add('loading');
             try {
                 const res = await fetch('/api/upload', {method: 'POST', body: fd});
-                if ((await res.json()).success) {
+                if (res.status === 413) throw new Error("Fayl hajmi juda katta!");
+                const data = await res.json();
+                if (data.success) {
                     showToast("Yuklandi");
                     fetchProducts();
-                }
-            } finally { sec.classList.remove('loading'); input.value = ''; }
+                } else showToast(data.error || "Xato", 'error');
+            } catch (err) { showToast(err.message || "Xato", 'error'); }
+            finally { sec.classList.remove('loading'); input.value = ''; }
         }
 
         async function handleUrlUpload(e, id) {
