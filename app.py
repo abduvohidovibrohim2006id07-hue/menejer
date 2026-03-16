@@ -75,14 +75,15 @@ def upload_image_from_url(url, item_id, index):
             return None
 
         content_type = resp.headers.get('content-type', 'image/jpeg')
-        if 'png' in content_type:
-            ext = '.png'
-        elif 'webp' in content_type:
-            ext = '.webp'
+        if 'png' in content_type: ext = '.png'
+        elif 'webp' in content_type: ext = '.webp'
+        elif 'mp4' in content_type: ext = '.mp4'
+        elif 'webm' in content_type: ext = '.webm'
+        elif 'video/' in content_type:
+            ext = '.' + content_type.split('/')[-1].split(';')[0]
         else:
-            # URL'dan extension olishga harakat
             url_ext = os.path.splitext(url.split('?')[0])[1].lower()
-            ext = url_ext if url_ext in ('.jpg', '.jpeg', '.png', '.webp') else '.jpg'
+            ext = url_ext if url_ext in ('.jpg', '.jpeg', '.png', '.webp', '.mp4', '.mov', '.avi', '.webm') else '.jpg'
 
         filename  = f"import_{index}{ext}"
         s3_key    = f"images/{item_id}/{filename}"
@@ -451,7 +452,13 @@ def upload_image():
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
                 content_type = resp.headers.get('content-type', '')
-                ext   = '.png' if 'png' in content_type else '.webp' if 'webp' in content_type else '.jpg'
+                if 'png' in content_type: ext = '.png'
+                elif 'webp' in content_type: ext = '.webp'
+                elif 'mp4' in content_type: ext = '.mp4'
+                elif 'webm' in content_type: ext = '.webm'
+                elif 'video/' in content_type: ext = '.' + content_type.split('/')[-1].split(';')[0]
+                else: ext = '.jpg'
+
                 count = s3_client.list_objects_v2(Bucket=BUCKET_NAME, Prefix=f"images/{item_id}/").get('KeyCount', 0)
                 s3_key = f"images/{item_id}/manual_{count + 1}{ext}"
                 s3_client.put_object(Bucket=BUCKET_NAME, Key=s3_key, Body=resp.content,

@@ -1166,7 +1166,18 @@
                 
                 const imgs = product.local_images || [];
                 const galleryHtml = imgs.length > 0 ? imgs.map(img => {
-                    const fname = img.split('/').pop();
+                    const fname = img.split('/').pop().toLowerCase();
+                    const isVideo = fname.endsWith('.mp4') || fname.endsWith('.webm') || fname.endsWith('.mov') || fname.endsWith('.avi') || fname.endsWith('.ogg');
+                    
+                    if (isVideo) {
+                        return `
+                        <div class="img-card" id="img-${product.id}-${fname}">
+                            <video src="${img}" style="width:100%; height:100%; object-fit:cover;" muted loop onmouseover="this.play()" onmouseout="this.pause()" onclick="openImageOverlay('${img}', true)"></video>
+                            ${isManage ? `<div class="img-overlay"><button class="del-img-btn" onclick="deleteImage('${product.id}', '${fname}')">🗑️</button></div>` : ''}
+                        </div>
+                        `;
+                    }
+
                     return `
                         <div class="img-card" id="img-${product.id}-${fname}">
                             <div style="position: absolute; top:0; left:0; z-index:60; display:flex; gap:4px; padding:6px;">
@@ -1177,7 +1188,7 @@
                             ${isManage ? `<div class="img-overlay"><button class="del-img-btn" onclick="deleteImage('${product.id}', '${fname}')">🗑️</button></div>` : ''}
                         </div>
                     `;
-                }).join('') : `<div class="empty-state" style="padding:20px; font-size:0.8rem;">Rasm yo'q</div>`;
+                }).join('') : `<div class="empty-state" style="padding:20px; font-size:0.8rem;">Rasm yoki video yo'q</div>`;
 
                 card.innerHTML = `
                     <div class="product-header">
@@ -1220,8 +1231,8 @@
                             <div class="uploading-overlay">...</div>
                             <form onsubmit="handleFileUpload(event, '${product.id}')">
                                 <div class="file-drop">
-                                    <input type="file" class="file-input" onchange="this.form.dispatchEvent(new Event('submit'))">
-                                    <div class="file-drop-text" style="font-size:0.75rem;">📁 Yuklash</div>
+                                    <input type="file" class="file-input" accept="image/*,video/*" onchange="this.form.dispatchEvent(new Event('submit'))">
+                                    <div class="file-drop-text" style="font-size:0.75rem;">📁 Media yuklash</div>
                                 </div>
                             </form>
                             <form class="url-form" onsubmit="handleUrlUpload(event, '${product.id}')" style="margin-top:8px;">
@@ -1339,9 +1350,12 @@
             const input = e.target.querySelector('input[type="file"]');
             if (!input.files[0]) return;
             
-            // Size Check (4.5 MB limit for Vercel/Server)
-            if (input.files[0].size > 4.5 * 1024 * 1024) {
-                showToast("Fayl juda katta (max 4.5MB)", 'error');
+            const file = input.files[0];
+            const isVideo = file.type.startsWith('video/');
+            const limit = isVideo ? 200 * 1024 * 1024 : 20 * 1024 * 1024; // 200MB for video, 20MB for image
+
+            if (file.size > limit) {
+                showToast(`Fayl juda katta (max ${isVideo ? '200MB' : '20MB'})`, 'error');
                 input.value = '';
                 return;
             }
@@ -1440,11 +1454,23 @@
         }
 
         // --- Layout/UI ---
-        function openImageOverlay(src) {
+        function openImageOverlay(src, isVideo = false) {
             const overlay = document.getElementById('imageOverlay');
             const img = document.getElementById('overlayImg');
-            img.src = src;
+            
+            if (isVideo) {
+                overlay.innerHTML = `<video src="${src}" controls autoplay style="max-width:95%; max-height:95%; outline:none;"></video>`;
+            } else {
+                overlay.innerHTML = `<img src="${src}" alt="Full Sized">`;
+            }
+            
             overlay.classList.add('show');
+            overlay.onclick = (e) => {
+                if(e.target === overlay) {
+                    overlay.classList.remove('show');
+                    overlay.innerHTML = '<img id="overlayImg" src="" alt="Full Sized">';
+                }
+            };
         }
 
         function downloadExcel() {
