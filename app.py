@@ -21,6 +21,12 @@ app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 200 * 1024 * 1024  # 200 MB limit
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
+@app.after_request
+def add_security_headers(response):
+    response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+    response.headers['Cross-Origin-Embedder-Policy'] = 'require-corp'
+    return response
+
 # ── Firebase ──────────────────────────────────────────────────────────────────
 firebase_initialized = False
 try:
