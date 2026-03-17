@@ -24,8 +24,19 @@ export const POST = withGateway(async (req) => {
     const id = row['ID']?.toString();
     if (!id) continue;
 
-    const productData = {
+    // Media havolalarini qayta ishlash
+    const rasmText = row['Rasm havolalari'] || '';
+    const videoText = row['Video havolalari'] || '';
+    
+    const imagesArray = rasmText.split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
+    const videosArray = videoText.split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
+    
+    // Barchasini birlashtirish
+    const local_images = [...imagesArray, ...videosArray];
+
+    const productData: any = {
       name: row['Nomi'] || '',
+      name_ru: row['Nomi RU'] || '',
       model: row['Model'] || '',
       brand: row['Brend'] || '',
       category: row['Kategoriya'] || '',
@@ -33,6 +44,9 @@ export const POST = withGateway(async (req) => {
       price: row['Narx']?.toString() || '0',
       description_short: row['Qisqa Tavsif'] || '',
       description_full: row['To\'liq Tavsif'] || '',
+      description_short_ru: row['Qisqa Tavsif RU'] || '',
+      description_full_ru: row['To\'liq Tavsif RU'] || '',
+      local_images: local_images,
       updated_at: new Date().toISOString(),
     };
 

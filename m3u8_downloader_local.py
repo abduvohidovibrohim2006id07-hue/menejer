@@ -38,17 +38,26 @@ def download_and_upload(product_id, m3u8_url):
     local_path = os.path.join(os.getcwd(), output_filename)
 
     try:
-        # Path to the ffmpeg you just extracted
-        FFMPEG_PATH = r"C:\Users\abduv\Downloads\ffmpeg-2026-03-15-git-6ba0b59d8b-full_build\bin"
-        ffmpeg_exe = os.path.join(FFMPEG_PATH, 'ffmpeg.exe')
+        # Potential FFmpeg paths
+        possible_paths = [
+            os.path.join(os.path.dirname(__file__), 'ffmpeg', 'bin'), # Project folder/ffmpeg/bin
+            r"C:\Users\abduv\Downloads\ffmpeg-2026-03-15-git-6ba0b59d8b-full_build\bin", # Downloads
+            r"C:\ffmpeg\bin" # Standard C drive
+        ]
+        
+        FFMPEG_PATH = None
+        for p in possible_paths:
+            if os.path.exists(os.path.join(p, 'ffmpeg.exe')):
+                FFMPEG_PATH = p
+                break
 
-        has_ffmpeg = os.path.exists(ffmpeg_exe)
+        has_ffmpeg = FFMPEG_PATH is not None
 
         if not has_ffmpeg:
             print("⚠️  FFmpeg topilmadi! Videoning ulangan joylari bilinishi mumkin.")
-            print("💡 Tavsiya: FFmpeg o'rnating, shunda videolar choksiz (seamless) bo'ladi.")
+            print(f"💡 Tavsiya: FFmpeg'ni mana bu yerga joylang: {os.path.join(os.getcwd(), 'ffmpeg', 'bin')}")
         else:
-            print("✅ FFmpeg topildi! Video sifati mukammal bo'ladi.")
+            print(f"✅ FFmpeg topildi ({FFMPEG_PATH})! Video sifati mukammal bo'ladi.")
 
         # 1. Download using yt-dlp (Forced Re-encode for smoothness)
         print("⬇️ .m3u8 dan MP4 ga o'girilmoqda (Mukammal birlashtirish: Re-encode)...")

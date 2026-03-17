@@ -8,6 +8,12 @@ export const GET = withGateway(async () => {
   
   const products = snapshot.docs.map(doc => {
     const data = doc.data();
+    const allMedia = (data.local_images || []) as string[];
+    
+    // Ajratish: Rasmlar va Videolar
+    const images = allMedia.filter(url => !url.toLowerCase().endsWith('.mp4')).join('; ');
+    const videos = allMedia.filter(url => url.toLowerCase().endsWith('.mp4')).join('; ');
+
     return {
       'ID': doc.id,
       'Nomi': data.name || '',
@@ -17,6 +23,8 @@ export const GET = withGateway(async () => {
       'Kategoriya': data.category || '',
       'Rang': data.color || '',
       'Narx': data.price || '0',
+      'Rasm havolalari': images,
+      'Video havolalari': videos,
       'Qisqa Tavsif': data.description_short || '',
       'To\'liq Tavsif': data.description_full || '',
       'Qisqa Tavsif RU': data.description_short_ru || '',
