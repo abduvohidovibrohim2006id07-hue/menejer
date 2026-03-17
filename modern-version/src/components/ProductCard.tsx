@@ -24,6 +24,8 @@ interface ProductCardProps {
 }
 
 export const ProductCard = ({ product, onEdit, onDelete, onRefresh }: ProductCardProps) => {
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+
   const scrollGallery = (direction: number) => {
     const gallery = document.getElementById(`gallery-${product.id}`);
     if (gallery) {
@@ -47,6 +49,41 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh }: ProductCar
 
   return (
     <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all flex flex-col md:flex-row gap-8 items-stretch group/card">
+      {/* Media Preview Modal (Lightbox) */}
+      {previewUrl && (
+        <div 
+          className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <button 
+            className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-2xl transition-all z-[110]"
+            onClick={() => setPreviewUrl(null)}
+          >
+            ✕
+          </button>
+          
+          <div 
+            className="relative max-w-5xl w-full h-full flex items-center justify-center"
+            onClick={e => e.stopPropagation()}
+          >
+            {previewUrl.toLowerCase().endsWith('.mp4') ? (
+              <video 
+                src={previewUrl} 
+                className="max-w-full max-h-full rounded-2xl shadow-2xl"
+                controls
+                autoPlay
+              />
+            ) : (
+              <img 
+                src={previewUrl} 
+                alt="" 
+                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+              />
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Left: Gallery Section */}
       <div className="relative group w-full md:w-[350px] shrink-0">
         <button 
@@ -65,7 +102,11 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh }: ProductCar
               const filename = img.split('/').pop() || '';
               const isVideo = img.toLowerCase().endsWith('.mp4');
               return (
-                <div key={idx} className="flex-none w-full aspect-[4/5] md:w-[300px] md:h-[350px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 snap-start relative group/item shadow-sm">
+                <div 
+                  key={idx} 
+                  className="flex-none w-full aspect-[4/5] md:w-[300px] md:h-[350px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 snap-start relative group/item shadow-sm cursor-zoom-in"
+                  onClick={() => setPreviewUrl(img)}
+                >
                   {isVideo ? (
                     <video 
                       src={img} 
@@ -82,6 +123,7 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh }: ProductCar
                       className="w-full h-full object-cover transition-transform group-hover/item:scale-110 duration-500"
                     />
                   )}
+                  {/* ... rest of the content ... */}
                   <div className="absolute top-3 left-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <a 
                       href={`https://www.google.com/search?q=${encodeURIComponent(product.category + ' ' + (product.brand || '') + ' ' + (product.model || ''))}&tbm=isch`} 
