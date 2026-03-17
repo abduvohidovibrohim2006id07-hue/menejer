@@ -5,7 +5,7 @@ type ApiHandler = (req: Request, context?: any) => Promise<any>;
 /**
  * Optimized API Gateway for 100% unified error handling, logging, and response format.
  */
-export const withGateway = (handler: ApiHandler) => async (req: Request, context?: any) => {
+export const withGateway = (handler: ApiHandler) => async (req: Request, context?: any): Promise<Response> => {
   const startTime = Date.now();
   const url = new URL(req.url);
   const path = url.pathname;

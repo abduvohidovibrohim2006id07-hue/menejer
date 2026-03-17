@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       url
     ];
 
-    return new Promise((resolve) => {
+    return new Promise<Response>((resolve) => {
       const yt = spawn('yt-dlp', args);
       
       let errorOutput = '';
