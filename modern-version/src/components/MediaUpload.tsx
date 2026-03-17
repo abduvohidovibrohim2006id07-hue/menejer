@@ -12,23 +12,63 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
   const [mode, setMode] = useState<'file' | 'url'>('file');
   const [url, setUrl] = useState('');
 
+  const processImage = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) return resolve(file);
+      
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1080;
+        canvas.height = 1440;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(file);
+
+        // Fill background white in case of transparency
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, 1080, 1440);
+
+        // Calculate proportions to avoid stretching (cover effect)
+        const scale = Math.max(1080 / img.naturalWidth, 1440 / img.naturalHeight);
+        const nw = img.naturalWidth * scale;
+        const nh = img.naturalHeight * scale;
+        const cx = (1080 - nw) / 2;
+        const cy = (1440 - nh) / 2;
+
+        ctx.drawImage(img, cx, cy, nw, nh);
+        
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+          } else {
+            resolve(file);
+          }
+        }, 'image/jpeg', 0.92);
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploading(true);
     try {
+      const processedFile = await processImage(file);
+      
       const res = await fetch('/api/products/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: productId, filename: file.name, contentType: file.type })
+        body: JSON.stringify({ id: productId, filename: processedFile.name, contentType: processedFile.type })
       });
       const { uploadUrl } = await res.json();
 
       await fetch(uploadUrl, {
         method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type }
+        body: processedFile,
+        headers: { 'Content-Type': processedFile.type }
       });
 
       onSuccess();
