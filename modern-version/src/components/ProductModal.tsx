@@ -240,7 +240,10 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
 
             {/* Full Descriptions */}
             <div className="space-y-4">
-              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1">To'liq tavsif (UZ)</label>
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest px-1">To'liq tavsif (UZ)</label>
+                <button type="button" onClick={() => handleAIAction('translate_desc_uz_ru', 'description_full', 'description_full_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 RU tarjima</button>
+              </div>
               <textarea 
                 className="w-full p-5 rounded-3xl border border-slate-200 bg-white text-slate-900 font-medium focus:ring-4 focus:ring-indigo-500/10 outline-none min-h-[200px] transition-all shadow-sm leading-relaxed"
                 value={formData.description_full}
@@ -249,7 +252,10 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
               />
             </div>
             <div className="space-y-4">
-              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1">To'liq tavsif (RU)</label>
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest px-1">To'liq tavsif (RU)</label>
+                <button type="button" onClick={() => handleAIAction('translate_ru_uz', 'description_full_ru', 'description_full')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 UZ tarjima</button>
+              </div>
               <textarea 
                 className="w-full p-5 rounded-3xl border border-slate-200 bg-white text-slate-900 font-medium focus:ring-4 focus:ring-indigo-500/10 outline-none min-h-[200px] transition-all shadow-sm leading-relaxed"
                 value={formData.description_full_ru}
