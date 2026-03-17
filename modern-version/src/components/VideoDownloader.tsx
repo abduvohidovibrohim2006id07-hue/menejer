@@ -11,6 +11,22 @@ export const VideoDownloader = () => {
   const [confirming, setConfirming] = useState(false);
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
+  const videoRef = React.useRef<HTMLVideoElement>(null);
+
+  const formatSecondsToTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = Math.floor(seconds % 60);
+    return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':');
+  };
+
+  const captureTime = (type: 'start' | 'end') => {
+    if (videoRef.current) {
+      const time = formatSecondsToTime(videoRef.current.currentTime);
+      if (type === 'start') setStartTime(time);
+      else setEndTime(time);
+    }
+  };
 
   const handleDownload = async () => {
     if (!productId || !videoUrl) {
@@ -160,9 +176,14 @@ export const VideoDownloader = () => {
         </button>
 
         {status && (
-          <div className="py-4 px-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-300">
-            <span className="text-lg">ℹ️</span>
-            <p className="text-sm font-bold text-slate-600 leading-tight">{status}</p>
+          <div className="py-4 px-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center justify-between animate-in fade-in slide-in-from-left-4 duration-300">
+            <div className="flex items-center gap-3">
+              <span className="text-lg">ℹ️</span>
+              <p className="text-sm font-bold text-slate-600 leading-tight">{status}</p>
+            </div>
+            {(startTime || endTime) && (
+              <button onClick={() => { setStartTime(""); setEndTime(""); }} className="text-[10px] font-black text-red-500 hover:text-red-700">TOZALASH</button>
+            )}
           </div>
         )}
       </div>
@@ -170,12 +191,13 @@ export const VideoDownloader = () => {
       {tempVideo && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-700 pb-10">
           <header className="flex items-center justify-between px-2">
-            <h3 className="text-xl md:text-2xl font-black text-slate-900">Preview</h3>
+            <h3 className="text-xl md:text-2xl font-black text-slate-900">Preview (Kesish)</h3>
             <span className="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-tighter">Yuklab olindi</span>
           </header>
-          
+
           <div className="bg-black rounded-[24px] md:rounded-[40px] overflow-hidden shadow-2xl border-2 md:border-4 border-white aspect-video relative group">
             <video 
+              ref={videoRef}
               src={tempVideo.url} 
               className="w-full h-full object-contain"
               controls
@@ -183,7 +205,29 @@ export const VideoDownloader = () => {
             />
           </div>
 
+          <div className="grid grid-cols-2 gap-4">
+             <button 
+               onClick={() => captureTime('start')}
+               className="py-4 bg-slate-100 text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-wider hover:bg-slate-200 transition-all shadow-sm flex items-center justify-center gap-2"
+             >
+               📍 Boshini {startTime ? `(${startTime})` : ""} belgilash
+             </button>
+             <button 
+               onClick={() => captureTime('end')}
+               className="py-4 bg-slate-100 text-slate-900 rounded-2xl font-black text-[10px] uppercase tracking-wider hover:bg-slate-200 transition-all shadow-sm flex items-center justify-center gap-2"
+             >
+               📍 Tugashini {endTime ? `(${endTime})` : ""} belgilash
+             </button>
+          </div>
+
           <div className="flex flex-col md:flex-row gap-3 md:gap-4">
+            <button 
+              onClick={handleDownload}
+              disabled={loading || confirming}
+              className="flex-1 py-5 md:py-6 bg-indigo-600 text-white rounded-[20px] md:rounded-[24px] font-black text-xs md:text-sm uppercase tracking-widest hover:bg-indigo-700 shadow-lg transition-all active:scale-95 flex items-center justify-center gap-3"
+            >
+              {loading ? "⏳ Kesilmoqda..." : "✂️ QAYTA KESISH"}
+            </button>
             <button 
               onClick={handleConfirm}
               disabled={confirming}
