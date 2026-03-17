@@ -29,6 +29,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
   });
 
   const [loading, setLoading] = useState(false);
+  const [isCatOpen, setIsCatOpen] = useState(false);
 
   useEffect(() => {
     if (product) {
@@ -240,21 +241,58 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
               />
             </div>
 
-            <div className="col-span-1 lg:col-span-2">
-               <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Kategoriya</label>
-               <input 
-                 list="category-list"
-                 type="text"
-                 placeholder="Kategoriyani tanlang yoki yozing..."
-                 className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
-                 value={formData.category}
-                 onChange={(e) => setFormData({...formData, category: e.target.value})}
-               />
-               <datalist id="category-list">
-                 {categories.map((c, i) => (
-                   <option key={i} value={c.name} />
-                 ))}
-               </datalist>
+            <div className="col-span-1 lg:col-span-2 relative">
+               <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Kategoriya*</label>
+               <div className="relative">
+                 <input 
+                   type="text"
+                   placeholder="Kategoriyani tanlang yoki yangi yozing..."
+                   className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                   value={formData.category}
+                   autoComplete="off"
+                   onFocus={() => setIsCatOpen(true)}
+                   onBlur={() => setTimeout(() => setIsCatOpen(false), 200)}
+                   onChange={(e) => {
+                     setFormData({...formData, category: e.target.value});
+                     setIsCatOpen(true);
+                   }}
+                 />
+                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                   {isCatOpen ? "▲" : "▼"}
+                 </div>
+
+                 {isCatOpen && (
+                   <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-slate-200 rounded-2xl shadow-2xl z-[150] max-h-[250px] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200 scrollbar-hide">
+                     <div className="sticky top-0 bg-slate-50 p-3 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
+                       Mavjud kategoriyalar
+                     </div>
+                     {categories
+                       .filter(c => c.name.toLowerCase().includes((formData.category || "").toLowerCase()))
+                       .length > 0 ? (
+                         categories
+                           .filter(c => c.name.toLowerCase().includes((formData.category || "").toLowerCase()))
+                           .map((c, i) => (
+                             <button
+                               key={i}
+                               type="button"
+                               onClick={() => {
+                                 setFormData({...formData, category: c.name});
+                                 setIsCatOpen(false);
+                               }}
+                               className="w-full text-left px-5 py-4 hover:bg-indigo-50 transition-colors border-b border-slate-50 last:border-0 flex items-center justify-between group"
+                             >
+                               <span className="font-bold text-slate-700 group-hover:text-indigo-600">{c.name}</span>
+                               <span className="text-[10px] bg-slate-100 text-slate-400 px-2 py-1 rounded-lg uppercase font-black">Tanlash</span>
+                             </button>
+                           ))
+                       ) : (
+                         <div className="p-5 text-center text-slate-400 italic font-medium">
+                           Mos kategoriya topilmadi. Yangi yozishingiz mumkin.
+                         </div>
+                       )}
+                   </div>
+                 )}
+               </div>
             </div>
 
             {/* STATUS SELECTION */}
