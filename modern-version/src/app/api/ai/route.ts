@@ -84,35 +84,38 @@ export const POST = withGateway(async (req) => {
         switch (action) {
           case 'translate_uz_ru':
             model = 'llama-3.3-70b-versatile';
-            prompt = `Matn: "${text}". Faqat ruscha tarjimasini qaytaring.`;
+            prompt = `Matn: "${text}". Faqat ruscha tarjimasini qaytaring. Hech qanday sarlavha va tushuntirishsiz.`;
             break;
           case 'translate_ru_uz':
             model = 'llama-3.3-70b-versatile';
-            prompt = `Matn: "${text}". Faqat o'zbekcha tarjimasini qaytaring.`;
+            prompt = `Matn: "${text}". Faqat o'zbekcha tarjimasini qaytaring. Hech qanday sarlavha va tushuntirishsiz.`;
             break;
           case 'generate_short':
             model = 'llama-3.3-70b-versatile';
-            prompt = `Ushbu mahsulot uchun juda jozibali qisqa tavsif yozing. Ma'lumotlar: ${JSON.stringify(context || {})}. Mavjud qo'shimcha ma'lumotlar: ${text}. TIL: O'zbekcha. QOIDA: Maksimal 350 ta belgi. Faqat matnni qaytaring.`;
+            prompt = `Ushbu mahsulot uchun jozibali marketing qisqa tavsifini yozing. Ma'lumotlar: ${JSON.stringify(context || {})}. Qo'shimcha ma'lumot: ${text}. TIL: O'zbekcha. QOIDA: Maksimal 350 ta belgi. FAQAT matnni o'zini qaytaring.`;
             break;
           case 'generate_short_ru':
             model = 'llama-3.3-70b-versatile';
-            prompt = `Напишите привлекательное маркетинговое краткое описание. Данные: ${JSON.stringify(context || {})}. Дополнительная информация: ${text}. ЯЗЫК: Русский. ПРАВИЛО: Максимум 350 символов. Верните только текст.`;
+            prompt = `Напишите привлекательное маркетинговое краткое описание. Данные: ${JSON.stringify(context || {})}. Дополнительно: ${text}. ЯЗЫК: Русский. ПРАВИЛО: Максимум 350 символов. Верните ТОЛЬКО чистый текст.`;
             break;
           case 'generate_full':
             model = 'openai/gpt-oss-120b';
-            prompt = `Ushbu mahsulot haqida juda mukammal professional marketing tavsifi yozing. Ma'lumotlar: ${JSON.stringify(context || {})}. Mavjud qo'shimcha ma'lumotlar: ${text}. TIL: O'zbekcha. Uzunlik: Taxminan 2000-2500 ta belgi bo'lsin. Faqat matnni qaytaring.`;
+            prompt = `Ushbu mahsulot haqida professional marketing tavsifi yozing. Ma'lumotlar: ${JSON.stringify(context || {})}. Qo'shimcha ma'lumot: ${text}. TIL: O'zbekcha. Uzunlik: 2000-2500 belgi. FAQAT matnni qaytaring.`;
             break;
           case 'generate_full_ru':
             model = 'openai/gpt-oss-120b';
-            prompt = `Напишите подробное профессиональное маркетинговое описание товара. Данные: ${JSON.stringify(context || {})}. Дополнительная информация: ${text}. ЯЗЫК: Русский. Длина: 2000-2500 символов. Верните только текст.`;
+            prompt = `Напишите подробное профессиональное маркетинговое описание товара. Данные: ${JSON.stringify(context || {})}. Дополнительно: ${text}. ЯЗЫК: Русский. Длина: 2000-2500 символов. Верните ТОЛЬКО текст.`;
             break;
           default:
             prompt = text;
         }
       } else {
-        prompt = `${prompt}\n\nGID (Yo'nalish): \n1. "short" - MAKS 350 ta belgi. \n2. "full" - MIN 1000 ta, MAKS 5000 ta belgi. \nData: ${text || JSON.stringify(context || {})}`;
+        prompt = `${prompt}\n\nQOIDALAR: FAQAT natijani qaytaring. Hech qanday "GID", "Yo'nalish", sarlavha yoki tushuntirish yozmang. Faqat matn bo'lsin.\nMa'lumotlar: ${text || JSON.stringify(context || {})}`;
       }
-      messages = [{ role: 'user', content: prompt }];
+      messages = [
+        { role: 'system', content: 'Siz faqat so\'ralgan matnni qaytaradigan AI yordamchisiz. HECH QANDAY sarlavha, "Gid", "Natija:" kabi so\'zlar qo\'shmang. Faqat toza matn qaytaring.' },
+        { role: 'user', content: prompt }
+      ];
     }
 
   const groqResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
