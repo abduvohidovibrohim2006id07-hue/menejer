@@ -31,6 +31,74 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [confirmDeleteImg, setConfirmDeleteImg] = React.useState<string | null>(null);
   const [imageValidations, setImageValidations] = React.useState<Record<string, { w: number, h: number, isValid: boolean }>>({});
+  const [fixing, setFixing] = React.useState<string | null>(null);
+
+  const processImage = (file: File): Promise<File> => {
+    return new Promise((resolve) => {
+      if (!file.type.startsWith('image/')) return resolve(file);
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = 1080;
+        canvas.height = 1440;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(file);
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, 1080, 1440);
+        const scale = Math.max(1080 / img.naturalWidth, 1440 / img.naturalHeight);
+        const nw = img.naturalWidth * scale;
+        const nh = img.naturalHeight * scale;
+        const cx = (1080 - nw) / 2;
+        const cy = (1440 - nh) / 2;
+        ctx.drawImage(img, cx, cy, nw, nh);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name, { type: 'image/jpeg' }));
+          } else {
+            resolve(file);
+          }
+        }, 'image/jpeg', 0.92);
+      };
+      img.onerror = () => resolve(file);
+      img.src = URL.createObjectURL(file);
+    });
+  };
+
+  const handleFixImage = async (imgUrl: string) => {
+    setFixing(imgUrl);
+    try {
+      const filename = imgUrl.split('/').pop() || 'image.jpg';
+      const response = await fetch(imgUrl);
+      const blob = await response.blob();
+      const file = new File([blob], filename, { type: blob.type });
+      const processedFile = await processImage(file);
+
+      const upRes = await fetch('/api/products/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: product.id, filename: processedFile.name, contentType: processedFile.type })
+      });
+      const { uploadUrl } = await upRes.json();
+
+      await fetch(uploadUrl, {
+        method: 'PUT',
+        body: processedFile,
+        headers: { 'Content-Type': processedFile.type }
+      });
+
+      await fetch('/api/products/delete-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: product.id, filename })
+      });
+
+      onRefresh();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setFixing(null);
+    }
+  };
 
   const handleImageLoad = (url: string, e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.currentTarget;
@@ -183,9 +251,21 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
                   {/* DIMENSION WARNING */}
                   {imageValidations[img] && !imageValidations[img].isValid && !isVideo && (
                     <div className="absolute bottom-2 left-2 right-2 z-[35] bg-red-600/90 backdrop-blur-md rounded-xl p-2.5 border border-white/20 shadow-xl animate-in slide-in-from-bottom-2">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm">⚠️</span>
-                        <span className="text-[10px] font-black text-white uppercase tracking-wider">Noto'g'ri o'lcham!</span>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm">⚠️</span>
+                          <span className="text-[10px] font-black text-white uppercase tracking-wider">Noto'g'ri o'lcham!</span>
+                        </div>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleFixImage(img);
+                          }}
+                          disabled={fixing === img}
+                          className="bg-white text-red-600 px-2 py-1 rounded-lg text-[9px] font-black hover:bg-slate-100 transition-all shadow-sm active:scale-90 flex items-center gap-1 disabled:opacity-50"
+                        >
+                          {fixing === img ? "⏳..." : "🛠️ TO'G'IRLASH"}
+                        </button>
                       </div>
                       <p className="text-[10px] text-white/90 font-medium leading-tight">
                         Kutilayotgan: <span className="font-bold text-white">1080x1440</span><br/>
