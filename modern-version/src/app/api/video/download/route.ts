@@ -3,6 +3,8 @@ import { spawn } from 'child_process';
 import path from 'path';
 import fs from 'fs';
 import os from 'os';
+import { s3Client, BUCKET_NAME, PUBLIC_ENDPOINT } from '@/lib/s3';
+import { PutObjectCommand } from "@aws-sdk/client-s3";
 
 export async function POST(req: Request) {
   try {
@@ -13,12 +15,8 @@ export async function POST(req: Request) {
     }
 
     const outputFilename = `${productId}_temp_${Math.random().toString(36).substring(7)}.mp4`;
-    const publicPath = path.join(process.cwd(), 'public', 'temp_videos');
-    const fullPath = path.join(publicPath, outputFilename);
-
-    if (!fs.existsSync(publicPath)) {
-      fs.mkdirSync(publicPath, { recursive: true });
-    }
+    const tempDir = os.tmpdir();
+    const fullPath = path.join(tempDir, outputFilename);
 
     // FFmpeg path logic from Python script
     const possiblePaths = [
@@ -64,13 +62,34 @@ export async function POST(req: Request) {
         console.log('yt-dlp stderr:', data.toString());
       });
 
-      yt.on('close', (code) => {
+      yt.on('close', async (code) => {
         if (code === 0 && fs.existsSync(fullPath)) {
-          resolve(NextResponse.json({ 
-            success: true, 
-            tempUrl: `/temp_videos/${outputFilename}`,
-            filename: outputFilename
-          }));
+          try {
+            const fileBuffer = fs.readFileSync(fullPath);
+            const s3Key = `temp_videos/${outputFilename}`;
+            
+            await s3Client.send(new PutObjectCommand({
+              Bucket: BUCKET_NAME,
+              Key: s3Key,
+              Body: fileBuffer,
+              ContentType: 'video/mp4',
+              ACL: 'public-read'
+            }));
+
+            const tempUrl = `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${s3Key}`;
+            
+            // Clean up local temp file
+            fs.unlinkSync(fullPath);
+
+            resolve(NextResponse.json({ 
+              success: true, 
+              tempUrl,
+              filename: outputFilename,
+              s3Key
+            }));
+          } catch (uploadError: any) {
+            resolve(NextResponse.json({ error: 'S3 ga yuklashda xatolik: ' + uploadError.message }, { status: 500 }));
+          }
         } else {
           resolve(NextResponse.json({ 
             error: 'Video yuklashda xatolik yuz berdi.', 

@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { s3Client, BUCKET_NAME, PUBLIC_ENDPOINT } from '@/lib/s3';
-import { PutObjectCommand } from "@aws-sdk/client-s3";
+import { CopyObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { db } from '@/lib/firebase-admin';
-import path from 'path';
-import fs from 'fs';
 
 export async function POST(req: Request) {
   try {
@@ -13,26 +11,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'ID va Fayl nomi kiritish majburiy!' }, { status: 400 });
     }
 
-    const localPath = path.join(process.cwd(), 'public', 'temp_videos', filename);
+    const tempS3Key = `temp_videos/${filename}`;
+    const finalS3Key = `images/${productId}/${filename}`;
 
-    if (!fs.existsSync(localPath)) {
-      return NextResponse.json({ error: 'Fayl topilmadi!' }, { status: 404 });
-    }
-
-    const fileBuffer = fs.readFileSync(localPath);
-    const s3Key = `images/${productId}/${filename}`;
-
-    // 1. Upload to S3
-    const uploadCommand = new PutObjectCommand({
+    // 1. Copy in S3
+    await s3Client.send(new CopyObjectCommand({
       Bucket: BUCKET_NAME,
-      Key: s3Key,
-      Body: fileBuffer,
-      ContentType: 'video/mp4',
+      CopySource: `${BUCKET_NAME}/${tempS3Key}`,
+      Key: finalS3Key,
       ACL: 'public-read'
-    });
+    }));
 
-    await s3Client.send(uploadCommand);
-    const videoUrl = `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${s3Key}`;
+    const videoUrl = `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${finalS3Key}`;
 
     // 2. Update Firestore
     const docRef = db.collection('products').doc(productId.toString());
@@ -47,8 +37,11 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Cleanup
-    fs.unlinkSync(localPath);
+    // 3. Cleanup S3 Temp
+    await s3Client.send(new DeleteObjectCommand({
+      Bucket: BUCKET_NAME,
+      Key: tempS3Key
+    }));
 
     return NextResponse.json({ 
       success: true, 
