@@ -16,10 +16,17 @@ export async function POST(req: Request) {
     
     const buffer = Buffer.from(await response.arrayBuffer());
     const contentType = response.headers.get('content-type') || 'image/jpeg';
-    const extension = contentType.split('/')[1] || 'jpg';
+    const extension = contentType.split('/')[1]?.split('+')[0] || 'jpg';
     
-    const filename = `url_upload_${Date.now()}.${extension}`;
-    const key = `images/${id}/${Date.now()}_${filename}`;
+    // Sanitization: Clean filename from URL if it exists
+    const urlParts = url.split('/').pop()?.split('?')[0] || 'upload';
+    const cleanName = urlParts
+      .replace(/[^\x00-\x7F]/g, "")
+      .replace(/\s+/g, "_")
+      .substring(0, 50);
+
+    const filename = `url_${Date.now()}_${cleanName}.${extension}`;
+    const key = `images/${id}/${filename}`;
 
     // 2. Upload to S3
     const command = new PutObjectCommand({

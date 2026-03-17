@@ -12,7 +12,15 @@ export async function POST(req: Request) {
     }
 
     const tempS3Key = `temp_videos/${filename}`;
-    const finalS3Key = `images/${productId}/${filename}`;
+    
+    // Sanitization: Remove emojis and special characters that break URLs
+    const safeFilename = filename
+      .replace(/[^\x00-\x7F]/g, "") // Remove emojis/non-ascii
+      .replace(/\s+/g, "_")         // Spaces to underscores
+      .replace(/[()]/g, "")         // Remove parentheses
+      .replace(/[%&?]/g, "");       // Remove URL magic chars
+
+    const finalS3Key = `images/${productId}/${Date.now()}_${safeFilename}`;
 
     // 1. Copy in S3
     await s3Client.send(new CopyObjectCommand({
