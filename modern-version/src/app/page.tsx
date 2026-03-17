@@ -152,6 +152,7 @@ export default function Home() {
                       setIsModalOpen(true);
                     }}
                     onDelete={handleDelete}
+                    onRefresh={fetchData}
                   />
                 ))}
                 

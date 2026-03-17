@@ -20,9 +20,10 @@ interface ProductCardProps {
   product: Product;
   onEdit: (p: Product) => void;
   onDelete: (id: string) => void;
+  onRefresh: () => void;
 }
 
-export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => {
+export const ProductCard = ({ product, onEdit, onDelete, onRefresh }: ProductCardProps) => {
   const scrollGallery = (direction: number) => {
     const gallery = document.getElementById(`gallery-${product.id}`);
     if (gallery) {
@@ -38,7 +39,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: product.id, filename })
       });
-      window.location.reload(); // Simple refresh for now
+      onRefresh(); 
     } catch (e) {
       console.error(e);
     }
@@ -142,7 +143,7 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-6 border-t border-slate-100">
           <div className="col-span-1">
-            <MediaUpload productId={product.id} onSuccess={() => window.location.reload()} />
+            <MediaUpload productId={product.id} onSuccess={onRefresh} />
           </div>
           <button 
             onClick={() => onEdit(product)}
