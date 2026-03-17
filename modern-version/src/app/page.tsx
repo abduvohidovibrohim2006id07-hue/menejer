@@ -13,7 +13,10 @@ import { useScrollPersistence } from "@/hooks/useScrollPersistence";
 import { apiClient } from "@/lib/api-client";
 
 export default function Home() {
-  useScrollPersistence('home-scroll');
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  
+  useScrollPersistence('home-scroll', !initialLoading);
   
   const [activeTab, setActiveTab] = useState('products');
   const [mounted, setMounted] = useState(false);
@@ -21,8 +24,6 @@ export default function Home() {
   const [categories, setCategories] = useState<any[]>([]);
   const [markets, setMarkets] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
-  const [initialLoading, setInitialLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
