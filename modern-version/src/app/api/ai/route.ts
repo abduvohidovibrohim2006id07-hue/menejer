@@ -90,15 +90,21 @@ export const POST = withGateway(async (req) => {
             model = 'llama-3.3-70b-versatile';
             prompt = `Matn: "${text}". Faqat o'zbekcha tarjimasini qaytaring.`;
             break;
+          case 'generate_short':
+            model = 'llama-3.3-70b-versatile';
+            prompt = `Ushbu mahsulot uchun juda jozibali qisqa tavsif yozing. Ma'lumotlar: ${JSON.stringify(context || {})}. TIL: O'zbekcha. QOIDA: Maksimal 350 ta belgi. Faqat matnni qaytaring.`;
+            break;
+          case 'generate_short_ru':
+            model = 'llama-3.3-70b-versatile';
+            prompt = `Напишите привлекательное маркетинговое краткое описание. Данные: ${JSON.stringify(context || {})}. ЯЗЫК: Русский. ПРАВИЛО: Максимум 350 символов. Верните только текст.`;
+            break;
           case 'generate_full':
             model = 'openai/gpt-oss-120b';
-            prompt = `Professional va sotuvchi (marketing) JSON tavsif yozing: ${JSON.stringify(context || {})}.
-              QOIDALAR:
-              1. Qisqa tavsif ("short") - MAKSIMAL 350 ta belgidan oshmasligi shart.
-              2. To'liq tavsif ("full") - MINIMAL 1000, MAKSIMAL 5000 ta belgi bo'lishi shart.
-              3. Tavsif mukammal bo'lsin, mijozda hech qanday savol qolmasin.
-              Format JSON: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}`;
-            responseFormat = { type: 'json_object' };
+            prompt = `Ushbu mahsulot haqida juda mukammal professional marketing tavsifi yozing. Ma'lumotlar: ${JSON.stringify(context || {})}. TIL: O'zbekcha. Uzunlik: Taxminan 2000-2500 ta belgi bo'lsin. Faqat matnni qaytaring.`;
+            break;
+          case 'generate_full_ru':
+            model = 'openai/gpt-oss-120b';
+            prompt = `Напишите подробное профессиональное маркетинговое описание товара. Данные: ${JSON.stringify(context || {})}. ЯЗЫК: Русский. Длина: 2000-2500 символов. Верните только текст.`;
             break;
           default:
             prompt = text;
