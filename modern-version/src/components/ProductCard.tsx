@@ -63,13 +63,25 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh }: ProductCar
           {product.local_images && product.local_images.length > 0 ? (
             product.local_images.map((img, idx) => {
               const filename = img.split('/').pop() || '';
+              const isVideo = img.toLowerCase().endsWith('.mp4');
               return (
                 <div key={idx} className="flex-none w-full aspect-[4/5] md:w-[300px] md:h-[350px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 snap-start relative group/item shadow-sm">
-                  <img 
-                    src={img} 
-                    alt="" 
-                    className="w-full h-full object-cover transition-transform group-hover/item:scale-110 duration-500"
-                  />
+                  {isVideo ? (
+                    <video 
+                      src={img} 
+                      className="w-full h-full object-cover"
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline
+                    />
+                  ) : (
+                    <img 
+                      src={img} 
+                      alt="" 
+                      className="w-full h-full object-cover transition-transform group-hover/item:scale-110 duration-500"
+                    />
+                  )}
                   <div className="absolute top-3 left-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <a 
                       href={`https://www.google.com/search?q=${encodeURIComponent(product.category + ' ' + (product.brand || '') + ' ' + (product.model || ''))}&tbm=isch`} 
