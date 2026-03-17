@@ -92,19 +92,19 @@ export const POST = withGateway(async (req) => {
             break;
           case 'generate_short':
             model = 'llama-3.3-70b-versatile';
-            prompt = `Ushbu mahsulot uchun juda jozibali qisqa tavsif yozing. Ma'lumotlar: ${JSON.stringify(context || {})}. TIL: O'zbekcha. QOIDA: Maksimal 350 ta belgi. Faqat matnni qaytaring.`;
+            prompt = `Ushbu mahsulot uchun juda jozibali qisqa tavsif yozing. Ma'lumotlar: ${JSON.stringify(context || {})}. Mavjud qo'shimcha ma'lumotlar: ${text}. TIL: O'zbekcha. QOIDA: Maksimal 350 ta belgi. Faqat matnni qaytaring.`;
             break;
           case 'generate_short_ru':
             model = 'llama-3.3-70b-versatile';
-            prompt = `Напишите привлекательное маркетинговое краткое описание. Данные: ${JSON.stringify(context || {})}. ЯЗЫК: Русский. ПРАВИЛО: Максимум 350 символов. Верните только текст.`;
+            prompt = `Напишите привлекательное маркетинговое краткое описание. Данные: ${JSON.stringify(context || {})}. Дополнительная информация: ${text}. ЯЗЫК: Русский. ПРАВИЛО: Максимум 350 символов. Верните только текст.`;
             break;
           case 'generate_full':
             model = 'openai/gpt-oss-120b';
-            prompt = `Ushbu mahsulot haqida juda mukammal professional marketing tavsifi yozing. Ma'lumotlar: ${JSON.stringify(context || {})}. TIL: O'zbekcha. Uzunlik: Taxminan 2000-2500 ta belgi bo'lsin. Faqat matnni qaytaring.`;
+            prompt = `Ushbu mahsulot haqida juda mukammal professional marketing tavsifi yozing. Ma'lumotlar: ${JSON.stringify(context || {})}. Mavjud qo'shimcha ma'lumotlar: ${text}. TIL: O'zbekcha. Uzunlik: Taxminan 2000-2500 ta belgi bo'lsin. Faqat matnni qaytaring.`;
             break;
           case 'generate_full_ru':
             model = 'openai/gpt-oss-120b';
-            prompt = `Напишите подробное профессиональное маркетинговое описание товара. Данные: ${JSON.stringify(context || {})}. ЯЗЫК: Русский. Длина: 2000-2500 символов. Верните только текст.`;
+            prompt = `Напишите подробное профессиональное маркетинговое описание товара. Данные: ${JSON.stringify(context || {})}. Дополнительная информация: ${text}. ЯЗЫК: Русский. Длина: 2000-2500 символов. Верните только текст.`;
             break;
           default:
             prompt = text;

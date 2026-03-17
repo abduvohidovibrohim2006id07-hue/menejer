@@ -251,7 +251,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
               <div className="flex justify-between items-center">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Qisqa tavsif (UZ)</label>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => handleAIAction('generate_short', '', 'description_short')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
+                  <button type="button" onClick={() => handleAIAction('generate_short', 'description_short', 'description_short')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
                   <button type="button" onClick={() => handleAIAction('translate_uz_ru', 'description_short', 'description_short_ru')} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-black hover:bg-slate-200 transition-colors flex items-center gap-1">🤖 RU tarjima</button>
                 </div>
               </div>
@@ -266,7 +266,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
               <div className="flex justify-between items-center">
                 <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1">Qisqa tavsif (RU)</label>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => handleAIAction('generate_short_ru', '', 'description_short_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
+                  <button type="button" onClick={() => handleAIAction('generate_short_ru', 'description_short_ru', 'description_short_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
                   <button type="button" onClick={() => handleAIAction('translate_ru_uz', 'description_short_ru', 'description_short')} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-black hover:bg-slate-200 transition-colors flex items-center gap-1">🤖 UZ tarjima</button>
                 </div>
               </div>
@@ -283,7 +283,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
               <div className="flex justify-between items-center">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest px-1">To'liq tavsif (UZ)</label>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => handleAIAction('generate_full', '', 'description_full')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
+                  <button type="button" onClick={() => handleAIAction('generate_full', 'description_full', 'description_full')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
                   <button type="button" onClick={() => handleAIAction('translate_uz_ru', 'description_full', 'description_full_ru')} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-black hover:bg-slate-200 transition-colors flex items-center gap-1">🤖 RU tarjima</button>
                 </div>
               </div>
@@ -298,7 +298,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
               <div className="flex justify-between items-center">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest px-1">To'liq tavsif (RU)</label>
                 <div className="flex gap-2">
-                  <button type="button" onClick={() => handleAIAction('generate_full_ru', '', 'description_full_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
+                  <button type="button" onClick={() => handleAIAction('generate_full_ru', 'description_full_ru', 'description_full_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
                   <button type="button" onClick={() => handleAIAction('translate_ru_uz', 'description_full_ru', 'description_full')} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-black hover:bg-slate-200 transition-colors flex items-center gap-1">🤖 UZ tarjima</button>
                 </div>
               </div>
