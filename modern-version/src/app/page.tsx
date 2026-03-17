@@ -13,12 +13,14 @@ import { apiClient } from "@/lib/api-client";
 export default function Home() {
   useScrollPersistence('home-scroll');
   
-  const [activeTab, setActiveTab] = useState(() => {
-    if (typeof window !== 'undefined') {
-       return sessionStorage.getItem('activeTab') || 'products';
-    }
-    return 'products';
-  });
+  const [activeTab, setActiveTab] = useState('products');
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+    const saved = sessionStorage.getItem('activeTab');
+    if (saved) setActiveTab(saved);
+  }, []);
 
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -80,6 +82,8 @@ export default function Home() {
       alert("Xatolik: " + e.message);
     }
   };
+
+  if (!mounted) return null;
 
   return (
     <main className="min-h-screen bg-slate-50 pb-20 font-sans">
