@@ -31,6 +31,7 @@ export default function Home() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'active', 'quarantine', 'archive'
+  const [marketFilter, setMarketFilter] = useState("all"); // 'all', 'uzum', 'yandex', etc.
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
   useEffect(() => {
@@ -131,9 +132,13 @@ export default function Home() {
     if (statusFilter !== "all") {
       result = result.filter((p: any) => (p.status || 'active') === statusFilter);
     }
+
+    if (marketFilter !== "all") {
+      result = result.filter((p: any) => p.marketplaces?.includes(marketFilter));
+    }
     
     setFilteredProducts(result);
-  }, [allProducts, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter]);
+  }, [allProducts, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, marketFilter]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -236,15 +241,31 @@ export default function Home() {
                     onChange={(e) => setMaxPrice(e.target.value)}
                   />
                 </div>
-                {(brandFilter || colorFilter || minPrice || maxPrice) && (
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black text-slate-400 ml-1">Sotuv bozori</label>
+                  <select 
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold appearance-none cursor-pointer"
+                    value={marketFilter}
+                    onChange={(e) => setMarketFilter(e.target.value)}
+                  >
+                    <option value="all">Barchasi (Hamma bozorlar)</option>
+                    <option value="uzum">🟣 Uzum Market</option>
+                    <option value="yandex">🟡 Yandex Market</option>
+                    <option value="olx">🟢 OLX</option>
+                    <option value="wildberries">💗 Wildberries</option>
+                    <option value="instagram">📸 Instagram</option>
+                  </select>
+                </div>
+                {(brandFilter || colorFilter || minPrice || maxPrice || marketFilter !== 'all') && (
                   <button 
                     onClick={() => {
                       setBrandFilter("");
                       setColorFilter("");
                       setMinPrice("");
                       setMaxPrice("");
+                      setMarketFilter("all");
                     }}
-                    className="md:col-span-4 mt-2 text-xs font-black text-red-500 hover:text-red-700 uppercase tracking-widest text-right"
+                    className="md:col-span-5 mt-2 text-xs font-black text-red-500 hover:text-red-700 uppercase tracking-widest text-right"
                   >
                     Filtrlarni tozalash
                   </button>

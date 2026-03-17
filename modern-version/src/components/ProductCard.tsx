@@ -233,6 +233,46 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
         >
           &#10095;
         </button>
+
+        {/* FLOATING STATUS BADGE OVER GALLERY */}
+        <div className="absolute top-4 left-4 z-30 flex flex-col gap-2">
+          {product.status === 'active' && (
+            <span className="px-3 py-1.5 bg-emerald-500 text-white text-[10px] font-black rounded-xl shadow-lg shadow-emerald-200/50 border border-emerald-400/50 backdrop-blur-sm animate-in fade-in slide-in-from-left-2">
+              ✅ FAOL
+            </span>
+          )}
+          {product.status === 'quarantine' && (
+            <span className="px-3 py-1.5 bg-amber-500 text-white text-[10px] font-black rounded-xl shadow-lg shadow-amber-200/50 border border-amber-400/50 backdrop-blur-sm animate-in fade-in slide-in-from-left-2">
+              ⚠️ KARANTIN
+            </span>
+          )}
+          {product.status === 'archive' && (
+            <span className="px-3 py-1.5 bg-slate-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-slate-900/20 border border-slate-600/50 backdrop-blur-sm animate-in fade-in slide-in-from-left-2">
+              📁 ARXIV
+            </span>
+          )}
+          
+          {/* MARKETPLACE SHELF OVER GALLERY */}
+          {product.marketplaces && product.marketplaces.length > 0 && (
+            <div className="flex gap-1.5 p-1.5 bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-white/50 animate-in fade-in slide-in-from-left-4 duration-500">
+              {product.marketplaces.includes('uzum') && (
+                <div title="Uzum Market" className="w-5 h-5 bg-[#7000FF] rounded-lg flex items-center justify-center text-[9px] font-black text-white shadow-sm ring-1 ring-white/20">U</div>
+              )}
+              {product.marketplaces.includes('yandex') && (
+                <div title="Yandex Market" className="w-5 h-5 bg-[#FFCC00] rounded-lg flex items-center justify-center text-[9px] font-black text-black shadow-sm ring-1 ring-black/10">Y</div>
+              )}
+              {product.marketplaces.includes('olx') && (
+                <div title="OLX" className="w-5 h-5 bg-[#002f34] rounded-lg flex items-center justify-center text-[7px] font-black text-[#23e5db] shadow-sm ring-1 ring-white/10 uppercase">olx</div>
+              )}
+              {product.marketplaces.includes('wildberries') && (
+                <div title="Wildberries" className="w-5 h-5 bg-[#cb11ab] rounded-lg flex items-center justify-center text-[7px] font-black text-white shadow-sm ring-1 ring-white/10 uppercase">wb</div>
+              )}
+              {product.marketplaces.includes('instagram') && (
+                <div title="Instagram" className="w-5 h-5 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-lg flex items-center justify-center text-[9px] text-white shadow-sm ring-1 ring-white/20">📸</div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Right: Content Section */}
@@ -250,32 +290,6 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
                 <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 bg-indigo-50 text-indigo-500 rounded-lg">
                   🆔 {product.id}
                 </span>
-                
-                {/* Operational Status Badge */}
-                {product.status === 'active' && <span className="text-[10px] font-black px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg shadow-sm border border-emerald-200">✅ FAOL</span>}
-                {product.status === 'quarantine' && <span className="text-[10px] font-black px-2 py-1 bg-amber-100 text-amber-700 rounded-lg shadow-sm border border-amber-200">⚠️ KARANTIN</span>}
-                {product.status === 'archive' && <span className="text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-700 rounded-lg shadow-sm border border-slate-200">📁 ARXIV</span>}
-                
-                {/* Marketplace Presence */}
-                {product.marketplaces && product.marketplaces.length > 0 && (
-                  <div className="flex gap-2 items-center bg-slate-50/50 px-3 py-1.5 rounded-xl border border-slate-100 shadow-inner">
-                    {product.marketplaces.includes('uzum') && (
-                      <div title="Uzum Market" className="w-5 h-5 bg-[#7000FF] rounded-md flex items-center justify-center text-[10px] font-black text-white shadow-sm ring-1 ring-white/20">U</div>
-                    )}
-                    {product.marketplaces.includes('yandex') && (
-                      <div title="Yandex Market" className="w-5 h-5 bg-[#FFCC00] rounded-md flex items-center justify-center text-[10px] font-black text-black shadow-sm ring-1 ring-black/10">Y</div>
-                    )}
-                    {product.marketplaces.includes('olx') && (
-                      <div title="OLX" className="w-5 h-5 bg-[#002f34] rounded-md flex items-center justify-center text-[8px] font-black text-[#23e5db] shadow-sm ring-1 ring-white/10 uppercase">olx</div>
-                    )}
-                    {product.marketplaces.includes('wildberries') && (
-                      <div title="Wildberries" className="w-5 h-5 bg-[#cb11ab] rounded-md flex items-center justify-center text-[8px] font-black text-white shadow-sm ring-1 ring-white/10 uppercase">wb</div>
-                    )}
-                    {product.marketplaces.includes('instagram') && (
-                      <div title="Instagram" className="w-5 h-5 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-md flex items-center justify-center text-[10px] text-white shadow-sm ring-1 ring-white/20">📸</div>
-                    )}
-                  </div>
-                )}
               </div>
             </div>
             <div className="shrink-0">
