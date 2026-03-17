@@ -85,13 +85,38 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
     
     setUploading(true);
     try {
-      const res = await fetch('/api/products/upload-url', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: productId, url })
-      });
+      const isVideo = url.toLowerCase().split('?')[0].endsWith('.mp4');
       
-      if (!res.ok) throw new Error("URL upload failed");
+      if (isVideo) {
+        // Direct pass for videos
+        const res = await fetch('/api/products/upload-url', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: productId, url })
+        });
+        if (!res.ok) throw new Error("Video URL upload failed");
+      } else {
+        // Resize for images
+        const response = await fetch(url);
+        if (!response.ok) throw new Error("URL dan rasmni olib bo'lmadi");
+        const blob = await response.blob();
+        const filename = url.split('/').pop()?.split('?')[0] || 'image.jpg';
+        const file = new File([blob], filename, { type: blob.type });
+        const processedFile = await processImage(file);
+
+        const upRes = await fetch('/api/products/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: productId, filename: processedFile.name, contentType: processedFile.type })
+        });
+        const { uploadUrl } = await upRes.json();
+
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          body: processedFile,
+          headers: { 'Content-Type': processedFile.type }
+        });
+      }
       
       setUrl('');
       onSuccess();
