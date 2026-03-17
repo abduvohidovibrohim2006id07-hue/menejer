@@ -10,12 +10,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Groq API key not found' }, { status: 500 });
     }
 
-    // Fetch dynamic AI settings from Firestore
     const settingsDoc = await db.collection('settings').doc('ai_config').get();
     const settings = settingsDoc.exists ? settingsDoc.data() : {};
     const config = settings?.[action] || {};
 
-    let model = config.model || 'llama-3.3-70b-versatile';
+    let model = config.model || 'openai/gpt-oss-120b';
     let messages: any[] = [];
     let responseFormat: any = undefined;
 
@@ -24,75 +23,78 @@ export async function POST(req: Request) {
       const imageUrl = images[0]; 
 
       if (!imageUrl) {
-        return NextResponse.json({ error: 'No image found for analysis' }, { status: 400 });
+        return NextResponse.json({ error: 'Rasm topilmadi. Avval rasm yuklang.' }, { status: 400 });
       }
 
-      // Step 1: Visual Analysis using Llama-3.2-Vision (Always vision model)
-      const visionResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'llama-3.2-11b-vision-preview',
-          messages: [
-            {
-              role: 'user',
-              content: [
-                { type: 'text', text: "O'zbek tilida ushbu rasmdagi mahsulot haqida batafsil ma'lumot bering: nomi, brendi, modeli, rangi va asosiy xususiyatlari." },
-                { type: 'image_url', image_url: { url: imageUrl } }
-              ]
-            }
-          ],
-          temperature: 0.1,
-        }),
-      });
-
-      const visionData = await visionResponse.json();
-      const visualDescription = visionData.choices?.[0]?.message?.content || "Tasvirni aniqlab bo'lmadi";
-
-      // Step 2: Full JSON Generation using selected model (Default: GPT-OSS 120B)
-      model = config.model || 'openai/gpt-oss-120b';
-      const customPrompt = config.prompt || `Visual tahlil natijasi: ${visualDescription}. Quyidagi qolipda JSON qaytaring: { "uz": { "name": "...", "short": "...", "full": "..." }, "ru": { "name": "...", "short": "...", "full": "..." }, "brand": "...", "model": "...", "color": "...", "category": "..." }`;
+      let visualDescription = "";
       
-      messages = [
-        {
-          role: 'system',
-          content: 'Siz mahsulotlar bo\'yicha mutaxassissiz. Berilgan ma\'lumotlar asosida mahsulot uchun professional va sotuvchi tavsiflar tayyorlang. JAVOB FAQAT JSON FORMATIDA BO\'LSIN.'
-        },
-        {
-          role: 'user',
-          content: customPrompt
+      try {
+        // Step 1: Visual Analysis using Llama-3.2-Vision
+        const visionResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'llama-3.2-11b-vision-preview',
+            messages: [
+              {
+                role: 'user',
+                content: [
+                  { type: 'text', text: "Ushbu mahsulotni tahlil qiling. Brendi, modeli, rangi va barcha texnik xususiyatlarini aniqlang." },
+                  { type: 'image_url', image_url: { url: imageUrl } }
+                ]
+              }
+            ],
+            temperature: 0.1,
+          }),
+        });
+
+        const visionData = await visionResponse.json();
+        visualDescription = visionData.choices?.[0]?.message?.content || "";
+        
+        if (!visualDescription && visionData.error) {
+          console.error("Vision Error:", visionData.error);
+          visualDescription = "Tasvirni tahlil qilib bo'lmadi (URL xatosi yoki limit).";
         }
+      } catch (vError) {
+        visualDescription = "Vision tizimi bilan bog'lanib bo'lmadi.";
+      }
+
+      // Step 2: Reasoning using flagship model
+      model = config.model || 'openai/gpt-oss-120b';
+      const systemPrompt = "Siz tajribali marketing mutaxassisi va mahsulotlar bo'yicha tahlilchisiz. JAVOB FAQAT JSON FORMATIDA BO'LSIN.";
+      const userPrompt = config.prompt || `Quyidagi ma'lumotlar asosida mahsulot uchun professional va sotuvchi tavsiflar tayyorlang.\n\nVizual tahlil natijasi: ${visualDescription}\n\nMavjud ma'lumotlar: ${JSON.stringify(context || {})}\n\nMUHIM: JAVOB FAQAT SHU FORMATDA BO'LSIN (JSON):\n{\n  "uz": { "name": "Mahsulot nomi", "short": "Qisqa tavsif (1 qator)", "full": "Batafsil tavsif" },\n  "ru": { "name": "Название товара", "short": "Краткое описание", "full": "Полное описание" },\n  "brand": "Brand",\n  "model": "Model",\n  "color": "Color",\n  "category": "Category"\n}`;
+
+      messages = [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: userPrompt }
       ];
       responseFormat = { type: 'json_object' };
     } else {
       let prompt = config.prompt || '';
-      
       if (!prompt) {
         switch (action) {
           case 'translate_uz_ru':
-            prompt = `Translate the following product name from Uzbek to Russian. Return ONLY the translated text. Text: ${text}`;
+            model = 'llama-3.3-70b-versatile';
+            prompt = `Nomi: "${text}". Faqat ruscha tarjimasini qaytaring. Ortiqcha gap kerak emas.`;
             break;
           case 'translate_ru_uz':
-            prompt = `Translate the following product name from Russian to Uzbek. Return ONLY the translated text. Text: ${text}`;
-            break;
-          case 'translate_desc_uz_ru':
-            prompt = `Translate the following product description from Uzbek to Russian. Return ONLY the translated text. Text: ${text}`;
+            model = 'llama-3.3-70b-versatile';
+            prompt = `Nomi: "${text}". Faqat o'zbekcha tarjimasini qaytaring. Ortiqcha gap kerak emas.`;
             break;
           case 'generate_full':
-            prompt = `Generate a professional product description in Uzbek and Russian based on name: ${context?.name}, brand: ${context?.brand}, model: ${context?.model}. Output format JSON: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}`;
+            model = 'openai/gpt-oss-120b';
+            prompt = `Quyidagilar bo'yicha JSON formatda tavsif yozing: Nomi: ${context?.name}, Brend: ${context?.brand}, Model: ${context?.model}.\nFormat: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}`;
             responseFormat = { type: 'json_object' };
             break;
           default:
             prompt = text;
         }
       } else {
-        // If custom prompt exists, use it with the context
-        prompt = `${prompt}\n\nContext/Text: ${text || JSON.stringify(context || {})}`;
+        prompt = `${prompt}\n\nMavjud ma'lumot: ${text || JSON.stringify(context || {})}`;
       }
-      
       messages = [{ role: 'user', content: prompt }];
     }
 
@@ -111,11 +113,16 @@ export async function POST(req: Request) {
     });
 
     const data = await response.json();
-    const resultText = data.choices[0].message.content;
+    let resultText = data.choices?.[0]?.message?.content || "";
 
+    // Robust JSON parsing (handles markdown blocks)
     try {
-      const isJson = action === 'generate_full' || action === 'generate_from_image';
-      return NextResponse.json({ result: isJson ? JSON.parse(resultText) : resultText });
+      const isJson = action === 'generate_full' || action === 'generate_from_image' || responseFormat?.type === 'json_object';
+      if (isJson) {
+        const jsonStr = resultText.replace(/```json|```/g, '').trim();
+        return NextResponse.json({ result: JSON.parse(jsonStr) });
+      }
+      return NextResponse.json({ result: resultText });
     } catch (e) {
        return NextResponse.json({ result: resultText });
     }
