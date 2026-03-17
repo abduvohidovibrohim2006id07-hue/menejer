@@ -34,33 +34,45 @@ export async function POST(req: Request) {
     }
 
     const args = [
-      '--format', 'best[height<=720][ext=mp4]/best[height<=720]',
+      '--format', 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best',
       '--ffmpeg-location', FFMPEG_BIN,
       '--recode-video', 'mp4',
       '-o', fullPath,
       '--fixup', 'warn',
       '--no-check-certificate',
-      '--max-filesize', '100M'
+      '--max-filesize', '100M',
+      '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      '--referer', 'https://www.youtube.com/',
     ];
 
     // Trimming logic if parameters provided
-    if (startTime || endTime) {
-      const trimmer = [];
-      if (startTime) trimmer.push(`-ss ${startTime}`);
-      if (endTime) trimmer.push(`-to ${endTime}`);
+    if (startTime && startTime.trim() !== "" && startTime !== "00:00:00") {
+      const trimmer = [`-ss ${startTime}`];
+      if (endTime && endTime.trim() !== "" && endTime !== "To'liq yuklash") {
+        trimmer.push(`-to ${endTime}`);
+      }
       args.push('--postprocessor-args', `ffmpeg-s1:${trimmer.join(' ')}`);
+    } else if (endTime && endTime.trim() !== "" && endTime !== "To'liq yuklash") {
+      args.push('--postprocessor-args', `ffmpeg-s1:-to ${endTime}`);
     }
 
     args.push(url);
 
     return new Promise<Response>((resolve) => {
+      console.log('Spawning yt-dlp with args:', args.join(' '));
       const yt = spawn('yt-dlp', args);
       
       let errorOutput = '';
+      let stdoutOutput = '';
+
+      yt.stdout.on('data', (data) => {
+        stdoutOutput += data.toString();
+      });
 
       yt.stderr.on('data', (data) => {
-        errorOutput += data.toString();
-        console.log('yt-dlp stderr:', data.toString());
+        const msg = data.toString();
+        errorOutput += msg;
+        console.log('yt-dlp stderr:', msg);
       });
 
       yt.on('close', async (code) => {
@@ -80,7 +92,7 @@ export async function POST(req: Request) {
             const tempUrl = `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${s3Key}`;
             
             // Clean up local temp file
-            fs.unlinkSync(fullPath);
+            if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
 
             resolve(NextResponse.json({ 
               success: true, 
@@ -92,15 +104,24 @@ export async function POST(req: Request) {
             resolve(NextResponse.json({ error: 'S3 ga yuklashda xatolik: ' + uploadError.message }, { status: 500 }));
           }
         } else {
+          // Identify specific bot/sign-in error
+          let userMessage = 'Video yuklashda xatolik yuz berdi.';
+          if (errorOutput.includes('Sign in to confirm you')) {
+            userMessage = 'YouTube bot aniqladi va yuklashni blokladi. Iltimos, bir ozdan so\'ng qayta urinib ko\'ring yoki boshqa havoladan foydalaning.';
+          } else if (errorOutput.includes('Requested format is not available')) {
+             userMessage = 'Tanlangan sifatdagi video topilmadi.';
+          }
+
           resolve(NextResponse.json({ 
-            error: 'Video yuklashda xatolik yuz berdi.', 
-            details: errorOutput 
+            error: userMessage, 
+            details: errorOutput.substring(0, 1000) // Limit length
           }, { status: 500 }));
         }
       });
     });
 
   } catch (error: any) {
+    console.error('Download Route Error:', error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
