@@ -84,11 +84,11 @@ export const POST = withGateway(async (req) => {
         switch (action) {
           case 'translate_uz_ru':
             model = 'llama-3.3-70b-versatile';
-            prompt = `Nomi: "${text}". Faqat ruscha tarjimasini qaytaring.`;
+            prompt = `Matn: "${text}". Faqat ruscha tarjimasini qaytaring.`;
             break;
           case 'translate_ru_uz':
             model = 'llama-3.3-70b-versatile';
-            prompt = `Nomi: "${text}". Faqat o'zbekcha tarjimasini qaytaring.`;
+            prompt = `Matn: "${text}". Faqat o'zbekcha tarjimasini qaytaring.`;
             break;
           case 'generate_full':
             model = 'openai/gpt-oss-120b';
