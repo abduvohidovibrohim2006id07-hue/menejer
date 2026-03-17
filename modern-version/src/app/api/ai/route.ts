@@ -9,13 +9,13 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Groq API key not found' }, { status: 500 });
     }
 
-    let model = 'llama-3.3-70b-versatile';
+    let model = 'openai/gpt-oss-120b';
     let messages: any[] = [];
     let responseFormat: any = undefined;
 
     if (action === 'generate_from_image') {
       const images = context?.images || [];
-      const imageUrl = images[0]; // Take the first image for analysis
+      const imageUrl = images[0]; 
 
       if (!imageUrl) {
         return NextResponse.json({ error: 'No image found for analysis' }, { status: 400 });
@@ -44,10 +44,10 @@ export async function POST(req: Request) {
       });
 
       const visionData = await visionResponse.json();
-      const visualDescription = visionData.choices[0].message.content;
+      const visualDescription = visionData.choices?.[0]?.message?.content || "Tasvirni aniqlab bo'lmadi";
 
-      // Step 2: Full JSON Generation using 70B model or similar
-      model = 'llama-3.3-70b-versatile';
+      // Step 2: Full JSON Generation using Flagship 120B model on Groq
+      model = 'openai/gpt-oss-120b';
       messages = [
         {
           role: 'system',
@@ -73,19 +73,24 @@ Quyidagi qolipda JSON qaytaring:
       let prompt = '';
       switch (action) {
         case 'translate_uz_ru':
+          model = 'llama-3.3-70b-versatile';
           prompt = `Translate the following product name from Uzbek to Russian. Return ONLY the translated text. Text: ${text}`;
           break;
         case 'translate_ru_uz':
+          model = 'llama-3.3-70b-versatile';
           prompt = `Translate the following product name from Russian to Uzbek. Return ONLY the translated text. Text: ${text}`;
           break;
         case 'translate_desc_uz_ru':
+          model = 'llama-3.3-70b-versatile';
           prompt = `Translate the following product description from Uzbek to Russian. Return ONLY the translated text. Text: ${text}`;
           break;
         case 'generate_full':
+          model = 'openai/gpt-oss-120b';
           prompt = `Generate a professional product description in Uzbek and Russian based on name: ${context?.name}, brand: ${context?.brand}, model: ${context?.model}. Output format JSON: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}`;
           responseFormat = { type: 'json_object' };
           break;
         default:
+          model = 'llama-3.3-70b-versatile';
           prompt = text;
       }
       messages = [{ role: 'user', content: prompt }];
