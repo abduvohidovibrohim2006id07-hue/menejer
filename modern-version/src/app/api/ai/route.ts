@@ -23,12 +23,22 @@ export async function POST(req: Request) {
       const imageUrl = images[0]; 
 
       if (!imageUrl) {
-        return NextResponse.json({ error: 'Rasm topilmadi. Avval rasm yuklang.' }, { status: 400 });
+        return NextResponse.json({ error: 'Rasm topilmadi.' }, { status: 400 });
       }
 
       let visualDescription = "";
       
       try {
+        console.log("Fetching image for vision analysis:", imageUrl);
+        // Step 1: Fetch and convert to base64 (since Groq can't access private Yandex S3 URLs directly)
+        const imgResponse = await fetch(imageUrl);
+        if (!imgResponse.ok) throw new Error("Image fetch failed");
+        
+        const arrayBuffer = await imgResponse.arrayBuffer();
+        const base64Image = Buffer.from(arrayBuffer).toString('base64');
+        const contentType = imgResponse.headers.get('content-type') || 'image/jpeg';
+
+        console.log("Sending base64 to Groq Vision...");
         // Step 1: Visual Analysis using Llama-3.2-Vision
         const visionResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
@@ -42,8 +52,8 @@ export async function POST(req: Request) {
               {
                 role: 'user',
                 content: [
-                  { type: 'text', text: "Ushbu mahsulotni tahlil qiling. Brendi, modeli, rangi va barcha texnik xususiyatlarini aniqlang." },
-                  { type: 'image_url', image_url: { url: imageUrl } }
+                  { type: 'text', text: "Ushbu mahsulotni rasm orqali tahlil qiling. Brendi, modeli, rangi va barcha texnik xususiyatlarini aniqlang." },
+                  { type: 'image_url', image_url: { url: `data:${contentType};base64,${base64Image}` } }
                 ]
               }
             ],
@@ -52,48 +62,51 @@ export async function POST(req: Request) {
         });
 
         const visionData = await visionResponse.json();
-        visualDescription = visionData.choices?.[0]?.message?.content || "";
-        
-        if (!visualDescription && visionData.error) {
-          console.error("Vision Error:", visionData.error);
-          visualDescription = "Tasvirni tahlil qilib bo'lmadi (URL xatosi yoki limit).";
+        if (visionData.error) {
+          console.error("Groq Vision API Error:", visionData.error);
+          throw new Error(visionData.error.message || "Vision API error");
         }
-      } catch (vError) {
-        visualDescription = "Vision tizimi bilan bog'lanib bo'lmadi.";
+        visualDescription = visionData.choices?.[0]?.message?.content || "";
+        console.log("Vision analysis complete.");
+      } catch (vError: any) {
+        console.error("Vision Analysis Failed:", vError);
+        visualDescription = `Visual tahlil vaqtincha imkonsiz: ${vError.message}`;
       }
 
-      // Step 2: Reasoning using flagship model
+      // Step 2: Reasoning using flagship model - FORCING CREATIVITY
       model = config.model || 'openai/gpt-oss-120b';
-      const systemPrompt = "Siz tajribali marketing mutaxassisi va mahsulotlar bo'yicha tahlilchisiz. JAVOB FAQAT JSON FORMATIDA BO'LSIN.";
-      const userPrompt = config.prompt || `Quyidagi ma'lumotlar asosida mahsulot uchun professional va sotuvchi tavsiflar tayyorlang.\n\nVizual tahlil natijasi: ${visualDescription}\n\nMavjud ma'lumotlar: ${JSON.stringify(context || {})}\n\nMUHIM: JAVOB FAQAT SHU FORMATDA BO'LSIN (JSON):\n{\n  "uz": { "name": "Mahsulot nomi", "short": "Qisqa tavsif (1 qator)", "full": "Batafsil tavsif" },\n  "ru": { "name": "Название товара", "short": "Краткое описание", "full": "Полное описание" },\n  "brand": "Brand",\n  "model": "Model",\n  "color": "Color",\n  "category": "Category"\n}`;
+      const systemPrompt = `Siz dunyodagi eng zo'r marketing mutaxassisiz. JAVOB FAQAT TOZA JSON BO'LSIN.`;
+
+      const userPrompt = config.prompt || `Quyidagi ma'lumotlar asosida mahsulot uchun professional va sotuvchi tavsiflar yarating.\n\nVizual tahlil: ${visualDescription}\n\nData: ${JSON.stringify(context || {})}\n\nMUHIM: JAVOB FAQAT JSON BO'LSIN:\n{\n  "uz": { "name": "...", "short": "...", "full": "..." },\n  "ru": { "name": "...", "short": "...", "full": "..." },\n  "brand": "...",\n  "model": "...",\n  "color": "...",\n  "category": "..."\n}`;
 
       messages = [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt }
       ];
       responseFormat = { type: 'json_object' };
-    } else {
+    }
+ else {
       let prompt = config.prompt || '';
       if (!prompt) {
         switch (action) {
           case 'translate_uz_ru':
             model = 'llama-3.3-70b-versatile';
-            prompt = `Nomi: "${text}". Faqat ruscha tarjimasini qaytaring. Ortiqcha gap kerak emas.`;
+            prompt = `Nomi: "${text}". Faqat ruscha tarjimasini qaytaring.`;
             break;
           case 'translate_ru_uz':
             model = 'llama-3.3-70b-versatile';
-            prompt = `Nomi: "${text}". Faqat o'zbekcha tarjimasini qaytaring. Ortiqcha gap kerak emas.`;
+            prompt = `Nomi: "${text}". Faqat o'zbekcha tarjimasini qaytaring.`;
             break;
           case 'generate_full':
             model = 'openai/gpt-oss-120b';
-            prompt = `Quyidagilar bo'yicha JSON formatda tavsif yozing: Nomi: ${context?.name}, Brend: ${context?.brand}, Model: ${context?.model}.\nFormat: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}`;
+            prompt = `JSON formatda tavsif yozing: ${JSON.stringify(context || {})}. Hech qachon "N/A" ishlatmang.`;
             responseFormat = { type: 'json_object' };
             break;
           default:
             prompt = text;
         }
       } else {
-        prompt = `${prompt}\n\nMavjud ma'lumot: ${text || JSON.stringify(context || {})}`;
+        prompt = `${prompt}\n\nData: ${text || JSON.stringify(context || {})}`;
       }
       messages = [{ role: 'user', content: prompt }];
     }
@@ -107,7 +120,7 @@ export async function POST(req: Request) {
       body: JSON.stringify({
         model,
         messages,
-        temperature: 0.1,
+        temperature: 0.7, // Kreativlikni oshirish uchun
         response_format: responseFormat,
       }),
     });
@@ -115,7 +128,6 @@ export async function POST(req: Request) {
     const data = await response.json();
     let resultText = data.choices?.[0]?.message?.content || "";
 
-    // Robust JSON parsing (handles markdown blocks)
     try {
       const isJson = action === 'generate_full' || action === 'generate_from_image' || responseFormat?.type === 'json_object';
       if (isJson) {
