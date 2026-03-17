@@ -59,6 +59,12 @@ export const Navbar = ({ onAddProduct, onTabChange, onRefreshProducts, activeTab
             📦 Mahsulotlar
           </button>
           <button 
+            onClick={() => onTabChange('video')}
+            className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'video' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
+          >
+            🎥 Video
+          </button>
+          <button 
             onClick={() => onTabChange('categories')}
             className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'categories' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
           >

@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
 import { CategoryManager } from "@/components/CategoryManager";
 import { AiSettingsManager } from "@/components/AiSettingsManager";
+import { VideoDownloader } from "@/components/VideoDownloader";
 import { useScrollPersistence } from "@/hooks/useScrollPersistence";
 import { apiClient } from "@/lib/api-client";
 
@@ -291,6 +292,12 @@ export default function Home() {
               </div>
             )}
           </>
+        )}
+
+        {activeTab === "video" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <VideoDownloader />
+          </div>
         )}
 
         {activeTab === "categories" && (
