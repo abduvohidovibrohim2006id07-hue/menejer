@@ -235,7 +235,7 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
               return (
                 <div 
                   key={idx} 
-                  className="flex-none w-full aspect-[4/5] md:w-[300px] md:h-[350px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 snap-start relative group/item shadow-sm cursor-zoom-in"
+                  className="flex-none w-full aspect-[3/4] md:w-[300px] md:h-[400px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 snap-start relative group/item shadow-sm cursor-zoom-in"
                   onClick={() => !confirmDeleteImg && setPreviewUrl(img)}
                 >
                   {isVideo ? (
