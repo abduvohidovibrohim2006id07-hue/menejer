@@ -93,6 +93,22 @@ export const ProductCard = ({ product, onEdit, onDelete }: ProductCardProps) => 
                     alt="" 
                     className="w-full h-full object-cover transition-transform group-hover/item:scale-110 duration-500"
                   />
+                  <div className="absolute top-3 left-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <a 
+                      href={`https://www.google.com/search?q=${encodeURIComponent(product.name)}&tbm=isch`} 
+                      target="_blank" 
+                      className="w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-lg flex items-center justify-center text-xs hover:bg-white transition-colors"
+                    >
+                      🔍
+                    </a>
+                    <a 
+                      href={`https://lens.google.com/uploadbyurl?url=${encodeURIComponent(img)}`} 
+                      target="_blank" 
+                      className="w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-lg flex items-center justify-center text-xs hover:bg-white transition-colors"
+                    >
+                      📷
+                    </a>
+                  </div>
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/item:opacity-100 transition-opacity flex justify-end p-2 pointer-events-none">
                     <button 
                       onClick={() => handleDeleteImg(filename)}

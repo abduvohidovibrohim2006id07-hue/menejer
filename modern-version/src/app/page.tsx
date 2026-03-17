@@ -5,10 +5,13 @@ import { Navbar } from "@/components/Navbar";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
+import { CategoryManager } from "@/components/CategoryManager";
+import { AiSettingsManager } from "@/components/AiSettingsManager";
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState("products"); // products, categories, ai
   const [allProducts, setAllProducts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
@@ -20,7 +23,7 @@ export default function Home() {
     setLoading(true);
     try {
       const prodRes = await fetch('/api/products');
-      const catsRes = await fetch('/api/categories'); // I'll create this API shortly
+      const catsRes = await fetch('/api/categories');
       
       const prodData = await prodRes.json();
       const catsData = await catsRes.json();
@@ -73,66 +76,87 @@ export default function Home() {
 
   return (
     <main className="min-h-screen bg-slate-50 pb-20 font-sans">
-      <Navbar onAddProduct={() => {
-        setEditingProduct(null);
-        setIsModalOpen(true);
-      }} />
+      <Navbar 
+        onAddProduct={() => {
+          setEditingProduct(null);
+          setIsModalOpen(true);
+        }} 
+        onTabChange={setActiveTab}
+        activeTab={activeTab}
+      />
       
       <div className="max-w-7xl mx-auto px-6 mt-10 space-y-8">
-        <header className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div>
-            <h2 className="text-4xl font-black text-slate-900 tracking-tight">
-              Galereya
-            </h2>
-            <p className="text-slate-500 mt-2 font-medium">
-              Hozirda <span className="text-indigo-600 font-bold">{filteredProducts.length}</span> ta mahsulot ko'rsatilmoqda
-            </p>
-          </div>
-          
-          <div className="relative w-full max-w-md">
-            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
-            <input 
-              type="text"
-              placeholder="Qidirish (Nom, ID, Kategoriya)..."
-              className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-          </div>
-        </header>
-
-        <CategoryFilter 
-          categories={categories} 
-          currentCategory={selectedCategory} 
-          onSelectCategory={setSelectedCategory} 
-        />
-
-        {loading ? (
-          <div className="py-40 flex flex-col items-center justify-center gap-4">
-            <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-            <p className="text-slate-500 font-bold animate-pulse">Yuklanmoqda...</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {filteredProducts.map((product) => (
-              <ProductCard 
-                key={product.id} 
-                product={product} 
-                onEdit={(p) => {
-                  setEditingProduct(p);
-                  setIsModalOpen(true);
-                }}
-                onDelete={handleDelete}
-              />
-            ))}
-            
-            {filteredProducts.length === 0 && (
-              <div className="col-span-full py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-200">
-                <p className="text-2xl text-slate-300 font-black italic">
-                  Hech narsa topilmadi
+        
+        {activeTab === "products" && (
+          <>
+            <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-500">
+              <div>
+                <h2 className="text-4xl font-black text-slate-900 tracking-tight">
+                  Galereya
+                </h2>
+                <p className="text-slate-500 mt-2 font-medium">
+                  Hozirda <span className="text-indigo-600 font-bold">{filteredProducts.length}</span> ta mahsulot ko'rsatilmoqda
                 </p>
               </div>
+              
+              <div className="relative w-full max-w-md">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">🔍</span>
+                <input 
+                  type="text"
+                  placeholder="Qidirish (Nom, ID, Kategoriya)..."
+                  className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                />
+              </div>
+            </header>
+
+            <CategoryFilter 
+              categories={categories.map(c => c.name)} 
+              currentCategory={selectedCategory} 
+              onSelectCategory={setSelectedCategory} 
+            />
+
+            {loading ? (
+              <div className="py-40 flex flex-col items-center justify-center gap-4">
+                <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                <p className="text-slate-500 font-bold animate-pulse">Yuklanmoqda...</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in zoom-in-95 duration-700">
+                {filteredProducts.map((product) => (
+                  <ProductCard 
+                    key={product.id} 
+                    product={product} 
+                    onEdit={(p) => {
+                      setEditingProduct(p);
+                      setIsModalOpen(true);
+                    }}
+                    onDelete={handleDelete}
+                  />
+                ))}
+                
+                {filteredProducts.length === 0 && (
+                  <div className="col-span-full py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-200">
+                    <p className="text-2xl text-slate-300 font-black italic">
+                      Hech narsa topilmadi
+                    </p>
+                  </div>
+                )}
+              </div>
             )}
+          </>
+        )}
+
+        {activeTab === "categories" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <CategoryManager categories={categories} onRefresh={fetchData} />
+          </div>
+        )}
+
+        {activeTab === "ai" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <AiSettingsManager />
           </div>
         )}
       </div>
