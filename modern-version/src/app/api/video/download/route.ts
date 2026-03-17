@@ -28,12 +28,14 @@ export async function POST(req: Request) {
     const tempDir = os.tmpdir();
     const fullPath = path.join(tempDir, outputFilename);
 
-    // FFmpeg path logic
+    // FFmpeg path logic - More comprehensive search
     const possiblePaths = [
       path.join(process.cwd(), '..', 'ffmpeg', 'bin'),
-      path.join(process.env.USERPROFILE || '', 'Downloads', 'ffmpeg-2026-03-15-git-6ba0b59d8b-full_build', 'bin'),
-      'C:\\ffmpeg\\bin'
-    ];
+      'C:\\ffmpeg\\bin',
+      path.join(os.homedir(), 'Downloads', 'ffmpeg', 'bin'),
+      // Try finding any ffmpeg in Downloads
+      ...fs.readdirSync(os.homedir() + '/Downloads').filter(f => f.toLowerCase().startsWith('ffmpeg')).map(f => path.join(os.homedir(), 'Downloads', f, 'bin'))
+    ].filter(p => fs.existsSync(p));
 
     let FFMPEG_BIN = '';
     for (const p of possiblePaths) {
@@ -43,49 +45,64 @@ export async function POST(req: Request) {
       }
     }
 
+    const isYouTube = processedUrl.includes('youtube.com') || processedUrl.includes('youtu.be');
+
     const args = [
       '--format', 'bestvideo[height<=720][ext=mp4]+bestaudio[ext=m4a]/best[height<=720][ext=mp4]/best',
-      '--ffmpeg-location', FFMPEG_BIN,
       '--recode-video', 'mp4',
       '-o', fullPath,
       '--fixup', 'warn',
       '--no-check-certificate',
       '--max-filesize', '100M',
-      // Advanced bypass flags
-      '--impersonate-client', 'chrome',
-      '--extractor-args', 'youtube:player-client=ios,mweb',
-      '--cookies-from-browser', 'chrome',
-      '--js-runtimes', 'node',
-      '--no-cache-dir',
-      processedUrl
+      '--no-playlist',
+      '--no-cache-dir'
     ];
 
-    // Restore trimming logic
+    if (FFMPEG_BIN) {
+      args.push('--ffmpeg-location', FFMPEG_BIN);
+    }
+
+    if (isYouTube) {
+      args.push(
+        '--extractor-args', 'youtube:player-client=ios,android,mweb',
+        '--cookies-from-browser', 'chrome',
+        '--js-runtimes', 'node',
+        '--impersonate-client', 'chrome'
+      );
+    }
+
+    // Trimming logic
     if (startTime && startTime.trim() !== "" && startTime !== "00:00:00") {
       const trimmer = [`-ss ${startTime}`];
       if (endTime && endTime.trim() !== "" && endTime !== "To'liq yuklash") {
         trimmer.push(`-to ${endTime}`);
       }
-      args.splice(args.length - 1, 0, '--postprocessor-args', `ffmpeg-s1:${trimmer.join(' ')}`);
+      args.push('--postprocessor-args', `ffmpeg-s1:${trimmer.join(' ')}`);
     } else if (endTime && endTime.trim() !== "" && endTime !== "To'liq yuklash") {
-      args.splice(args.length - 1, 0, '--postprocessor-args', `ffmpeg-s1:-to ${endTime}`);
+      args.push('--postprocessor-args', `ffmpeg-s1:-to ${endTime}`);
     }
 
+    args.push(processedUrl);
+
     return new Promise<Response>((resolve) => {
-      console.log('Spawning yt-dlp with args:', args.join(' '));
+      console.log('--- STARTING DOWNLOAD ---');
+      console.log('Link:', processedUrl);
+      console.log('FFmpeg:', FFMPEG_BIN || 'NOT FOUND');
+      
       const yt = spawn('yt-dlp', args);
       
       let errorOutput = '';
-      let stdoutOutput = '';
+      let lastOutput = '';
 
       yt.stdout.on('data', (data) => {
-        stdoutOutput += data.toString();
+        lastOutput = data.toString();
+        // console.log('yt-dlp:', lastOutput);
       });
 
       yt.stderr.on('data', (data) => {
         const msg = data.toString();
         errorOutput += msg;
-        console.log('yt-dlp stderr:', msg);
+        console.error('yt-dlp error:', msg);
       });
 
       yt.on('close', async (code) => {
@@ -103,31 +120,28 @@ export async function POST(req: Request) {
             }));
 
             const tempUrl = `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${s3Key}`;
-            
-            // Clean up local temp file
             if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
 
-            resolve(NextResponse.json({ 
-              success: true, 
-              tempUrl,
-              filename: outputFilename,
-              s3Key
-            }));
+            resolve(NextResponse.json({ success: true, tempUrl, filename: outputFilename }));
           } catch (uploadError: any) {
-            resolve(NextResponse.json({ error: 'S3 ga yuklashda xatolik: ' + uploadError.message }, { status: 500 }));
+            resolve(NextResponse.json({ error: 'Cloud ga yuklashda xato: ' + uploadError.message }, { status: 500 }));
           }
         } else {
-          // Identify specific bot/sign-in error
           let userMessage = 'Video yuklashda xatolik yuz berdi.';
+          
           if (errorOutput.includes('Sign in to confirm you')) {
-            userMessage = 'YouTube bot aniqladi va yuklashni blokladi. Iltimos, bir ozdan so\'ng qayta urinib ko\'ring yoki boshqa havoladan foydalaning.';
+            userMessage = 'YouTube bot aniqladi. Iltimos, bir ozdan so\'ng qayta urinib ko\'ring yoki havolani Chrome-da ochib ko\'ring.';
+          } else if (errorOutput.includes('Cookies file is locked')) {
+            userMessage = 'Brauzer kukkilarini oqib bo\'lmadi. Iltimos, Chrome brauzerini butunlay yopib, qayta urinib ko\'ring yoki boshqa brauzerga o\'ting.';
           } else if (errorOutput.includes('Requested format is not available')) {
-             userMessage = 'Tanlangan sifatdagi video topilmadi.';
+            userMessage = 'Siz so\'ragan format yoki sifatdagi video topilmadi.';
+          } else if (errorOutput.includes('ffmpeg')) {
+            userMessage = 'Videoni qayta ishlashda (trimming) xatolik yuz berdi. FFmpeg dasturi o\'rnatilganini tekshiring.';
           }
 
           resolve(NextResponse.json({ 
             error: userMessage, 
-            details: errorOutput.substring(0, 1000) // Limit length
+            details: errorOutput.substring(0, 500) 
           }, { status: 500 }));
         }
       });
