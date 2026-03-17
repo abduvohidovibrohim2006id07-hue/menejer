@@ -3,10 +3,33 @@ import { db } from '@/lib/firebase-admin';
 import * as XLSX from 'xlsx';
 import { withGateway } from '@/lib/api-gateway';
 
-export const GET = withGateway(async () => {
-  const snapshot = await db.collection('products').get();
+export const GET = withGateway(async (req) => {
+  const { searchParams } = new URL(req.url);
+  const idsParam = searchParams.get('ids');
   
-  const products = snapshot.docs.map(doc => {
+  let query: any = db.collection('products');
+  
+  if (idsParam) {
+    const idList = idsParam.split(',').filter(id => id.trim() !== '');
+    if (idList.length > 0) {
+      // Note: Firestore 'in' query limit is 30. If more, we handle manually.
+      if (idList.length <= 30) {
+        query = query.where('__name__', 'in', idList);
+      }
+    }
+  }
+
+  const snapshot = await query.get();
+  
+  let docs = snapshot.docs;
+  if (idsParam) {
+    const idList = idsParam.split(',').filter(id => id.trim() !== '');
+    if (idList.length > 30) {
+      docs = docs.filter(doc => idList.includes(doc.id));
+    }
+  }
+
+  const products = docs.map(doc => {
     const data = doc.data();
     const allMedia = (data.local_images || []) as string[];
     

@@ -21,9 +21,11 @@ interface ProductCardProps {
   onEdit: (p: Product) => void;
   onDelete: (id: string) => void;
   onRefresh: () => void;
+  selected: boolean;
+  onSelectToggle: (id: string) => void;
 }
 
-export const ProductCard = ({ product, onEdit, onDelete, onRefresh }: ProductCardProps) => {
+export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, onSelectToggle }: ProductCardProps) => {
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
 
   const scrollGallery = (direction: number) => {
@@ -48,7 +50,18 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh }: ProductCar
   };
 
   return (
-    <div className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm hover:shadow-xl transition-all flex flex-col md:flex-row gap-8 items-stretch group/card">
+    <div className={`bg-white rounded-3xl p-6 border transition-all flex flex-col md:flex-row gap-8 items-stretch group/card relative ${selected ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg bg-indigo-50/10' : 'border-slate-200 shadow-sm hover:shadow-xl'}`}>
+      {/* SELECTION CHECKBOX (Floating) */}
+      <div 
+        onClick={(e) => {
+          e.stopPropagation();
+          onSelectToggle(product.id);
+        }}
+        className={`absolute -top-3 -right-3 w-8 h-8 rounded-full border-2 flex items-center justify-center cursor-pointer z-30 transition-all ${selected ? 'bg-indigo-600 border-indigo-600 text-white scale-110 shadow-lg' : 'bg-white border-slate-300 text-transparent hover:border-indigo-400'}`}
+      >
+        <span className="text-xs font-black">✓</span>
+      </div>
+
       {/* Media Preview Modal (Lightbox) */}
       {previewUrl && (
         <div 
