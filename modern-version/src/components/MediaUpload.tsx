@@ -85,43 +85,45 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
     
     setUploading(true);
     try {
-      const isVideo = url.toLowerCase().split('?')[0].endsWith('.mp4');
-      
-      if (isVideo) {
-        // Direct pass for videos
+      const lowerUrl = url.toLowerCase();
+      const isSocialMedia = lowerUrl.includes('youtube.com') || 
+                            lowerUrl.includes('youtu.be') || 
+                            lowerUrl.includes('instagram.com') || 
+                            lowerUrl.includes('tiktok.com');
+
+      if (isSocialMedia) {
+        // Use the Video Downloader logic
+        const res = await fetch('/api/video/download', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, url: url.trim() }),
+        });
+        
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Video yuklashda xatolik");
+
+        // After download, we need to confirm it to move from temp to final
+        await fetch('/api/video/confirm', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ productId, filename: data.filename }),
+        });
+      } else {
+        // Regular URL upload via backend (to avoid CORS)
         const res = await fetch('/api/products/upload-url', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: productId, url })
+          body: JSON.stringify({ id: productId, url: url.trim() })
         });
-        if (!res.ok) throw new Error("Video URL upload failed");
-      } else {
-        // Resize for images
-        const response = await fetch(url);
-        if (!response.ok) throw new Error("URL dan rasmni olib bo'lmadi");
-        const blob = await response.blob();
-        const filename = url.split('/').pop()?.split('?')[0] || 'image.jpg';
-        const file = new File([blob], filename, { type: blob.type });
-        const processedFile = await processImage(file);
-
-        const upRes = await fetch('/api/products/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: productId, filename: processedFile.name, contentType: processedFile.type })
-        });
-        const { uploadUrl } = await upRes.json();
-
-        await fetch(uploadUrl, {
-          method: 'PUT',
-          body: processedFile,
-          headers: { 'Content-Type': processedFile.type }
-        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "URL orqali yuklashda xatolik");
       }
       
       setUrl('');
       onSuccess();
-    } catch (error) {
+    } catch (error: any) {
       console.error("URL Upload failed", error);
+      alert("Xatolik: " + (error.message || "Yuklab bo'lmadi"));
     } finally {
       setUploading(false);
     }
