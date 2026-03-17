@@ -74,12 +74,14 @@ export default function Home() {
     window.location.href = `/api/products/export?ids=${ids}`;
   };
 
-  const fetchData = async () => {
-    setLoading(true);
+  const fetchData = async (silent = false) => {
+    if (!silent) setLoading(true);
     try {
-      const prodData = await apiClient.get('/api/products');
-      const catsData = await apiClient.get('/api/categories');
-      const marketsData = await apiClient.get('/api/markets');
+      const [prodData, catsData, marketsData] = await Promise.all([
+        apiClient.get('/api/products'),
+        apiClient.get('/api/categories'),
+        apiClient.get('/api/markets')
+      ]);
       
       setAllProducts(Array.isArray(prodData) ? prodData : []);
       setCategories(Array.isArray(catsData) ? catsData : []);
@@ -87,7 +89,7 @@ export default function Home() {
     } catch (e: any) {
       console.error("Fetch Data Error:", e.message);
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   };
 
@@ -147,7 +149,7 @@ export default function Home() {
   const handleDelete = async (id: string) => {
     try {
       await apiClient.delete('/api/products', id);
-      fetchData();
+      fetchData(true);
     } catch (e: any) {
       alert("Xatolik: " + e.message);
     }
@@ -163,7 +165,7 @@ export default function Home() {
           setIsModalOpen(true);
         }} 
         onTabChange={setActiveTab}
-        onRefreshProducts={fetchData}
+        onRefreshProducts={() => fetchData(true)}
         activeTab={activeTab}
       />
       
@@ -333,7 +335,7 @@ export default function Home() {
                       setIsModalOpen(true);
                     }}
                     onDelete={handleDelete}
-                    onRefresh={fetchData}
+                    onRefresh={() => fetchData(true)}
                   />
                 ))}
                 
@@ -357,7 +359,7 @@ export default function Home() {
 
         {activeTab === "categories" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <CategoryManager categories={categories} onRefresh={fetchData} />
+            <CategoryManager categories={categories} onRefresh={() => fetchData(true)} />
           </div>
         )}
 
@@ -369,7 +371,7 @@ export default function Home() {
 
         {activeTab === "markets" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-            <MarketManager markets={markets} onRefresh={fetchData} />
+            <MarketManager markets={markets} onRefresh={() => fetchData(true)} />
           </div>
         )}
       </div>
@@ -378,7 +380,7 @@ export default function Home() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         product={editingProduct}
-        onSuccess={fetchData}
+        onSuccess={() => fetchData(true)}
         categories={categories}
         markets={markets}
       />
