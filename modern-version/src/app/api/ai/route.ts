@@ -18,10 +18,10 @@ export const POST = withGateway(async (req) => {
   let visualDescription = "";
 
     if (action === 'generate_from_image') {
-      const images = context?.images || [];
-      const imageUrl = images[0]; 
+      const allMedia = context?.images || [];
+      const imageUrl = allMedia.find((url: string) => !url.toLowerCase().endsWith('.mp4'));
 
-      if (!imageUrl) throw { message: 'Rasm topilmadi.', status: 400 };
+      if (!imageUrl) throw { message: 'AI tahlili uchun rasm topilmadi. Faqat rasmlar tahlil qilinadi.', status: 400 };
       
       // Step 1: Vision
       const imgResponse = await fetch(imageUrl);

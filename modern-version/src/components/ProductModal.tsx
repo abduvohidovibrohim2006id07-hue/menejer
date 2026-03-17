@@ -128,7 +128,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             <p className="text-indigo-100 text-sm mt-1">{product ? `ID: ${product.id}` : "Barcha ma'lumotlarni to'ldiring"}</p>
           </div>
           <div className="flex items-center gap-3">
-            {product?.local_images?.length > 0 && (
+            {product?.local_images?.some((url: string) => !url.toLowerCase().endsWith('.mp4')) && (
               <button 
                 type="button"
                 onClick={() => handleAIAction('generate_from_image', '', '')}
