@@ -14,11 +14,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'ID va Link kiritish majburiy!' }, { status: 400 });
     }
 
+    // 1. URL Transformation: Convert shorts to regular watch URL
+    let processedUrl = url;
+    if (url.includes('/shorts/')) {
+      const videoId = url.split('/shorts/')[1]?.split('?')[0];
+      if (videoId) {
+        processedUrl = `https://www.youtube.com/watch?v=${videoId}`;
+        console.log("Transformed Shorts URL to:", processedUrl);
+      }
+    }
+
     const outputFilename = `${productId}_temp_${Math.random().toString(36).substring(7)}.mp4`;
     const tempDir = os.tmpdir();
     const fullPath = path.join(tempDir, outputFilename);
 
-    // FFmpeg path logic from Python script
+    // FFmpeg path logic
     const possiblePaths = [
       path.join(process.cwd(), '..', 'ffmpeg', 'bin'),
       path.join(process.env.USERPROFILE || '', 'Downloads', 'ffmpeg-2026-03-15-git-6ba0b59d8b-full_build', 'bin'),
@@ -43,23 +53,23 @@ export async function POST(req: Request) {
       '--max-filesize', '100M',
       // Advanced bypass flags
       '--impersonate-client', 'chrome',
-      '--extractor-args', 'youtube:player-client=ios,android,mweb',
+      '--extractor-args', 'youtube:player-client=ios,mweb',
+      '--cookies-from-browser', 'chrome',
       '--js-runtimes', 'node',
-      '--referer', 'https://www.youtube.com/',
+      '--no-cache-dir',
+      processedUrl
     ];
 
-    // Trimming logic if parameters provided
+    // Restore trimming logic
     if (startTime && startTime.trim() !== "" && startTime !== "00:00:00") {
       const trimmer = [`-ss ${startTime}`];
       if (endTime && endTime.trim() !== "" && endTime !== "To'liq yuklash") {
         trimmer.push(`-to ${endTime}`);
       }
-      args.push('--postprocessor-args', `ffmpeg-s1:${trimmer.join(' ')}`);
+      args.splice(args.length - 1, 0, '--postprocessor-args', `ffmpeg-s1:${trimmer.join(' ')}`);
     } else if (endTime && endTime.trim() !== "" && endTime !== "To'liq yuklash") {
-      args.push('--postprocessor-args', `ffmpeg-s1:-to ${endTime}`);
+      args.splice(args.length - 1, 0, '--postprocessor-args', `ffmpeg-s1:-to ${endTime}`);
     }
-
-    args.push(url);
 
     return new Promise<Response>((resolve) => {
       console.log('Spawning yt-dlp with args:', args.join(' '));
