@@ -21,7 +21,8 @@ export default function Home() {
   const [categories, setCategories] = useState<any[]>([]);
   const [markets, setMarkets] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [initialLoading, setInitialLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -55,7 +56,7 @@ export default function Home() {
 
   const handleBulkDelete = async () => {
     if (!confirm(`${selectedIds.size} ta mahsulot o'chirilsinmi?`)) return;
-    setLoading(true);
+    setRefreshing(true);
     try {
       for (const id of Array.from(selectedIds)) {
         await apiClient.delete('/api/products', id);
@@ -65,7 +66,7 @@ export default function Home() {
     } catch (e: any) {
       alert("Xatolik: " + e.message);
     } finally {
-      setLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -75,7 +76,9 @@ export default function Home() {
   };
 
   const fetchData = async (silent = false) => {
-    if (!silent) setLoading(true);
+    if (silent) setRefreshing(true);
+    else if (allProducts.length === 0) setInitialLoading(true);
+
     try {
       const [prodData, catsData, marketsData] = await Promise.all([
         apiClient.get('/api/products'),
@@ -89,7 +92,8 @@ export default function Home() {
     } catch (e: any) {
       console.error("Fetch Data Error:", e.message);
     } finally {
-      if (!silent) setLoading(false);
+      setInitialLoading(false);
+      setRefreshing(false);
     }
   };
 
@@ -303,51 +307,54 @@ export default function Home() {
                 </button>
               ))}
             </div>
-
+ 
             <CategoryFilter 
               categories={categories.map((c: any) => c.name)} 
               currentCategory={selectedCategory} 
               onSelectCategory={setSelectedCategory} 
             />
-
-            {loading && allProducts.length === 0 ? (
-              <div className="py-40 flex flex-col items-center justify-center gap-4">
-                <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                <p className="text-slate-500 font-bold animate-pulse uppercase tracking-[0.2em] text-xs">Ma'lumotlar yuklanmoqda...</p>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-700 relative">
-                {loading && (
-                   <div className="absolute top-0 right-0 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-indigo-100 shadow-sm z-10 flex items-center gap-2 -mt-4 animate-in slide-in-from-top-1">
-                      <div className="w-3 h-3 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                      <span className="text-[10px] font-black text-indigo-600 uppercase">Yangilanmoqda</span>
-                   </div>
-                )}
-                
-                {filteredProducts.map((product: any) => (
-                  <ProductCard 
-                    key={product.id} 
-                    product={product} 
-                    selected={selectedIds.has(product.id)}
-                    onSelectToggle={toggleSelection}
-                    onEdit={(p: any) => {
-                      setEditingProduct(p);
-                      setIsModalOpen(true);
-                    }}
-                    onDelete={handleDelete}
-                    onRefresh={() => fetchData(true)}
-                  />
-                ))}
-                
-                {filteredProducts.length === 0 && !loading && (
-                  <div className="col-span-full py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-200">
-                    <p className="text-2xl text-slate-300 font-black italic">
-                      Hech narsa topilmadi
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
+ 
+            <div className="relative min-h-[400px]">
+              {/* SILENT REFRESH INDICATOR */}
+              {refreshing && (
+                 <div className="absolute -top-12 right-0 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-indigo-100 shadow-sm z-20 flex items-center gap-2 animate-in slide-in-from-top-1">
+                    <div className="w-3 h-3 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                    <span className="text-[10px] font-black text-indigo-600 uppercase">Yangilanmoqda</span>
+                 </div>
+              )}
+ 
+              {initialLoading ? (
+                <div className="py-40 flex flex-col items-center justify-center gap-4">
+                  <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                  <p className="text-slate-500 font-bold animate-pulse uppercase tracking-[0.2em] text-xs">Ma'lumotlar yuklanmoqda...</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-6 animate-in fade-in duration-500">
+                  {filteredProducts.map((product: any) => (
+                    <ProductCard 
+                      key={product.id} 
+                      product={product} 
+                      selected={selectedIds.has(product.id)}
+                      onSelectToggle={toggleSelection}
+                      onEdit={(p: any) => {
+                        setEditingProduct(p);
+                        setIsModalOpen(true);
+                      }}
+                      onDelete={handleDelete}
+                      onRefresh={() => fetchData(true)}
+                    />
+                  ))}
+                  
+                  {filteredProducts.length === 0 && (
+                    <div className="col-span-full py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-200">
+                      <p className="text-2xl text-slate-300 font-black italic">
+                        Hech narsa topilmadi
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </>
         )}
 
