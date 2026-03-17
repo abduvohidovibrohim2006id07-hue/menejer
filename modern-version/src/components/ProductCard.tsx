@@ -251,27 +251,6 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
               📁 ARXIV
             </span>
           )}
-          
-          {/* MARKETPLACE SHELF OVER GALLERY */}
-          {product.marketplaces && product.marketplaces.length > 0 && (
-            <div className="flex gap-1.5 p-1.5 bg-white/90 backdrop-blur-md rounded-xl shadow-xl border border-white/50 animate-in fade-in slide-in-from-left-4 duration-500">
-              {product.marketplaces.includes('uzum') && (
-                <div title="Uzum Market" className="w-5 h-5 bg-[#7000FF] rounded-lg flex items-center justify-center text-[9px] font-black text-white shadow-sm ring-1 ring-white/20">U</div>
-              )}
-              {product.marketplaces.includes('yandex') && (
-                <div title="Yandex Market" className="w-5 h-5 bg-[#FFCC00] rounded-lg flex items-center justify-center text-[9px] font-black text-black shadow-sm ring-1 ring-black/10">Y</div>
-              )}
-              {product.marketplaces.includes('olx') && (
-                <div title="OLX" className="w-5 h-5 bg-[#002f34] rounded-lg flex items-center justify-center text-[7px] font-black text-[#23e5db] shadow-sm ring-1 ring-white/10 uppercase">olx</div>
-              )}
-              {product.marketplaces.includes('wildberries') && (
-                <div title="Wildberries" className="w-5 h-5 bg-[#cb11ab] rounded-lg flex items-center justify-center text-[7px] font-black text-white shadow-sm ring-1 ring-white/10 uppercase">wb</div>
-              )}
-              {product.marketplaces.includes('instagram') && (
-                <div title="Instagram" className="w-5 h-5 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-lg flex items-center justify-center text-[9px] text-white shadow-sm ring-1 ring-white/20">📸</div>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
@@ -299,9 +278,22 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
             </div>
           </div>
 
-          <p className="text-slate-500 leading-relaxed mb-6 text-sm">
-            {product.description_short || "Tavsif mavjud emas. Mahsulot haqida batafsil ma'lumot olish uchun tahrirlash bo'limiga o'ting."}
-          </p>
+          <div className="flex flex-wrap gap-3 mb-6">
+            <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-full mb-1">Sotuvda:</span>
+            {product.marketplaces && product.marketplaces.length > 0 ? (
+              product.marketplaces.map((m: string) => (
+                <div key={m} className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
+                   {m === 'uzum' && <><div className="w-4 h-4 bg-[#7000FF] rounded flex items-center justify-center text-[8px] text-white font-bold">U</div> <span className="text-[10px] font-black text-slate-600">Uzum</span></>}
+                   {m === 'yandex' && <><div className="w-4 h-4 bg-[#FFCC00] rounded flex items-center justify-center text-[8px] text-black font-bold">Y</div> <span className="text-[10px] font-black text-slate-600">Yandex</span></>}
+                   {m === 'olx' && <><div className="w-4 h-4 bg-[#002f34] rounded flex items-center justify-center text-[6px] text-white font-bold">olx</div> <span className="text-[10px] font-black text-slate-600">OLX</span></>}
+                   {m === 'wildberries' && <><div className="w-4 h-4 bg-[#cb11ab] rounded flex items-center justify-center text-[6px] text-white font-bold">wb</div> <span className="text-[10px] font-black text-slate-600">WB</span></>}
+                   {m === 'instagram' && <><div className="w-4 h-4 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded flex items-center justify-center text-[8px] text-white font-bold">📸</div> <span className="text-[10px] font-black text-slate-600">Insta</span></>}
+                </div>
+              ))
+            ) : (
+              <span className="text-[10px] font-bold text-slate-300 italic">Hech qayerda sotuvda emas</span>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-6 border-t border-slate-100">

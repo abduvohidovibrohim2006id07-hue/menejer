@@ -8,6 +8,7 @@ import { ProductModal } from "@/components/ProductModal";
 import { CategoryManager } from "@/components/CategoryManager";
 import { AiSettingsManager } from "@/components/AiSettingsManager";
 import { VideoDownloader } from "@/components/VideoDownloader";
+import { MarketManager } from "@/components/MarketManager";
 import { useScrollPersistence } from "@/hooks/useScrollPersistence";
 import { apiClient } from "@/lib/api-client";
 
@@ -18,6 +19,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
+  const [markets, setMarkets] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
@@ -77,9 +79,11 @@ export default function Home() {
     try {
       const prodData = await apiClient.get('/api/products');
       const catsData = await apiClient.get('/api/categories');
+      const marketsData = await apiClient.get('/api/markets');
       
       setAllProducts(Array.isArray(prodData) ? prodData : []);
       setCategories(Array.isArray(catsData) ? catsData : []);
+      setMarkets(Array.isArray(marketsData) ? marketsData : []);
     } catch (e: any) {
       console.error("Fetch Data Error:", e.message);
     } finally {
@@ -362,6 +366,12 @@ export default function Home() {
             <AiSettingsManager />
           </div>
         )}
+
+        {activeTab === "markets" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <MarketManager markets={markets} onRefresh={fetchData} />
+          </div>
+        )}
       </div>
 
       <ProductModal 
@@ -370,6 +380,7 @@ export default function Home() {
         product={editingProduct}
         onSuccess={fetchData}
         categories={categories}
+        markets={markets}
       />
 
       {/* FLOAT BULK ACTION BAR */}
