@@ -96,12 +96,12 @@ export default function Home() {
     let result = allProducts;
     
     if (selectedCategory !== "Barchasi") {
-      result = result.filter(p => p.category === selectedCategory);
+      result = result.filter((p: any) => p.category === selectedCategory);
     }
 
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
-      result = result.filter(p => 
+      result = result.filter((p: any) => 
         p.name?.toLowerCase().includes(q) || 
         p.id?.toString().toLowerCase().includes(q) ||
         p.category?.toLowerCase().includes(q)
@@ -110,20 +110,20 @@ export default function Home() {
 
     if (brandFilter) {
       const bf = brandFilter.toLowerCase();
-      result = result.filter(p => p.brand?.toLowerCase().includes(bf));
+      result = result.filter((p: any) => p.brand?.toLowerCase().includes(bf));
     }
 
     if (colorFilter) {
       const cf = colorFilter.toLowerCase();
-      result = result.filter(p => p.color?.toLowerCase().includes(cf));
+      result = result.filter((p: any) => p.color?.toLowerCase().includes(cf));
     }
 
     if (minPrice) {
-      result = result.filter(p => Number(p.price) >= Number(minPrice));
+      result = result.filter((p: any) => Number(p.price) >= Number(minPrice));
     }
 
     if (maxPrice) {
-      result = result.filter(p => Number(p.price) <= Number(maxPrice));
+      result = result.filter((p: any) => Number(p.price) <= Number(maxPrice));
     }
 
     setFilteredProducts(result);
@@ -248,7 +248,7 @@ export default function Home() {
             )}
 
             <CategoryFilter 
-              categories={categories.map(c => c.name)} 
+              categories={categories.map((c: any) => c.name)} 
               currentCategory={selectedCategory} 
               onSelectCategory={setSelectedCategory} 
             />
@@ -267,13 +267,13 @@ export default function Home() {
                    </div>
                 )}
                 
-                {filteredProducts.map((product) => (
+                {filteredProducts.map((product: any) => (
                   <ProductCard 
                     key={product.id} 
                     product={product} 
                     selected={selectedIds.has(product.id)}
                     onSelectToggle={toggleSelection}
-                    onEdit={(p) => {
+                    onEdit={(p: any) => {
                       setEditingProduct(p);
                       setIsModalOpen(true);
                     }}

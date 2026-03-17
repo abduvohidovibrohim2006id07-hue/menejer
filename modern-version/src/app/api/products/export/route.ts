@@ -25,11 +25,11 @@ export const GET = withGateway(async (req) => {
   if (idsParam) {
     const idList = idsParam.split(',').filter(id => id.trim() !== '');
     if (idList.length > 30) {
-      docs = docs.filter(doc => idList.includes(doc.id));
+      docs = docs.filter((doc: any) => idList.includes(doc.id));
     }
   }
 
-  const products = docs.map(doc => {
+  const products = docs.map((doc: any) => {
     const data = doc.data();
     const allMedia = (data.local_images || []) as string[];
     
