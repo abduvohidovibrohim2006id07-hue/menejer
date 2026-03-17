@@ -28,8 +28,8 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, 1080, 1440);
 
-        // Calculate proportions to avoid stretching (cover effect)
-        const scale = Math.max(1080 / img.naturalWidth, 1440 / img.naturalHeight);
+        // Calculate proportions to avoid stretching (contain effect with white padding)
+        const scale = Math.min(1080 / img.naturalWidth, 1440 / img.naturalHeight);
         const nw = img.naturalWidth * scale;
         const nh = img.naturalHeight * scale;
         const cx = (1080 - nw) / 2;

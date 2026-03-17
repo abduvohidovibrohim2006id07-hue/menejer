@@ -45,7 +45,7 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
         if (!ctx) return resolve(file);
         ctx.fillStyle = 'white';
         ctx.fillRect(0, 0, 1080, 1440);
-        const scale = Math.max(1080 / img.naturalWidth, 1440 / img.naturalHeight);
+        const scale = Math.min(1080 / img.naturalWidth, 1440 / img.naturalHeight);
         const nw = img.naturalWidth * scale;
         const nh = img.naturalHeight * scale;
         const cx = (1080 - nw) / 2;
@@ -68,15 +68,30 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
     setFixing(imgUrl);
     try {
       const filename = imgUrl.split('/').pop() || 'image.jpg';
+      
+      // Fetch through proxy to avoid CORS and get blob for processing
+      const proxyUrl = `/api/proxy?url=${encodeURIComponent(imgUrl)}`;
+      const response = await fetch(proxyUrl);
+      if (!response.ok) throw new Error("Rasmni yuklab bo'lmadi");
+      
+      const blob = await response.blob();
+      const file = new File([blob], filename, { type: blob.type });
+      
+      // Process localy (Resize to 1080x1440 with white padding)
+      const processedFile = await processImage(file);
 
-      const upRes = await fetch('/api/products/upload-url', {
+      const upRes = await fetch('/api/products/upload', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: product.id, url: imgUrl })
+        body: JSON.stringify({ id: product.id, filename: processedFile.name, contentType: processedFile.type })
       });
-      
-      const upData = await upRes.json();
-      if (!upRes.ok) throw new Error(upData.error || "Rasm to'g'irlashda xatolik");
+      const { uploadUrl } = await upRes.json();
+
+      await fetch(uploadUrl, {
+        method: 'PUT',
+        body: processedFile,
+        headers: { 'Content-Type': processedFile.type }
+      });
 
       await fetch('/api/products/delete-image', {
         method: 'POST',
@@ -85,8 +100,9 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
       });
 
       onRefresh();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("Fix image error:", e);
+      alert("Xatolik: " + e.message);
     } finally {
       setFixing(null);
     }
