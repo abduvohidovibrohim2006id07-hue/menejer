@@ -7,9 +7,10 @@ interface ProductModalProps {
   onClose: () => void;
   product?: any;
   onSuccess: () => void;
+  categories?: any[];
 }
 
-export const ProductModal = ({ isOpen, onClose, product, onSuccess }: ProductModalProps) => {
+export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories = [] }: ProductModalProps) => {
   const [formData, setFormData] = useState<any>({
     id: '',
     name: '',
@@ -18,6 +19,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess }: ProductMod
     category: '',
     brand: '',
     model: '',
+    color: '',
     description_short: '',
     description_full: '',
     description_short_ru: '',
@@ -28,7 +30,20 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess }: ProductMod
 
   useEffect(() => {
     if (product) {
-      setFormData(product);
+      setFormData({
+        id: product.id || '',
+        name: product.name || '',
+        name_ru: product.name_ru || '',
+        price: product.price || '',
+        category: product.category || '',
+        brand: product.brand || '',
+        model: product.model || '',
+        color: product.color || '',
+        description_short: product.description_short || '',
+        description_full: product.description_full || '',
+        description_short_ru: product.description_short_ru || '',
+        description_full_ru: product.description_full_ru || '',
+      });
     } else {
       setFormData({
         id: '',
@@ -38,6 +53,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess }: ProductMod
         category: '',
         brand: '',
         model: '',
+        color: '',
         description_short: '',
         description_full: '',
         description_short_ru: '',
@@ -133,6 +149,17 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess }: ProductMod
             </div>
 
             <div className="col-span-1">
+               <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Rang</label>
+               <input 
+                 type="text"
+                 placeholder="Masalan: Qora, Oq, Purple"
+                 className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                 value={formData.color}
+                 onChange={(e) => setFormData({...formData, color: e.target.value})}
+               />
+            </div>
+
+            <div className="col-span-1">
               <div className="flex justify-between mb-2">
                 <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Nomi (UZ)*</label>
                 <button type="button" onClick={() => handleAIAction('translate_uz_ru', 'name', 'name_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors tracking-tighter flex items-center gap-1">🤖 RU tarjima</button>
@@ -169,15 +196,21 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess }: ProductMod
               />
             </div>
 
-            <div className="col-span-1 lg:col-span-3">
+            <div className="col-span-1 lg:col-span-2">
                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Kategoriya</label>
                <input 
+                 list="category-list"
                  type="text"
-                 placeholder="Masalan: EPILYATOR"
+                 placeholder="Kategoriyani tanlang yoki yozing..."
                  className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
                  value={formData.category}
                  onChange={(e) => setFormData({...formData, category: e.target.value})}
                />
+               <datalist id="category-list">
+                 {categories.map((c, i) => (
+                   <option key={i} value={c.name} />
+                 ))}
+               </datalist>
             </div>
           </div>
 

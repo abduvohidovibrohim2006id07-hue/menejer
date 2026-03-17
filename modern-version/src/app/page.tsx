@@ -166,6 +166,7 @@ export default function Home() {
         onClose={() => setIsModalOpen(false)} 
         product={editingProduct}
         onSuccess={fetchData}
+        categories={categories}
       />
     </main>
   );
