@@ -63,18 +63,45 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
   }, [product, isOpen]);
 
   const handleAIAction = async (action: string, field: string, targetField: string) => {
+    setLoading(true);
     try {
       const response = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, text: formData[field] })
+        body: JSON.stringify({ 
+          action, 
+          text: formData[field],
+          context: {
+            ...formData,
+            images: product?.local_images || []
+          }
+        })
       });
       const data = await response.json();
       if (data.result) {
-        setFormData((prev: any) => ({ ...prev, [targetField]: data.result }));
+        if (typeof data.result === 'object') {
+          // If it's the full generation result
+          setFormData((prev: any) => ({
+            ...prev,
+            name: data.result.uz?.name || prev.name,
+            name_ru: data.result.ru?.name || prev.name_ru,
+            description_short: data.result.uz?.short || prev.description_short,
+            description_short_ru: data.result.ru?.short || prev.description_short_ru,
+            description_full: data.result.uz?.full || prev.description_full,
+            description_full_ru: data.result.ru?.full || prev.description_full_ru,
+            brand: data.result.brand || prev.brand,
+            model: data.result.model || prev.model,
+            color: data.result.color || prev.color,
+            category: data.result.category || prev.category
+          }));
+        } else {
+          setFormData((prev: any) => ({ ...prev, [targetField]: data.result }));
+        }
       }
     } catch (error) {
       console.error("AI action failed", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -108,7 +135,19 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             <h3 className="text-2xl font-black">{product ? "Mahsulotni tahrirlash" : "Yangi mahsulot qo'shish"}</h3>
             <p className="text-indigo-100 text-sm mt-1">{product ? `ID: ${product.id}` : "Barcha ma'lumotlarni to'ldiring"}</p>
           </div>
-          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors text-2xl">&times;</button>
+          <div className="flex items-center gap-3">
+            {product?.local_images?.length > 0 && (
+              <button 
+                type="button"
+                onClick={() => handleAIAction('generate_from_image', '', '')}
+                disabled={loading}
+                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-2 border border-white/20 shadow-lg backdrop-blur-sm"
+              >
+                ✨ Rasmdan ma'lumot olish (AI)
+              </button>
+            )}
+            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors text-2xl">&times;</button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/50">
