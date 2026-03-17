@@ -280,13 +280,15 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
               <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Sotuv bozorlari (Marketplaces)</label>
               <div className="flex flex-wrap gap-3">
                 {[
-                  { id: 'uzum', label: 'Uzum Market', emoji: '🍇' },
-                  { id: 'yandex', label: 'Yandex Market', emoji: '🟡' },
-                  { id: 'olx', label: 'OLX', emoji: '🔵' },
-                  { id: 'wildberries', label: 'Wildberries', emoji: '💜' },
-                  { id: 'instagram', label: 'Instagram', emoji: '📸' }
+                  { id: 'uzum', label: 'Uzum Market', color: '#7000FF', textColor: 'white', short: 'U' },
+                  { id: 'yandex', label: 'Yandex', color: '#FFCC00', textColor: 'black', short: 'Y' },
+                  { id: 'olx', label: 'OLX', color: '#002f34', textColor: '#23e5db', short: 'OLX' },
+                  { id: 'wildberries', label: 'WB', color: '#cb11ab', textColor: 'white', short: 'WB' },
+                  { id: 'instagram', label: 'Insta', color: 'gradient', textColor: 'white', short: '📸' }
                 ].map((m) => {
                   const isSelected = formData.marketplaces?.includes(m.id);
+                  const isInstagram = m.id === 'instagram';
+                  
                   return (
                     <button
                       key={m.id}
@@ -298,13 +300,22 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                           : [...mps, m.id];
                         setFormData({ ...formData, marketplaces: next });
                       }}
-                      className={`px-6 py-4 rounded-2xl font-black text-sm transition-all flex items-center gap-3 border-2 ${
+                      className={`px-5 py-3 rounded-2xl font-black text-xs transition-all flex items-center gap-3 border-2 ${
                         isSelected 
-                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' 
-                          : 'bg-slate-50 border-transparent text-slate-500 hover:bg-white hover:border-slate-200'
+                          ? 'border-indigo-600 shadow-lg shadow-indigo-100 scale-[1.05] z-10' 
+                          : 'border-transparent bg-slate-50 text-slate-500 hover:bg-white hover:border-slate-200'
                       }`}
                     >
-                      <span className="text-xl">{m.emoji}</span>
+                      <div 
+                        className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] shadow-sm"
+                        style={{ 
+                          backgroundColor: m.color !== 'gradient' ? m.color : undefined,
+                          background: isInstagram ? 'linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7)' : undefined,
+                          color: m.textColor 
+                        }}
+                      >
+                        {m.short}
+                      </div>
                       {m.label}
                     </button>
                   );

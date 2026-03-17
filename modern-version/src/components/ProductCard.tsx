@@ -258,12 +258,22 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
                 
                 {/* Marketplace Presence */}
                 {product.marketplaces && product.marketplaces.length > 0 && (
-                  <div className="flex gap-1 items-center bg-white px-2 py-1 rounded-lg border border-slate-100 shadow-sm">
-                    {product.marketplaces.includes('uzum') && <span title="Uzum Market">🍇</span>}
-                    {product.marketplaces.includes('yandex') && <span title="Yandex Market">🟡</span>}
-                    {product.marketplaces.includes('olx') && <span title="OLX">🔵</span>}
-                    {product.marketplaces.includes('wildberries') && <span title="Wildberries">💜</span>}
-                    {product.marketplaces.includes('instagram') && <span title="Instagram">📸</span>}
+                  <div className="flex gap-2 items-center bg-slate-50/50 px-3 py-1.5 rounded-xl border border-slate-100 shadow-inner">
+                    {product.marketplaces.includes('uzum') && (
+                      <div title="Uzum Market" className="w-5 h-5 bg-[#7000FF] rounded-md flex items-center justify-center text-[10px] font-black text-white shadow-sm ring-1 ring-white/20">U</div>
+                    )}
+                    {product.marketplaces.includes('yandex') && (
+                      <div title="Yandex Market" className="w-5 h-5 bg-[#FFCC00] rounded-md flex items-center justify-center text-[10px] font-black text-black shadow-sm ring-1 ring-black/10">Y</div>
+                    )}
+                    {product.marketplaces.includes('olx') && (
+                      <div title="OLX" className="w-5 h-5 bg-[#002f34] rounded-md flex items-center justify-center text-[8px] font-black text-[#23e5db] shadow-sm ring-1 ring-white/10 uppercase">olx</div>
+                    )}
+                    {product.marketplaces.includes('wildberries') && (
+                      <div title="Wildberries" className="w-5 h-5 bg-[#cb11ab] rounded-md flex items-center justify-center text-[8px] font-black text-white shadow-sm ring-1 ring-white/10 uppercase">wb</div>
+                    )}
+                    {product.marketplaces.includes('instagram') && (
+                      <div title="Instagram" className="w-5 h-5 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded-md flex items-center justify-center text-[10px] text-white shadow-sm ring-1 ring-white/20">📸</div>
+                    )}
                   </div>
                 )}
               </div>
