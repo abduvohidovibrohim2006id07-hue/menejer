@@ -30,6 +30,7 @@ export default function Home() {
   const [colorFilter, setColorFilter] = useState("");
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'active', 'quarantine', 'archive'
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
   useEffect(() => {
@@ -127,8 +128,12 @@ export default function Home() {
       result = result.filter((p: any) => Number(p.price) <= Number(maxPrice));
     }
 
+    if (statusFilter !== "all") {
+      result = result.filter((p: any) => (p.status || 'active') === statusFilter);
+    }
+    
     setFilteredProducts(result);
-  }, [allProducts, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice]);
+  }, [allProducts, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter]);
 
   const handleDelete = async (id: string) => {
     try {
@@ -246,6 +251,31 @@ export default function Home() {
                 )}
               </div>
             )}
+
+            {/* Status Tabs */}
+            <div className="flex bg-white p-1 rounded-2xl border border-slate-200 shadow-sm mb-6 w-full max-w-2xl overflow-x-auto no-scrollbar">
+              {[
+                { id: 'all', label: 'Barchasi', count: allProducts.length },
+                { id: 'active', label: 'Faol', count: allProducts.filter(p => (p.status || 'active') === 'active').length },
+                { id: 'quarantine', label: 'Karantin', count: allProducts.filter(p => p.status === 'quarantine').length },
+                { id: 'archive', label: 'Arxiv', count: allProducts.filter(p => p.status === 'archive').length },
+              ].map((s) => (
+                <button
+                  key={s.id}
+                  onClick={() => setStatusFilter(s.id)}
+                  className={`flex-1 min-w-[100px] px-4 py-2.5 rounded-xl font-black text-[11px] sm:text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 ${
+                    statusFilter === s.id 
+                      ? 'bg-indigo-600 text-white shadow-lg' 
+                      : 'text-slate-500 hover:bg-slate-50'
+                  }`}
+                >
+                  {s.label}
+                  <span className={`px-1.5 py-0.5 rounded-lg text-[10px] ${statusFilter === s.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-500'}`}>
+                    {s.count}
+                  </span>
+                </button>
+              ))}
+            </div>
 
             <CategoryFilter 
               categories={categories.map((c: any) => c.name)} 

@@ -23,6 +23,8 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     description_full: '',
     description_short_ru: '',
     description_full_ru: '',
+    status: 'active',
+    marketplaces: [],
   });
 
   const [loading, setLoading] = useState(false);
@@ -42,6 +44,8 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         description_full: product.description_full || '',
         description_short_ru: product.description_short_ru || '',
         description_full_ru: product.description_full_ru || '',
+        status: product.status || 'active',
+        marketplaces: product.marketplaces || [],
       });
     } else {
       setFormData({
@@ -57,6 +61,8 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         description_full: '',
         description_short_ru: '',
         description_full_ru: '',
+        status: 'active',
+        marketplaces: [],
       });
     }
   }, [product, isOpen]);
@@ -242,6 +248,68 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                    <option key={i} value={c.name} />
                  ))}
                </datalist>
+            </div>
+
+            {/* STATUS SELECTION */}
+            <div className="col-span-1 md:col-span-3 bg-white p-6 rounded-[24px] border border-slate-200">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Mahsulot Holati (Status)</label>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {[
+                  { id: 'active', label: '✅ Faol', color: 'emerald' },
+                  { id: 'quarantine', label: '⚠️ Karantin', color: 'amber' },
+                  { id: 'archive', label: '📁 Arxiv', color: 'slate' }
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    onClick={() => setFormData({ ...formData, status: s.id })}
+                    className={`p-4 rounded-2xl font-black text-sm transition-all flex items-center justify-center gap-2 border-2 ${
+                      formData.status === s.id 
+                        ? `bg-${s.color}-50 border-${s.color}-500 text-${s.color}-700 shadow-lg shadow-${s.color}-100 scale-[1.02]` 
+                        : 'bg-slate-50 border-transparent text-slate-500 hover:bg-white hover:border-slate-200'
+                    }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* MARKETPLACES */}
+            <div className="col-span-1 md:col-span-3 bg-white p-6 rounded-[24px] border border-slate-200">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Sotuv bozorlari (Marketplaces)</label>
+              <div className="flex flex-wrap gap-3">
+                {[
+                  { id: 'uzum', label: 'Uzum Market', emoji: '🍇' },
+                  { id: 'yandex', label: 'Yandex Market', emoji: '🟡' },
+                  { id: 'olx', label: 'OLX', emoji: '🔵' },
+                  { id: 'wildberries', label: 'Wildberries', emoji: '💜' },
+                  { id: 'instagram', label: 'Instagram', emoji: '📸' }
+                ].map((m) => {
+                  const isSelected = formData.marketplaces?.includes(m.id);
+                  return (
+                    <button
+                      key={m.id}
+                      type="button"
+                      onClick={() => {
+                        const mps = formData.marketplaces || [];
+                        const next = isSelected 
+                          ? mps.filter((x: string) => x !== m.id)
+                          : [...mps, m.id];
+                        setFormData({ ...formData, marketplaces: next });
+                      }}
+                      className={`px-6 py-4 rounded-2xl font-black text-sm transition-all flex items-center gap-3 border-2 ${
+                        isSelected 
+                          ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg shadow-indigo-100' 
+                          : 'bg-slate-50 border-transparent text-slate-500 hover:bg-white hover:border-slate-200'
+                      }`}
+                    >
+                      <span className="text-xl">{m.emoji}</span>
+                      {m.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
 

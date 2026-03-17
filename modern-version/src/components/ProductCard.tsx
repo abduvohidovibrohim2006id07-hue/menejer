@@ -14,6 +14,8 @@ interface Product {
   description_short?: string;
   local_images?: string[];
   sku?: string;
+  status?: 'active' | 'quarantine' | 'archive';
+  marketplaces?: string[];
 }
 
 interface ProductCardProps {
@@ -248,6 +250,22 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
                 <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 bg-indigo-50 text-indigo-500 rounded-lg">
                   🆔 {product.id}
                 </span>
+                
+                {/* Operational Status Badge */}
+                {product.status === 'active' && <span className="text-[10px] font-black px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg shadow-sm border border-emerald-200">✅ FAOL</span>}
+                {product.status === 'quarantine' && <span className="text-[10px] font-black px-2 py-1 bg-amber-100 text-amber-700 rounded-lg shadow-sm border border-amber-200">⚠️ KARANTIN</span>}
+                {product.status === 'archive' && <span className="text-[10px] font-black px-2 py-1 bg-slate-100 text-slate-700 rounded-lg shadow-sm border border-slate-200">📁 ARXIV</span>}
+                
+                {/* Marketplace Presence */}
+                {product.marketplaces && product.marketplaces.length > 0 && (
+                  <div className="flex gap-1 items-center bg-white px-2 py-1 rounded-lg border border-slate-100 shadow-sm">
+                    {product.marketplaces.includes('uzum') && <span title="Uzum Market">🍇</span>}
+                    {product.marketplaces.includes('yandex') && <span title="Yandex Market">🟡</span>}
+                    {product.marketplaces.includes('olx') && <span title="OLX">🔵</span>}
+                    {product.marketplaces.includes('wildberries') && <span title="Wildberries">💜</span>}
+                    {product.marketplaces.includes('instagram') && <span title="Instagram">📸</span>}
+                  </div>
+                )}
               </div>
             </div>
             <div className="shrink-0">
