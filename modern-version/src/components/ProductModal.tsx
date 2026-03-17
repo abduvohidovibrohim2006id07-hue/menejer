@@ -122,23 +122,23 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div className="bg-white w-full max-w-4xl max-h-[95vh] rounded-[32px] overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-300">
-        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-indigo-600 text-white relative">
+        <div className="p-4 md:p-8 border-b border-slate-100 flex justify-between items-center bg-indigo-600 text-white relative">
           <div>
-            <h3 className="text-2xl font-black">{product ? "Mahsulotni tahrirlash" : "Yangi mahsulot qo'shish"}</h3>
-            <p className="text-indigo-100 text-sm mt-1">{product ? `ID: ${product.id}` : "Barcha ma'lumotlarni to'ldiring"}</p>
+            <h3 className="text-lg md:text-2xl font-black">{product ? "Mahsulotni tahrirlash" : "Yangi mahsulot qo'shish"}</h3>
+            <p className="text-indigo-100 text-[10px] md:text-sm mt-0.5 md:mt-1">{product ? `ID: ${product.id}` : "Barcha ma'lumotlarni to'ldiring"}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             {product?.local_images?.some((url: string) => !url.toLowerCase().endsWith('.mp4')) && (
               <button 
                 type="button"
                 onClick={() => handleAIAction('generate_from_image', '', '')}
                 disabled={loading}
-                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-xl font-black text-sm transition-all flex items-center gap-2 border border-white/20 shadow-lg backdrop-blur-sm"
+                className="bg-white/20 hover:bg-white/30 px-3 md:px-4 py-2 rounded-xl font-black text-[10px] md:text-sm transition-all flex items-center gap-1.5 md:gap-2 border border-white/20 shadow-lg backdrop-blur-sm"
               >
-                ✨ Rasmdan ma'lumot olish (AI)
+                <span>✨</span> <span className="hidden sm:inline">Rasmdan ma'lumot olish (AI)</span><span className="sm:hidden">AI Tahlil</span>
               </button>
             )}
-            <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors text-2xl">&times;</button>
+            <button onClick={onClose} className="w-8 h-8 md:w-10 md:h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors text-xl md:text-2xl">&times;</button>
           </div>
         </div>
 

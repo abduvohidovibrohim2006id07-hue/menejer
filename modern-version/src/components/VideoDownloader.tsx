@@ -74,22 +74,22 @@ export const VideoDownloader = () => {
         <div className="inline-block px-4 py-2 bg-indigo-50 text-indigo-600 rounded-full text-xs font-black uppercase tracking-widest mb-2">
           Professional vosita
         </div>
-        <h1 className="text-5xl font-black text-slate-900 tracking-tight">
+        <h1 className="text-3xl md:text-5xl font-black text-slate-900 tracking-tight">
           Video Yuklagich <span className="text-indigo-600">Pro</span>
         </h1>
-        <p className="text-slate-500 max-w-xl mx-auto font-medium">
+        <p className="text-slate-500 text-sm md:text-base max-w-xl mx-auto font-medium px-4">
           .m3u8 formatidagi videolarni MP4 ga o'girib, ideal sifatda bulutga yuklang.
         </p>
       </header>
 
-      <div className="bg-white rounded-[40px] p-10 border border-slate-200 shadow-xl space-y-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      <div className="bg-white rounded-[32px] md:rounded-[40px] p-6 md:p-10 border border-slate-200 shadow-xl space-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
           <div className="space-y-3">
             <label className="text-[10px] uppercase font-black text-slate-500 ml-1 tracking-widest">Mahsulot ID</label>
             <input 
               type="text"
               placeholder="Masalan: 10013"
-              className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[24px] focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-bold text-slate-900"
+              className="w-full p-4 md:p-5 bg-slate-50 border border-slate-100 rounded-[20px] md:rounded-[24px] focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-bold text-slate-900"
               value={productId}
               onChange={(e) => setProductId(e.target.value)}
             />
@@ -99,7 +99,7 @@ export const VideoDownloader = () => {
             <input 
               type="text"
               placeholder="https://.../index.m3u8"
-              className="w-full p-5 bg-slate-50 border border-slate-100 rounded-[24px] focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-bold text-slate-900"
+              className="w-full p-4 md:p-5 bg-slate-50 border border-slate-100 rounded-[20px] md:rounded-[24px] focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-bold text-slate-900"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
             />
@@ -109,7 +109,7 @@ export const VideoDownloader = () => {
         <button 
           onClick={handleDownload}
           disabled={loading || confirming}
-          className={`w-full py-6 rounded-[24px] font-black text-sm uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3 ${loading ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'}`}
+          className={`w-full py-5 md:py-6 rounded-[20px] md:rounded-[24px] font-black text-xs md:text-sm uppercase tracking-widest transition-all shadow-lg active:scale-95 flex items-center justify-center gap-3 ${loading ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-indigo-600 text-white hover:bg-indigo-700 shadow-indigo-100'}`}
         >
           {loading ? (
             <>
@@ -126,7 +126,7 @@ export const VideoDownloader = () => {
         {status && (
           <div className="py-4 px-6 bg-slate-50 rounded-2xl border border-slate-100 flex items-center gap-3 animate-in fade-in slide-in-from-left-4 duration-300">
             <span className="text-lg">ℹ️</span>
-            <p className="text-sm font-bold text-slate-600">{status}</p>
+            <p className="text-sm font-bold text-slate-600 leading-tight">{status}</p>
           </div>
         )}
       </div>
@@ -134,11 +134,11 @@ export const VideoDownloader = () => {
       {tempVideo && (
         <div className="space-y-6 animate-in fade-in slide-in-from-bottom-10 duration-700 pb-10">
           <header className="flex items-center justify-between px-2">
-            <h3 className="text-2xl font-black text-slate-900">Preview (Tekshirish)</h3>
-            <span className="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg text-[10px] font-black uppercase">Yuklab olindi</span>
+            <h3 className="text-xl md:text-2xl font-black text-slate-900">Preview</h3>
+            <span className="px-3 py-1 bg-emerald-100 text-emerald-600 rounded-lg text-[10px] font-black uppercase tracking-tighter">Yuklab olindi</span>
           </header>
           
-          <div className="bg-black rounded-[40px] overflow-hidden shadow-2xl border-4 border-white aspect-video relative group">
+          <div className="bg-black rounded-[24px] md:rounded-[40px] overflow-hidden shadow-2xl border-2 md:border-4 border-white aspect-video relative group">
             <video 
               src={tempVideo.url} 
               className="w-full h-full object-contain"
@@ -147,11 +147,11 @@ export const VideoDownloader = () => {
             />
           </div>
 
-          <div className="flex gap-4">
+          <div className="flex flex-col md:flex-row gap-3 md:gap-4">
             <button 
               onClick={handleConfirm}
               disabled={confirming}
-              className={`flex-1 py-6 bg-emerald-600 text-white rounded-[24px] font-black text-sm uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-3 ${confirming ? 'opacity-50' : ''}`}
+              className={`flex-1 py-5 md:py-6 bg-emerald-600 text-white rounded-[20px] md:rounded-[24px] font-black text-xs md:text-sm uppercase tracking-widest hover:bg-emerald-700 shadow-lg shadow-emerald-100 transition-all active:scale-95 flex items-center justify-center gap-3 ${confirming ? 'opacity-50' : ''}`}
             >
               {confirming ? (
                  <>
@@ -159,13 +159,13 @@ export const VideoDownloader = () => {
                   Yuklanmoqda...
                  </>
               ) : (
-                <>✅ Tasdiqlash va Bazaga yuklash</>
+                <>✅ Tasdiqlash va Saqlash</>
               )}
             </button>
             <button 
               onClick={() => setTempVideo(null)}
               disabled={confirming}
-              className="px-10 py-6 bg-white text-slate-500 border border-slate-200 rounded-[24px] font-black text-sm uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
+              className="px-6 md:px-10 py-5 md:py-6 bg-white text-slate-500 border border-slate-200 rounded-[20px] md:rounded-[24px] font-black text-xs md:text-sm uppercase tracking-widest hover:bg-slate-50 transition-all active:scale-95"
             >
               ❌ Bekor qilish
             </button>

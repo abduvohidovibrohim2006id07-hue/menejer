@@ -323,30 +323,32 @@ export default function Home() {
 
       {/* FLOAT BULK ACTION BAR */}
       {selectedIds.size > 0 && (
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 z-[60] w-full max-w-2xl px-6 animate-in slide-in-from-bottom-10 duration-500">
-          <div className="bg-slate-900 border border-white/10 shadow-2xl rounded-[32px] p-4 flex items-center justify-between backdrop-blur-xl">
-             <div className="flex items-center gap-4 pl-4">
-               <span className="w-10 h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-black text-sm">
+        <div className="fixed bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 z-[60] w-full max-w-2xl px-4 md:px-6 animate-in slide-in-from-bottom-10 duration-500">
+          <div className="bg-slate-900 border border-white/10 shadow-2xl rounded-3xl md:rounded-[32px] p-3 md:p-4 flex items-center justify-between backdrop-blur-xl">
+             <div className="flex items-center gap-3 md:gap-4 pl-2 md:pl-4">
+               <span className="w-8 h-8 md:w-10 md:h-10 bg-indigo-600 text-white rounded-full flex items-center justify-center font-black text-xs md:sm">
                  {selectedIds.size}
                </span>
                <div className="flex flex-col">
-                 <span className="text-white font-black text-sm uppercase tracking-wider">Tanlandi</span>
-                 <button onClick={clearSelection} className="text-indigo-400 text-[10px] font-black uppercase text-left hover:text-white">Tozalash</button>
+                 <span className="text-white font-black text-[10px] md:text-sm uppercase tracking-wider">Tanlandi</span>
+                 <button onClick={clearSelection} className="text-indigo-400 text-[9px] md:text-[10px] font-black uppercase text-left hover:text-white">Tozalash</button>
                </div>
              </div>
              
              <div className="flex gap-2">
                 <button 
                   onClick={handleBulkExport}
-                  className="px-6 py-4 bg-emerald-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-emerald-700 transition-all flex items-center gap-2"
+                  title="Export (Excel)"
+                  className="px-4 md:px-6 py-3 md:py-4 bg-emerald-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-2xl hover:bg-emerald-700 transition-all flex items-center gap-2"
                 >
-                  📥 Export (Excel)
+                  <span>📥</span> <span className="hidden sm:inline">Export</span>
                 </button>
                 <button 
                   onClick={handleBulkDelete}
-                  className="px-6 py-4 bg-red-600 text-white font-black text-xs uppercase tracking-widest rounded-2xl hover:bg-red-700 transition-all flex items-center gap-2"
+                  title="O'chirish"
+                  className="px-4 md:px-6 py-3 md:py-4 bg-red-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-2xl hover:bg-red-700 transition-all flex items-center gap-2"
                 >
-                  🗑️ O'chirish
+                  <span>🗑️</span> <span className="hidden sm:inline">O'chirish</span>
                 </button>
              </div>
           </div>
