@@ -182,7 +182,7 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
 
                   {/* DIMENSION WARNING */}
                   {imageValidations[img] && !imageValidations[img].isValid && !isVideo && (
-                    <div className="absolute top-2 left-2 right-2 z-[35] bg-red-600/90 backdrop-blur-md rounded-xl p-2.5 border border-white/20 shadow-xl animate-in slide-in-from-top-2">
+                    <div className="absolute bottom-2 left-2 right-2 z-[35] bg-red-600/90 backdrop-blur-md rounded-xl p-2.5 border border-white/20 shadow-xl animate-in slide-in-from-bottom-2">
                       <div className="flex items-center gap-2 mb-1">
                         <span className="text-sm">⚠️</span>
                         <span className="text-[10px] font-black text-white uppercase tracking-wider">Noto'g'ri o'lcham!</span>
