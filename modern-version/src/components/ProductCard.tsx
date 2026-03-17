@@ -27,6 +27,7 @@ interface ProductCardProps {
 
 export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, onSelectToggle }: ProductCardProps) => {
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [confirmDeleteImg, setConfirmDeleteImg] = React.useState<string | null>(null);
 
   const scrollGallery = (direction: number) => {
     const gallery = document.getElementById(`gallery-${product.id}`);
@@ -36,21 +37,48 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
   };
 
   const handleDeleteImg = async (filename: string) => {
-    if (!confirm("Rasm o'chirilsinmi?")) return;
     try {
       await fetch('/api/products/delete-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: product.id, filename })
       });
+      setConfirmDeleteImg(null);
       onRefresh(); 
     } catch (e) {
       console.error(e);
     }
   };
 
+  const [confirmDeleteProduct, setConfirmDeleteProduct] = React.useState(false);
+
   return (
     <div className={`bg-white rounded-3xl p-6 border transition-all flex flex-col md:flex-row gap-8 items-stretch group/card relative ${selected ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg bg-indigo-50/10' : 'border-slate-200 shadow-sm hover:shadow-xl'}`}>
+      {/* PRODUCT DELETE OVERLAY */}
+      {confirmDeleteProduct && (
+        <div className="absolute inset-0 z-[45] bg-red-600/95 backdrop-blur-xl rounded-3xl flex flex-col items-center justify-center p-10 text-center animate-in fade-in zoom-in-95 duration-200">
+          <span className="text-6xl mb-6">🗑️</span>
+          <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Mahsulotni o'chiramizmi?</h3>
+          <p className="text-white/80 font-medium mb-8">Ushbu amalni ortga qaytarib bo'lmaydi.</p>
+          <div className="flex gap-4 w-full max-w-sm">
+            <button 
+              onClick={() => {
+                onDelete(product.id);
+                setConfirmDeleteProduct(false);
+              }}
+              className="flex-1 py-4 bg-white text-red-600 font-black rounded-2xl hover:bg-slate-100 active:scale-95 transition-all shadow-xl"
+            >
+              HA, O'CHIRILSIN
+            </button>
+            <button 
+              onClick={() => setConfirmDeleteProduct(false)}
+              className="flex-1 py-4 bg-transparent text-white border-2 border-white/30 font-black rounded-2xl hover:bg-white/10 active:scale-95 transition-all"
+            >
+              YO'Q, QOLSIN
+            </button>
+          </div>
+        </div>
+      )}
       {/* SELECTION CHECKBOX (Floating) */}
       <div 
         onClick={(e) => {
@@ -118,7 +146,7 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
                 <div 
                   key={idx} 
                   className="flex-none w-full aspect-[4/5] md:w-[300px] md:h-[350px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 snap-start relative group/item shadow-sm cursor-zoom-in"
-                  onClick={() => setPreviewUrl(img)}
+                  onClick={() => !confirmDeleteImg && setPreviewUrl(img)}
                 >
                   {isVideo ? (
                     <video 
@@ -136,12 +164,34 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
                       className="w-full h-full object-cover transition-transform group-hover/item:scale-110 duration-500"
                     />
                   )}
-                  {/* ... rest of the content ... */}
+                  
+                  {/* CONFIRM DELETE OVERLAY */}
+                  {confirmDeleteImg === filename && (
+                    <div className="absolute inset-0 z-40 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                      <p className="text-white font-black text-sm uppercase tracking-widest mb-4">Rostdan ham o'chirilsinmi?</p>
+                      <div className="flex gap-3 w-full">
+                        <button 
+                          onClick={() => handleDeleteImg(filename)}
+                          className="flex-1 py-3 bg-red-600 text-white font-black rounded-xl hover:bg-red-700 active:scale-95 transition-all text-xs"
+                        >
+                          HA, O'CHIR
+                        </button>
+                        <button 
+                          onClick={() => setConfirmDeleteImg(null)}
+                          className="flex-1 py-3 bg-white/20 text-white font-black rounded-xl hover:bg-white/30 active:scale-95 transition-all text-xs border border-white/10"
+                        >
+                          YO'Q
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
                   <div className="absolute top-3 left-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <a 
                       href={`https://www.google.com/search?q=${encodeURIComponent(product.category + ' ' + (product.brand || '') + ' ' + (product.model || ''))}&tbm=isch`} 
                       target="_blank" 
                       className="w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-lg flex items-center justify-center text-xs hover:bg-white transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       🔍
                     </a>
@@ -149,13 +199,17 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
                       href={`https://lens.google.com/uploadbyurl?url=${encodeURIComponent(img)}`} 
                       target="_blank" 
                       className="w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-lg flex items-center justify-center text-xs hover:bg-white transition-colors"
+                      onClick={(e) => e.stopPropagation()}
                     >
                       📷
                     </a>
                   </div>
                   <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/item:opacity-100 transition-opacity flex justify-end p-2 pointer-events-none">
                     <button 
-                      onClick={() => handleDeleteImg(filename)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteImg(filename);
+                      }}
                       className="w-8 h-8 bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg pointer-events-auto hover:bg-red-700 active:scale-90 transition-all"
                     >
                       🗑️
@@ -219,7 +273,7 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
             ✏️ Tahrirlash
           </button>
           <button 
-            onClick={() => onDelete(product.id)}
+            onClick={() => setConfirmDeleteProduct(true)}
             className="col-span-1 py-4 px-4 bg-red-50 text-red-600 font-black rounded-2xl hover:bg-red-600 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2"
           >
             🗑️ O'chirish

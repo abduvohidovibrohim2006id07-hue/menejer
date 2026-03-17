@@ -130,7 +130,6 @@ export default function Home() {
   }, [allProducts, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm("O'chirilsinmi?")) return;
     try {
       await apiClient.delete('/api/products', id);
       fetchData();
