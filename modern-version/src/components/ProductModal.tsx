@@ -198,8 +198,11 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             </div>
 
             <div className="col-span-1">
-              <div className="flex justify-between mb-2">
-                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Nomi (UZ)*</label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex gap-2 items-center">
+                  Nomi (UZ)*
+                  <span className="bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded text-[9px] font-bold">{formData.name?.length || 0}</span>
+                </label>
                 <button type="button" onClick={() => handleAIAction('translate_uz_ru', 'name', 'name_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors tracking-tighter flex items-center gap-1">🤖 RU tarjima</button>
               </div>
               <input 
@@ -211,8 +214,11 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             </div>
 
             <div className="col-span-1">
-              <div className="flex justify-between mb-2">
-                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Nomi (RU)</label>
+              <div className="flex justify-between items-center mb-2">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex gap-2 items-center">
+                  Nomi (RU)
+                  <span className="bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded text-[9px] font-bold">{formData.name_ru?.length || 0}</span>
+                </label>
                 <button type="button" onClick={() => handleAIAction('translate_ru_uz', 'name_ru', 'name')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors tracking-tighter flex items-center gap-1">🤖 UZ tarjima</button>
               </div>
               <input 
@@ -329,7 +335,10 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             {/* Short Descriptions */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Qisqa tavsif (UZ)</label>
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest flex gap-2 items-center">
+                  Qisqa tavsif (UZ)
+                  <span className="bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded text-[9px] font-bold">{formData.description_short?.length || 0}</span>
+                </label>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => handleAIAction('generate_short', 'description_short', 'description_short')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
                   <button type="button" onClick={() => handleAIAction('translate_uz_ru', 'description_short', 'description_short_ru')} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-black hover:bg-slate-200 transition-colors flex items-center gap-1">🤖 RU tarjima</button>
@@ -344,7 +353,10 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1">Qisqa tavsif (RU)</label>
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1 flex gap-2 items-center">
+                  Qisqa tavsif (RU)
+                  <span className="bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded text-[9px] font-bold">{formData.description_short_ru?.length || 0}</span>
+                </label>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => handleAIAction('generate_short_ru', 'description_short_ru', 'description_short_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
                   <button type="button" onClick={() => handleAIAction('translate_ru_uz', 'description_short_ru', 'description_short')} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-black hover:bg-slate-200 transition-colors flex items-center gap-1">🤖 UZ tarjima</button>
@@ -361,7 +373,10 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             {/* Full Descriptions */}
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-black text-slate-500 uppercase tracking-widest px-1">To'liq tavsif (UZ)</label>
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest px-1 flex gap-2 items-center">
+                  To'liq tavsif (UZ)
+                  <span className="bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded text-[9px] font-bold">{formData.description_full?.length || 0}</span>
+                </label>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => handleAIAction('generate_full', 'description_full', 'description_full')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
                   <button type="button" onClick={() => handleAIAction('translate_uz_ru', 'description_full', 'description_full_ru')} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-black hover:bg-slate-200 transition-colors flex items-center gap-1">🤖 RU tarjima</button>
@@ -376,7 +391,10 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             </div>
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <label className="text-xs font-black text-slate-500 uppercase tracking-widest px-1">To'liq tavsif (RU)</label>
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest px-1 flex gap-2 items-center">
+                  To'liq tavsif (RU)
+                  <span className="bg-slate-100 text-slate-400 px-1.5 py-0.5 rounded text-[9px] font-bold">{formData.description_full_ru?.length || 0}</span>
+                </label>
                 <div className="flex gap-2">
                   <button type="button" onClick={() => handleAIAction('generate_full_ru', 'description_full_ru', 'description_full_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 AI Matn</button>
                   <button type="button" onClick={() => handleAIAction('translate_ru_uz', 'description_full_ru', 'description_full')} className="text-[10px] bg-slate-100 text-slate-600 px-2 py-1 rounded-lg font-black hover:bg-slate-200 transition-colors flex items-center gap-1">🤖 UZ tarjima</button>
