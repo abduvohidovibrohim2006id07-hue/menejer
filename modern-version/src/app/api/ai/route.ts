@@ -30,16 +30,13 @@ export async function POST(req: Request) {
       
       try {
         console.log("Fetching image for vision analysis:", imageUrl);
-        // Step 1: Fetch and convert to base64 (since Groq can't access private Yandex S3 URLs directly)
         const imgResponse = await fetch(imageUrl);
-        if (!imgResponse.ok) throw new Error("Image fetch failed");
+        if (!imgResponse.ok) throw new Error("Rasmni serverdan yuklab bo'lmadi.");
         
         const arrayBuffer = await imgResponse.arrayBuffer();
         const base64Image = Buffer.from(arrayBuffer).toString('base64');
         const contentType = imgResponse.headers.get('content-type') || 'image/jpeg';
 
-        console.log("Sending base64 to Groq Vision...");
-        // Step 1: Visual Analysis using Llama-3.2-Vision
         const visionResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
           method: 'POST',
           headers: {
@@ -52,7 +49,7 @@ export async function POST(req: Request) {
               {
                 role: 'user',
                 content: [
-                  { type: 'text', text: "Ushbu mahsulotni rasm orqali tahlil qiling. Brendi, modeli, rangi va barcha texnik xususiyatlarini aniqlang." },
+                  { type: 'text', text: "Ushbu rasmdagi mahsulotni identifikatsiya qiling (nomi, brendi, rangi). Faqat ko'rgan narsangizni yozing." },
                   { type: 'image_url', image_url: { url: `data:${contentType};base64,${base64Image}` } }
                 ]
               }
@@ -62,26 +59,27 @@ export async function POST(req: Request) {
         });
 
         const visionData = await visionResponse.json();
-        if (visionData.error) {
-          console.error("Groq Vision API Error:", visionData.error);
-          throw new Error(visionData.error.message || "Vision API error");
-        }
         visualDescription = visionData.choices?.[0]?.message?.content || "";
-        console.log("Vision analysis complete.");
+        
+        // AGAR VISION JAVOBI YO'Q BO'LSA - TO'XTATAMIZ (User talabi)
+        if (!visualDescription || visualDescription.length < 5) {
+          return NextResponse.json({ error: "Vizual AI rasmni taniy olmadi. Hech narsa yozilmadi." }, { status: 400 });
+        }
+        
+        console.log("Vision analysis successful.");
       } catch (vError: any) {
         console.error("Vision Analysis Failed:", vError);
-        visualDescription = `Visual tahlil vaqtincha imkonsiz: ${vError.message}`;
+        return NextResponse.json({ error: `Vizual tahlil xatosi: ${vError.message}. Hech narsa yozilmadi.` }, { status: 400 });
       }
 
-      // Step 2: Reasoning using flagship model - FORCING CREATIVITY
+      // Step 2: Reasoning using flagship model - ONLY if Vision succeeded
       model = config.model || 'openai/gpt-oss-120b';
-      const systemPrompt = `Siz dunyodagi eng zo'r marketing mutaxassisiz. JAVOB FAQAT TOZA JSON BO'LSIN.`;
-
-      const userPrompt = config.prompt || `Quyidagi ma'lumotlar asosida mahsulot uchun professional va sotuvchi tavsiflar yarating.\n\nVizual tahlil: ${visualDescription}\n\nData: ${JSON.stringify(context || {})}\n\nMUHIM: JAVOB FAQAT JSON BO'LSIN:\n{\n  "uz": { "name": "...", "short": "...", "full": "..." },\n  "ru": { "name": "...", "short": "...", "full": "..." },\n  "brand": "...",\n  "model": "...",\n  "color": "...",\n  "category": "..."\n}`;
+      const systemPrompt = `Siz mahsulotlar bo'yicha tahlilchisiz. JAVOB FAQAT TOZA JSON BO'LSIN.`;
+      const userPrompt = config.prompt || `Vizual tahlil natijasi: ${visualDescription}. Ushbu ma'lumotlar asosida professional marketing tavsiflarini JSON formatda tayyorlang.`;
 
       messages = [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: userPrompt }
+        { role: 'user', content: userPrompt + `\nFormat: { "uz": { "name": "...", "short": "...", "full": "..." }, "ru": { "name": "...", "short": "...", "full": "..." }, "brand": "...", "model": "...", "color": "...", "category": "..." }` }
       ];
       responseFormat = { type: 'json_object' };
     }

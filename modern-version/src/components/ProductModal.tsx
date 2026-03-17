@@ -78,6 +78,12 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         })
       });
       const data = await response.json();
+      
+      if (!response.ok) {
+        alert(data.error || "AI xatoligi yuz berdi");
+        return;
+      }
+
       if (data.result) {
         if (typeof data.result === 'object') {
           // If it's the full generation result
