@@ -236,7 +236,7 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
 
         {/* FLOATING STATUS BADGE OVER GALLERY */}
         <div className="absolute top-4 left-4 z-30 flex flex-col gap-2">
-          {product.status === 'active' && (
+          {(product.status === 'active' || !product.status) && (
             <span className="px-3 py-1.5 bg-emerald-500 text-white text-[10px] font-black rounded-xl shadow-lg shadow-emerald-200/50 border border-emerald-400/50 backdrop-blur-sm animate-in fade-in slide-in-from-left-2">
               ✅ FAOL
             </span>
