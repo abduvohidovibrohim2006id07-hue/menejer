@@ -1,6 +1,5 @@
-"use client";
-
 import React, { useState, useEffect } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 export const AiSettingsManager = () => {
   const [settings, setSettings] = useState<any>({});
@@ -23,26 +22,24 @@ export const AiSettingsManager = () => {
   ];
 
   useEffect(() => {
-    fetch('/api/settings/ai')
-      .then(res => res.json())
+    apiClient.get('/api/settings/ai')
       .then(data => {
         setSettings(data || {});
         setLoading(false);
       })
-      .catch(() => setLoading(false));
+      .catch((e) => {
+        console.error(e);
+        setLoading(false);
+      });
   }, []);
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      await fetch('/api/settings/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(settings)
-      });
+      await apiClient.post('/api/settings/ai', settings);
       alert("AI Sozlamalari muvaffaqiyatli saqlandi!");
-    } catch (e) {
-      alert("Xatolik yuz berdi!");
+    } catch (e: any) {
+      alert("Xatolik: " + e.message);
     }
     setSaving(false);
   };

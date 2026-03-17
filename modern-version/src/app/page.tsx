@@ -7,9 +7,19 @@ import { ProductCard } from "@/components/ProductCard";
 import { ProductModal } from "@/components/ProductModal";
 import { CategoryManager } from "@/components/CategoryManager";
 import { AiSettingsManager } from "@/components/AiSettingsManager";
+import { useScrollPersistence } from "@/hooks/useScrollPersistence";
+import { apiClient } from "@/lib/api-client";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState("products"); // products, categories, ai
+  useScrollPersistence('home-scroll');
+  
+  const [activeTab, setActiveTab] = useState(() => {
+    if (typeof window !== 'undefined') {
+       return sessionStorage.getItem('activeTab') || 'products';
+    }
+    return 'products';
+  });
+
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
@@ -22,20 +32,21 @@ export default function Home() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const prodRes = await fetch('/api/products');
-      const catsRes = await fetch('/api/categories');
-      
-      const prodData = await prodRes.json();
-      const catsData = await catsRes.json();
+      const prodData = await apiClient.get('/api/products');
+      const catsData = await apiClient.get('/api/categories');
       
       setAllProducts(Array.isArray(prodData) ? prodData : []);
       setCategories(Array.isArray(catsData) ? catsData : []);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("Fetch Data Error:", e.message);
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    sessionStorage.setItem('activeTab', activeTab);
+  }, [activeTab]);
 
   useEffect(() => {
     fetchData();
@@ -63,14 +74,10 @@ export default function Home() {
   const handleDelete = async (id: string) => {
     if (!confirm("O'chirilsinmi?")) return;
     try {
-      await fetch('/api/products', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id })
-      });
+      await apiClient.delete('/api/products', id);
       fetchData();
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      alert("Xatolik: " + e.message);
     }
   };
 
@@ -117,13 +124,20 @@ export default function Home() {
               onSelectCategory={setSelectedCategory} 
             />
 
-            {loading ? (
+            {loading && allProducts.length === 0 ? (
               <div className="py-40 flex flex-col items-center justify-center gap-4">
                 <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                <p className="text-slate-500 font-bold animate-pulse">Yuklanmoqda...</p>
+                <p className="text-slate-500 font-bold animate-pulse uppercase tracking-[0.2em] text-xs">Ma'lumotlar yuklanmoqda...</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-700">
+              <div className="flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-700 relative">
+                {loading && (
+                   <div className="absolute top-0 right-0 bg-white/80 backdrop-blur-md px-4 py-2 rounded-full border border-indigo-100 shadow-sm z-10 flex items-center gap-2 -mt-4 animate-in slide-in-from-top-1">
+                      <div className="w-3 h-3 border-2 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                      <span className="text-[10px] font-black text-indigo-600 uppercase">Yangilanmoqda</span>
+                   </div>
+                )}
+                
                 {filteredProducts.map((product) => (
                   <ProductCard 
                     key={product.id} 
@@ -136,7 +150,7 @@ export default function Home() {
                   />
                 ))}
                 
-                {filteredProducts.length === 0 && (
+                {filteredProducts.length === 0 && !loading && (
                   <div className="col-span-full py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-200">
                     <p className="text-2xl text-slate-300 font-black italic">
                       Hech narsa topilmadi

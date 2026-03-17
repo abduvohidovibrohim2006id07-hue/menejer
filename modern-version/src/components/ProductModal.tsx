@@ -1,6 +1,5 @@
-"use client";
-
 import React, { useState, useEffect } from 'react';
+import { apiClient } from '@/lib/api-client';
 
 interface ProductModalProps {
   isOpen: boolean;
@@ -65,29 +64,19 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
   const handleAIAction = async (action: string, field: string, targetField: string) => {
     setLoading(true);
     try {
-      const response = await fetch('/api/ai', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          action, 
-          text: formData[field],
-          context: {
-            ...formData,
-            images: product?.local_images || []
-          }
-        })
+      const data = await apiClient.post('/api/ai', { 
+        action, 
+        text: formData[field],
+        context: {
+          ...formData,
+          images: product?.local_images || []
+        }
       });
-      const data = await response.json();
-      console.log("--- AI DEBUG LOGS ---", data);
       
-      if (!response.ok) {
-        alert(data.error || "AI xatoligi yuz berdi");
-        return;
-      }
+      console.log("--- AI DEBUG LOGS ---", data);
 
       if (data.result) {
         if (typeof data.result === 'object') {
-          // If it's the full generation result
           setFormData((prev: any) => ({
             ...prev,
             name: data.result.uz?.name || prev.name,
@@ -105,28 +94,24 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
           setFormData((prev: any) => ({ ...prev, [targetField]: data.result }));
         }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("AI action failed", error);
+      alert(error.message || "AI xatoligi yuz berdi");
     } finally {
       setLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setLoading(true);
     try {
-      const res = await fetch('/api/products', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
-      });
-      if (res.ok) {
-        onSuccess();
-        onClose();
-      }
-    } catch (error) {
+      await apiClient.post('/api/products', formData);
+      onSuccess();
+      onClose();
+    } catch (error: any) {
       console.error("Save failed", error);
+      alert("Xatolik: " + error.message);
     } finally {
       setLoading(false);
     }

@@ -1,51 +1,34 @@
-import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
+import { withGateway } from '@/lib/api-gateway';
 
-export async function GET() {
-  try {
-    const snapshot = await db.collection('categories').get();
-    const categories = snapshot.docs.map(doc => ({
-      id: doc.id,
-      name: doc.data().name
-    })).filter(c => c.name);
-    return NextResponse.json(categories);
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+export const GET = withGateway(async () => {
+  const snapshot = await db.collection('categories').get();
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    name: doc.data().name
+  })).filter(c => c.name);
+});
 
-export async function POST(req: Request) {
-  try {
-    const { name } = await req.json();
-    if (!name) return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+export const POST = withGateway(async (req) => {
+  const { name } = await req.json();
+  if (!name) throw { message: 'Nomi kiritilishi shart', status: 400 };
 
-    const docRef = await db.collection('categories').add({ name });
-    return NextResponse.json({ success: true, id: docRef.id });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+  const docRef = await db.collection('categories').add({ name });
+  return { success: true, id: docRef.id };
+});
 
-export async function PUT(req: Request) {
-  try {
-    const { id, name } = await req.json();
-    if (!id || !name) return NextResponse.json({ error: 'ID and Name are required' }, { status: 400 });
+export const PUT = withGateway(async (req) => {
+  const { id, name } = await req.json();
+  if (!id || !name) throw { message: 'ID va Nomi shart', status: 400 };
 
-    await db.collection('categories').doc(id).update({ name });
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+  await db.collection('categories').doc(id).update({ name });
+  return { success: true };
+});
 
-export async function DELETE(req: Request) {
-  try {
-    const { id } = await req.json();
-    if (!id) return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+export const DELETE = withGateway(async (req) => {
+  const { id } = await req.json();
+  if (!id) throw { message: 'ID shart', status: 400 };
 
-    await db.collection('categories').doc(id).delete();
-    return NextResponse.json({ success: true });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+  await db.collection('categories').doc(id).delete();
+  return { success: true };
+});
