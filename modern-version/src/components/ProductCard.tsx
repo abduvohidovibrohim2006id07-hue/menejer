@@ -230,8 +230,8 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
         >
           {product.local_images && product.local_images.length > 0 ? (
             product.local_images.map((img, idx) => {
-              const filename = img.split('/').pop() || '';
-              const isVideo = img.toLowerCase().endsWith('.mp4');
+              const filename = img.split('/').pop()?.split('?')[0] || '';
+              const isVideo = img.toLowerCase().includes('.mp4') || img.toLowerCase().includes('.mov');
               return (
                 <div 
                   key={idx} 
