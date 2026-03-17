@@ -9,6 +9,8 @@ export const VideoDownloader = () => {
   const [status, setStatus] = useState("");
   const [tempVideo, setTempVideo] = useState<{ url: string, filename: string } | null>(null);
   const [confirming, setConfirming] = useState(false);
+  const [startTime, setStartTime] = useState("");
+  const [endTime, setEndTime] = useState("");
 
   const handleDownload = async () => {
     if (!productId || !videoUrl) {
@@ -24,7 +26,12 @@ export const VideoDownloader = () => {
       const res = await fetch('/api/video/download', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId, url: videoUrl.trim() }),
+        body: JSON.stringify({ 
+          productId, 
+          url: videoUrl.trim(),
+          startTime: startTime.trim(),
+          endTime: endTime.trim()
+        }),
       });
       
       const data = await res.json();
@@ -95,13 +102,42 @@ export const VideoDownloader = () => {
             />
           </div>
           <div className="space-y-3">
-            <label className="text-[10px] uppercase font-black text-slate-500 ml-1 tracking-widest">m3u8 Video Link</label>
+            <label className="text-[10px] uppercase font-black text-slate-500 ml-1 tracking-widest">Video Link (m3u8, Insta, YT)</label>
             <input 
               type="text"
-              placeholder="https://.../index.m3u8"
+              placeholder="https://..."
               className="w-full p-4 md:p-5 bg-slate-50 border border-slate-100 rounded-[20px] md:rounded-[24px] focus:bg-white focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-bold text-slate-900"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
+            />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 p-6 bg-slate-50 rounded-[28px] border border-slate-100">
+          <div className="space-y-3">
+            <div className="flex justify-between px-1">
+              <label className="text-[10px] uppercase font-black text-slate-500 tracking-widest">✂️ Boshlanish vaqti</label>
+              <span className="text-[9px] font-bold text-slate-400">format: 00:00:05</span>
+            </div>
+            <input 
+              type="text"
+              placeholder="00:00:00"
+              className="w-full p-4 bg-white border border-slate-200 rounded-[18px] focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-bold text-slate-900"
+              value={startTime}
+              onChange={(e) => setStartTime(e.target.value)}
+            />
+          </div>
+          <div className="space-y-3">
+            <div className="flex justify-between px-1">
+              <label className="text-[10px] uppercase font-black text-slate-500 tracking-widest">🛑 Tugash vaqti</label>
+              <span className="text-[9px] font-bold text-slate-400">format: 00:00:15</span>
+            </div>
+            <input 
+              type="text"
+              placeholder="To'liq yuklash"
+              className="w-full p-4 bg-white border border-slate-200 rounded-[18px] focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none font-bold text-slate-900"
+              value={endTime}
+              onChange={(e) => setEndTime(e.target.value)}
             />
           </div>
         </div>

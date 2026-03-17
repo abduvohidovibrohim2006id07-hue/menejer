@@ -6,7 +6,7 @@ import os from 'os';
 
 export async function POST(req: Request) {
   try {
-    const { productId, url } = await req.json();
+    const { productId, url, startTime, endTime } = await req.json();
 
     if (!productId || !url) {
       return NextResponse.json({ error: 'ID va Link kiritish majburiy!' }, { status: 400 });
@@ -41,9 +41,18 @@ export async function POST(req: Request) {
       '--recode-video', 'mp4',
       '-o', fullPath,
       '--fixup', 'force',
-      '--no-check-certificate',
-      url
+      '--no-check-certificate'
     ];
+
+    // Trimming logic if parameters provided
+    if (startTime || endTime) {
+      const trimmer = [];
+      if (startTime) trimmer.push(`-ss ${startTime}`);
+      if (endTime) trimmer.push(`-to ${endTime}`);
+      args.push('--postprocessor-args', `ffmpeg-s1:${trimmer.join(' ')}`);
+    }
+
+    args.push(url);
 
     return new Promise<Response>((resolve) => {
       const yt = spawn('yt-dlp', args);
