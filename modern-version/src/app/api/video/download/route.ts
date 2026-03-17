@@ -41,7 +41,10 @@ export async function POST(req: Request) {
       '--fixup', 'warn',
       '--no-check-certificate',
       '--max-filesize', '100M',
-      '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+      // Advanced bypass flags
+      '--impersonate-client', 'chrome',
+      '--extractor-args', 'youtube:player-client=ios,android,mweb',
+      '--js-runtimes', 'node',
       '--referer', 'https://www.youtube.com/',
     ];
 
