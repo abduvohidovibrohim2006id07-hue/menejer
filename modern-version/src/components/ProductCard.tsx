@@ -68,23 +68,15 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
     setFixing(imgUrl);
     try {
       const filename = imgUrl.split('/').pop() || 'image.jpg';
-      const response = await fetch(imgUrl);
-      const blob = await response.blob();
-      const file = new File([blob], filename, { type: blob.type });
-      const processedFile = await processImage(file);
 
-      const upRes = await fetch('/api/products/upload', {
+      const upRes = await fetch('/api/products/upload-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: product.id, filename: processedFile.name, contentType: processedFile.type })
+        body: JSON.stringify({ id: product.id, url: imgUrl })
       });
-      const { uploadUrl } = await upRes.json();
-
-      await fetch(uploadUrl, {
-        method: 'PUT',
-        body: processedFile,
-        headers: { 'Content-Type': processedFile.type }
-      });
+      
+      const upData = await upRes.json();
+      if (!upRes.ok) throw new Error(upData.error || "Rasm to'g'irlashda xatolik");
 
       await fetch('/api/products/delete-image', {
         method: 'POST',

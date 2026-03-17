@@ -85,18 +85,22 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
     
     setUploading(true);
     try {
-      const lowerUrl = url.toLowerCase();
+      const cleanUrl = url.trim();
+      const lowerUrl = cleanUrl.toLowerCase();
+      console.log("MediaUpload: Processing URL", cleanUrl);
+
       const isSocialMedia = lowerUrl.includes('youtube.com') || 
                             lowerUrl.includes('youtu.be') || 
                             lowerUrl.includes('instagram.com') || 
                             lowerUrl.includes('tiktok.com');
 
       if (isSocialMedia) {
+        console.log("MediaUpload: Social Media detected");
         // Use the Video Downloader logic
         const res = await fetch('/api/video/download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ productId, url: url.trim() }),
+          body: JSON.stringify({ productId, url: cleanUrl }),
         });
         
         const data = await res.json();
