@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { db } from '@/lib/firebase-admin';
 
 export async function POST(req: Request) {
   try {
@@ -9,7 +10,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Groq API key not found' }, { status: 500 });
     }
 
-    let model = 'openai/gpt-oss-120b';
+    // Fetch dynamic AI settings from Firestore
+    const settingsDoc = await db.collection('settings').doc('ai_config').get();
+    const settings = settingsDoc.exists ? settingsDoc.data() : {};
+    const config = settings?.[action] || {};
+
+    let model = config.model || 'llama-3.3-70b-versatile';
     let messages: any[] = [];
     let responseFormat: any = undefined;
 
@@ -21,7 +27,7 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'No image found for analysis' }, { status: 400 });
       }
 
-      // Step 1: Visual Analysis using Llama-3.2-Vision
+      // Step 1: Visual Analysis using Llama-3.2-Vision (Always vision model)
       const visionResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
@@ -46,8 +52,10 @@ export async function POST(req: Request) {
       const visionData = await visionResponse.json();
       const visualDescription = visionData.choices?.[0]?.message?.content || "Tasvirni aniqlab bo'lmadi";
 
-      // Step 2: Full JSON Generation using Flagship 120B model on Groq
-      model = 'openai/gpt-oss-120b';
+      // Step 2: Full JSON Generation using selected model (Default: GPT-OSS 120B)
+      model = config.model || 'openai/gpt-oss-120b';
+      const customPrompt = config.prompt || `Visual tahlil natijasi: ${visualDescription}. Quyidagi qolipda JSON qaytaring: { "uz": { "name": "...", "short": "...", "full": "..." }, "ru": { "name": "...", "short": "...", "full": "..." }, "brand": "...", "model": "...", "color": "...", "category": "..." }`;
+      
       messages = [
         {
           role: 'system',
@@ -55,44 +63,36 @@ export async function POST(req: Request) {
         },
         {
           role: 'user',
-          content: `Visual tahlil natijasi: ${visualDescription}.
-
-Quyidagi qolipda JSON qaytaring:
-{
-  "uz": { "name": "...", "short": "...", "full": "..." },
-  "ru": { "name": "...", "short": "...", "full": "..." },
-  "brand": "...",
-  "model": "...",
-  "color": "...",
-  "category": "..."
-}`
+          content: customPrompt
         }
       ];
       responseFormat = { type: 'json_object' };
     } else {
-      let prompt = '';
-      switch (action) {
-        case 'translate_uz_ru':
-          model = 'llama-3.3-70b-versatile';
-          prompt = `Translate the following product name from Uzbek to Russian. Return ONLY the translated text. Text: ${text}`;
-          break;
-        case 'translate_ru_uz':
-          model = 'llama-3.3-70b-versatile';
-          prompt = `Translate the following product name from Russian to Uzbek. Return ONLY the translated text. Text: ${text}`;
-          break;
-        case 'translate_desc_uz_ru':
-          model = 'llama-3.3-70b-versatile';
-          prompt = `Translate the following product description from Uzbek to Russian. Return ONLY the translated text. Text: ${text}`;
-          break;
-        case 'generate_full':
-          model = 'openai/gpt-oss-120b';
-          prompt = `Generate a professional product description in Uzbek and Russian based on name: ${context?.name}, brand: ${context?.brand}, model: ${context?.model}. Output format JSON: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}`;
-          responseFormat = { type: 'json_object' };
-          break;
-        default:
-          model = 'llama-3.3-70b-versatile';
-          prompt = text;
+      let prompt = config.prompt || '';
+      
+      if (!prompt) {
+        switch (action) {
+          case 'translate_uz_ru':
+            prompt = `Translate the following product name from Uzbek to Russian. Return ONLY the translated text. Text: ${text}`;
+            break;
+          case 'translate_ru_uz':
+            prompt = `Translate the following product name from Russian to Uzbek. Return ONLY the translated text. Text: ${text}`;
+            break;
+          case 'translate_desc_uz_ru':
+            prompt = `Translate the following product description from Uzbek to Russian. Return ONLY the translated text. Text: ${text}`;
+            break;
+          case 'generate_full':
+            prompt = `Generate a professional product description in Uzbek and Russian based on name: ${context?.name}, brand: ${context?.brand}, model: ${context?.model}. Output format JSON: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}`;
+            responseFormat = { type: 'json_object' };
+            break;
+          default:
+            prompt = text;
+        }
+      } else {
+        // If custom prompt exists, use it with the context
+        prompt = `${prompt}\n\nContext/Text: ${text || JSON.stringify(context || {})}`;
       }
+      
       messages = [{ role: 'user', content: prompt }];
     }
 
