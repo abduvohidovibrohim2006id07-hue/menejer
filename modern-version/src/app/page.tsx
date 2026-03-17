@@ -123,7 +123,7 @@ export default function Home() {
                 <p className="text-slate-500 font-bold animate-pulse">Yuklanmoqda...</p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-in fade-in zoom-in-95 duration-700">
+              <div className="flex flex-col gap-6 animate-in fade-in zoom-in-95 duration-700">
                 {filteredProducts.map((product) => (
                   <ProductCard 
                     key={product.id} 
