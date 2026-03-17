@@ -93,6 +93,7 @@ export default function Home() {
           setIsModalOpen(true);
         }} 
         onTabChange={setActiveTab}
+        onRefreshProducts={fetchData}
         activeTab={activeTab}
       />
       

@@ -1,14 +1,47 @@
 "use client";
 
 import React from 'react';
+import { apiClient } from '@/lib/api-client';
 
 interface NavbarProps {
   onAddProduct: () => void;
   onTabChange: (tab: string) => void;
+  onRefreshProducts: () => void;
   activeTab: string;
 }
 
-export const Navbar = ({ onAddProduct, onTabChange, activeTab }: NavbarProps) => {
+export const Navbar = ({ onAddProduct, onTabChange, onRefreshProducts, activeTab }: NavbarProps) => {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [importing, setImporting] = React.useState(false);
+
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setImporting(true);
+    const formData = new FormData();
+    formData.append('file', file);
+
+    try {
+      const response = await fetch('/api/products/import', {
+        method: 'POST',
+        body: formData,
+      });
+      const data = await response.json();
+      if (response.ok) {
+        alert(`${data.count} ta mahsulot muvaffaqiyatli import qilindi!`);
+        onRefreshProducts();
+      } else {
+        alert("Xatolik: " + data.error);
+      }
+    } catch (e: any) {
+      alert("Xatolik: " + e.message);
+    } finally {
+      setImporting(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <nav className="sticky top-0 z-50 flex items-center justify-between px-10 py-4 bg-white/80 backdrop-blur-md border-b border-slate-200 shadow-sm">
       <div className="flex items-center gap-10">
@@ -41,6 +74,21 @@ export const Navbar = ({ onAddProduct, onTabChange, activeTab }: NavbarProps) =>
       </div>
 
       <div className="flex items-center gap-4">
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          accept=".xlsx, .xls"
+          onChange={handleImport}
+        />
+        <button 
+          onClick={() => fileInputRef.current?.click()}
+          disabled={importing}
+          className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100 disabled:opacity-50"
+          title="Excel Import"
+        >
+          {importing ? "⏳" : "📤"}
+        </button>
         <a 
           href="/api/products/export" 
           className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm border border-emerald-100"
