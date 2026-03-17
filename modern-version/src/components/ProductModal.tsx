@@ -86,106 +86,165 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess }: ProductMod
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-      <div className="bg-white w-full max-w-2xl max-h-[90vh] rounded-3xl overflow-hidden shadow-2xl flex flex-col">
-        <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-indigo-600 text-white">
-          <h3 className="text-xl font-bold">{product ? "Tahrirlash" : "Yangi mahsulot"}</h3>
-          <button onClick={onClose} className="text-2xl hover:opacity-70">&times;</button>
+      <div className="bg-white w-full max-w-4xl max-h-[95vh] rounded-[32px] overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-300">
+        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-indigo-600 text-white relative">
+          <div>
+            <h3 className="text-2xl font-black">{product ? "Mahsulotni tahrirlash" : "Yangi mahsulot qo'shish"}</h3>
+            <p className="text-indigo-100 text-sm mt-1">{product ? `ID: ${product.id}` : "Barcha ma'lumotlarni to'ldiring"}</p>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors text-2xl">&times;</button>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="col-span-2">
-              <label className="block text-sm font-bold text-slate-700 mb-1">ID (Majburiy)*</label>
+        <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/50">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="col-span-1">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">ID (O'zgartirib bo'lmaydi)*</label>
               <input 
                 type="text" 
                 required 
                 disabled={!!product}
-                className="w-full p-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none"
+                placeholder="Masalan: 1001"
+                className="w-full p-4 rounded-2xl border border-slate-200 bg-slate-100 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all disabled:opacity-50"
                 value={formData.id}
                 onChange={(e) => setFormData({...formData, id: e.target.value})}
               />
             </div>
 
-            <div>
-              <div className="flex justify-between mb-1">
-                <label className="text-sm font-bold text-slate-700">Nomi (UZ)*</label>
-                <button type="button" onClick={() => handleAIAction('translate_uz_ru', 'name', 'name_ru')} className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md font-bold">🤖 RU</button>
+            <div className="col-span-1">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Brend</label>
+              <input 
+                type="text"
+                placeholder="Masalan: KEMEI"
+                className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                value={formData.brand}
+                onChange={(e) => setFormData({...formData, brand: e.target.value})}
+              />
+            </div>
+
+            <div className="col-span-1">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Model</label>
+              <input 
+                type="text"
+                placeholder="Masalan: KM-3012"
+                className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                value={formData.model}
+                onChange={(e) => setFormData({...formData, model: e.target.value})}
+              />
+            </div>
+
+            <div className="col-span-1">
+              <div className="flex justify-between mb-2">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Nomi (UZ)*</label>
+                <button type="button" onClick={() => handleAIAction('translate_uz_ru', 'name', 'name_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors tracking-tighter flex items-center gap-1">🤖 RU tarjima</button>
               </div>
               <input 
                 type="text" required
-                className="w-full p-3 rounded-xl border border-slate-200 outline-none"
+                className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
               />
             </div>
 
-            <div>
-              <div className="flex justify-between mb-1">
-                <label className="text-sm font-bold text-slate-700">Nomi (RU)</label>
-                <button type="button" onClick={() => handleAIAction('translate_ru_uz', 'name_ru', 'name')} className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md font-bold">🤖 UZ</button>
+            <div className="col-span-1">
+              <div className="flex justify-between mb-2">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Nomi (RU)</label>
+                <button type="button" onClick={() => handleAIAction('translate_ru_uz', 'name_ru', 'name')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors tracking-tighter flex items-center gap-1">🤖 UZ tarjima</button>
               </div>
               <input 
                 type="text"
-                className="w-full p-3 rounded-xl border border-slate-200 outline-none"
+                className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
                 value={formData.name_ru}
                 onChange={(e) => setFormData({...formData, name_ru: e.target.value})}
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Narxi</label>
+            <div className="col-span-1">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Narxi (Raqamda)</label>
               <input 
                 type="text"
-                className="w-full p-3 rounded-xl border border-slate-200 outline-none"
+                placeholder="315000"
+                className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
                 value={formData.price}
                 onChange={(e) => setFormData({...formData, price: e.target.value})}
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-bold text-slate-700 mb-1">Kategoriya</label>
-              <input 
-                type="text"
-                className="w-full p-3 rounded-xl border border-slate-200 outline-none"
-                value={formData.category}
-                onChange={(e) => setFormData({...formData, category: e.target.value})}
-              />
+            <div className="col-span-1 lg:col-span-3">
+               <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Kategoriya</label>
+               <input 
+                 type="text"
+                 placeholder="Masalan: EPILYATOR"
+                 className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                 value={formData.category}
+                 onChange={(e) => setFormData({...formData, category: e.target.value})}
+               />
             </div>
           </div>
 
-          <div className="space-y-4">
-            <div>
-              <div className="flex justify-between mb-1">
-                <label className="text-sm font-bold text-slate-700">Qisqa tavsif (UZ)</label>
-                <button type="button" onClick={() => handleAIAction('translate_desc_uz_ru', 'description_short', 'description_short_ru')} className="text-[10px] bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md font-bold">🤖 RU</button>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Short Descriptions */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <label className="text-xs font-black text-slate-500 uppercase tracking-widest">Qisqa tavsif (UZ)</label>
+                <button type="button" onClick={() => handleAIAction('translate_desc_uz_ru', 'description_short', 'description_short_ru')} className="text-[10px] bg-indigo-50 text-indigo-600 px-2 py-1 rounded-lg font-black hover:bg-indigo-100 transition-colors flex items-center gap-1">🤖 RU tarjima</button>
               </div>
               <textarea 
-                className="w-full p-3 rounded-xl border border-slate-200 outline-none min-h-[80px]"
+                className="w-full p-5 rounded-3xl border border-slate-200 bg-white text-slate-900 font-medium focus:ring-4 focus:ring-indigo-500/10 outline-none min-h-[120px] transition-all shadow-sm leading-relaxed"
                 value={formData.description_short}
                 onChange={(e) => setFormData({...formData, description_short: e.target.value})}
+                placeholder="Qisqa ma'lumot yozing..."
               />
             </div>
-            <div>
-              <div className="flex justify-between mb-1">
-                <label className="text-sm font-bold text-slate-700">Qisqa tavsif (RU)</label>
-              </div>
+            <div className="space-y-4">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1">Qisqa tavsif (RU)</label>
               <textarea 
-                className="w-full p-3 rounded-xl border border-slate-200 outline-none min-h-[80px]"
+                className="w-full p-5 rounded-3xl border border-slate-200 bg-white text-slate-900 font-medium focus:ring-4 focus:ring-indigo-500/10 outline-none min-h-[120px] transition-all shadow-sm leading-relaxed"
                 value={formData.description_short_ru}
                 onChange={(e) => setFormData({...formData, description_short_ru: e.target.value})}
+                placeholder="Краткое описание на русском..."
+              />
+            </div>
+
+            {/* Full Descriptions */}
+            <div className="space-y-4">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1">To'liq tavsif (UZ)</label>
+              <textarea 
+                className="w-full p-5 rounded-3xl border border-slate-200 bg-white text-slate-900 font-medium focus:ring-4 focus:ring-indigo-500/10 outline-none min-h-[200px] transition-all shadow-sm leading-relaxed"
+                value={formData.description_full}
+                onChange={(e) => setFormData({...formData, description_full: e.target.value})}
+                placeholder="Mahsulot haqida batafsil ma'lumot..."
+              />
+            </div>
+            <div className="space-y-4">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest px-1">To'liq tavsif (RU)</label>
+              <textarea 
+                className="w-full p-5 rounded-3xl border border-slate-200 bg-white text-slate-900 font-medium focus:ring-4 focus:ring-indigo-500/10 outline-none min-h-[200px] transition-all shadow-sm leading-relaxed"
+                value={formData.description_full_ru}
+                onChange={(e) => setFormData({...formData, description_full_ru: e.target.value})}
+                placeholder="Полное описание на русском..."
               />
             </div>
           </div>
         </form>
 
-        <div className="p-6 border-t border-slate-100 flex justify-end gap-3 bg-slate-50">
-          <button onClick={onClose} className="px-6 py-3 font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors">Yopish</button>
+        <div className="p-8 border-t border-slate-100 flex justify-end gap-4 bg-white">
+          <button 
+            onClick={onClose} 
+            className="px-8 py-4 font-black text-slate-500 hover:bg-slate-100 rounded-2xl transition-all"
+          >
+            Yopish
+          </button>
           <button 
             onClick={handleSubmit}
             disabled={loading}
-            className="px-8 py-3 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-200 disabled:opacity-50"
+            className="px-12 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-200 disabled:opacity-50 flex items-center gap-2"
           >
-            {loading ? "Saqlanmoqda..." : "Saqlash"}
+            {loading ? (
+              <>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Saqlanmoqda...
+              </>
+            ) : "Saqlash"}
           </button>
         </div>
       </div>
