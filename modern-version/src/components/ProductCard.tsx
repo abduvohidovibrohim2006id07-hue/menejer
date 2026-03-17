@@ -142,6 +142,32 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
 
   const [confirmDeleteProduct, setConfirmDeleteProduct] = React.useState(false);
 
+  // LIGHTBOX NAVIGATION
+  const currentIndex = product.local_images?.indexOf(previewUrl || '') ?? -1;
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (product.local_images && currentIndex < product.local_images.length - 1) {
+      setPreviewUrl(product.local_images[currentIndex + 1]);
+    }
+  };
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    if (product.local_images && currentIndex > 0) {
+      setPreviewUrl(product.local_images[currentIndex - 1]);
+    }
+  };
+
+  React.useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!previewUrl) return;
+      if (e.key === 'ArrowRight') handleNext();
+      if (e.key === 'ArrowLeft') handlePrev();
+      if (e.key === 'Escape') setPreviewUrl(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewUrl, currentIndex]);
+
   return (
     <div className={`bg-white rounded-3xl p-6 border transition-all flex flex-col md:flex-row gap-8 items-stretch group/card relative ${selected ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg bg-indigo-50/10' : 'border-slate-200 shadow-sm hover:shadow-xl'}`}>
       {/* PRODUCT DELETE OVERLAY */}
@@ -186,18 +212,39 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
           className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300"
           onClick={() => setPreviewUrl(null)}
         >
+          {/* Close button */}
           <button 
             className="absolute top-6 right-6 w-12 h-12 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-2xl transition-all z-[110]"
             onClick={() => setPreviewUrl(null)}
           >
             ✕
           </button>
+
+          {/* Prev Button */}
+          {currentIndex > 0 && (
+            <button 
+              className="absolute left-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-3xl transition-all z-[110]"
+              onClick={handlePrev}
+            >
+              &#10094;
+            </button>
+          )}
+
+          {/* Next Button */}
+          {product.local_images && currentIndex < product.local_images.length - 1 && (
+            <button 
+              className="absolute right-6 top-1/2 -translate-y-1/2 w-14 h-14 bg-white/10 hover:bg-white/20 text-white rounded-full flex items-center justify-center text-3xl transition-all z-[110]"
+              onClick={handleNext}
+            >
+              &#10095;
+            </button>
+          )}
           
           <div 
             className="relative max-w-5xl w-full h-full flex items-center justify-center"
             onClick={e => e.stopPropagation()}
           >
-            {previewUrl.toLowerCase().endsWith('.mp4') ? (
+            {previewUrl.toLowerCase().includes('.mp4') || previewUrl.toLowerCase().includes('.mov') ? (
               <video 
                 src={previewUrl} 
                 className="max-w-full max-h-full rounded-2xl shadow-2xl"
@@ -209,8 +256,14 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
                 src={previewUrl} 
                 alt="" 
                 className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                key={previewUrl} // Force re-render for animation if needed
               />
             )}
+            
+            {/* INDEX COUNTER */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 bg-white/10 px-4 py-2 rounded-full text-white/50 text-xs font-black tracking-widest">
+              {currentIndex + 1} / {product.local_images?.length}
+            </div>
           </div>
         </div>
       )}
