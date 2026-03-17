@@ -17,7 +17,7 @@ export const AiSettingsManager = () => {
   const models = [
     { id: 'openai/gpt-oss-120b', label: '🚀 OpenAI GPT-OSS 120B (Eng aqlli)', category: 'Flagship' },
     { id: 'llama-3.3-70b-versatile', label: '🦙 Llama 3.3 70B (Versatile)', category: 'Versatile' },
-    { id: 'llama-3.2-11b-vision-preview', label: '👁️ Llama 3.2 Vision (Rasm ko\'radigan)', category: 'Vision' },
+    { id: 'meta-llama/llama-4-scout-17b-16e-instruct', label: '👁️ Llama 4 Scout (Eng yangi Vision)', category: 'Vision' },
     { id: 'deepseek-r1-distill-llama-70b', label: '🧠 DeepSeek R1 (Mantiqiy)', category: 'Reasoning' },
     { id: 'llama-3.1-8b-instant', label: '⚡ Llama 3.1 8B (Tezkor)', category: 'Instant' },
   ];
