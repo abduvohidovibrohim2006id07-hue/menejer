@@ -30,6 +30,18 @@ interface ProductCardProps {
 export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, onSelectToggle }: ProductCardProps) => {
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [confirmDeleteImg, setConfirmDeleteImg] = React.useState<string | null>(null);
+  const [imageValidations, setImageValidations] = React.useState<Record<string, { w: number, h: number, isValid: boolean }>>({});
+
+  const handleImageLoad = (url: string, e: React.SyntheticEvent<HTMLImageElement>) => {
+    const img = e.currentTarget;
+    const w = img.naturalWidth;
+    const h = img.naturalHeight;
+    const isValid = w === 1080 && h === 1440;
+    setImageValidations(prev => ({
+      ...prev,
+      [url]: { w, h, isValid }
+    }));
+  };
 
   const scrollGallery = (direction: number) => {
     const gallery = document.getElementById(`gallery-${product.id}`);
@@ -164,7 +176,22 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
                       src={img} 
                       alt="" 
                       className="w-full h-full object-cover transition-transform group-hover/item:scale-110 duration-500"
+                      onLoad={(e) => handleImageLoad(img, e)}
                     />
+                  )}
+
+                  {/* DIMENSION WARNING */}
+                  {imageValidations[img] && !imageValidations[img].isValid && !isVideo && (
+                    <div className="absolute top-2 left-2 right-2 z-[35] bg-red-600/90 backdrop-blur-md rounded-xl p-2.5 border border-white/20 shadow-xl animate-in slide-in-from-top-2">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm">⚠️</span>
+                        <span className="text-[10px] font-black text-white uppercase tracking-wider">Noto'g'ri o'lcham!</span>
+                      </div>
+                      <p className="text-[10px] text-white/90 font-medium leading-tight">
+                        Kutilayotgan: <span className="font-bold text-white">1080x1440</span><br/>
+                        Hozirgi: <span className="font-bold text-red-200">{imageValidations[img].w}x{imageValidations[img].h}</span>
+                      </p>
+                    </div>
                   )}
                   
                   {/* CONFIRM DELETE OVERLAY */}
