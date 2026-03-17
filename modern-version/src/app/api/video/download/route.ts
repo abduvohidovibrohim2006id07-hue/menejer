@@ -34,6 +34,7 @@ export async function POST(req: Request) {
     }
 
     const args = [
+      '--format', 'bestvideo[height<=720]+bestaudio/best[height<=720]',
       '--ffmpeg-location', FFMPEG_BIN,
       '--downloader', 'ffmpeg',
       '--recode-video', 'mp4',
