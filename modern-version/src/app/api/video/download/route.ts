@@ -28,17 +28,29 @@ export async function POST(req: Request) {
     const tempDir = os.tmpdir();
     const fullPath = path.join(tempDir, outputFilename);
 
-    // FFmpeg path logic - More comprehensive search
-    const possiblePaths = [
+    // FFmpeg path logic - More comprehensive and SAFER search
+    let possiblePaths = [
       path.join(process.cwd(), '..', 'ffmpeg', 'bin'),
       'C:\\ffmpeg\\bin',
       path.join(os.homedir(), 'Downloads', 'ffmpeg', 'bin'),
-      // Try finding any ffmpeg in Downloads
-      ...fs.readdirSync(os.homedir() + '/Downloads').filter(f => f.toLowerCase().startsWith('ffmpeg')).map(f => path.join(os.homedir(), 'Downloads', f, 'bin'))
-    ].filter(p => fs.existsSync(p));
+    ];
+
+    try {
+      const downloadsPath = path.join(os.homedir(), 'Downloads');
+      if (fs.existsSync(downloadsPath)) {
+        const files = fs.readdirSync(downloadsPath);
+        const ffmpegDirs = files
+          .filter(f => f.toLowerCase().startsWith('ffmpeg'))
+          .map(f => path.join(downloadsPath, f, 'bin'))
+          .filter(p => fs.existsSync(p));
+        possiblePaths = [...possiblePaths, ...ffmpegDirs];
+      }
+    } catch (e) {
+      console.error("Error searching FFmpeg in Downloads:", e);
+    }
 
     let FFMPEG_BIN = '';
-    for (const p of possiblePaths) {
+    for (const p of possiblePaths.filter(p => fs.existsSync(p))) {
       if (fs.existsSync(path.join(p, 'ffmpeg.exe'))) {
         FFMPEG_BIN = p;
         break;
@@ -84,19 +96,22 @@ export async function POST(req: Request) {
 
     args.push(processedUrl);
 
+    const YT_DLP_PATH = 'C:\\Users\\abduv\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\yt-dlp.exe';
+
     return new Promise<Response>((resolve) => {
       console.log('--- STARTING DOWNLOAD ---');
       console.log('Link:', processedUrl);
       console.log('FFmpeg:', FFMPEG_BIN || 'NOT FOUND');
+      console.log('YT-DLP:', fs.existsSync(YT_DLP_PATH) ? 'FOUND' : 'NOT FOUND');
       
-      const yt = spawn('yt-dlp', args);
+      const yt = spawn(YT_DLP_PATH, args);
       
       let errorOutput = '';
       let lastOutput = '';
 
       yt.stdout.on('data', (data) => {
         lastOutput = data.toString();
-        // console.log('yt-dlp:', lastOutput);
+        // console.log('yt-dlp stdout:', lastOutput);
       });
 
       yt.stderr.on('data', (data) => {
@@ -105,9 +120,16 @@ export async function POST(req: Request) {
         console.error('yt-dlp error:', msg);
       });
 
+      yt.on('error', (err) => {
+        console.error('Spawn error:', err);
+        resolve(NextResponse.json({ error: 'Processni ishga tushirishda xato: ' + err.message }, { status: 500 }));
+      });
+
       yt.on('close', async (code) => {
+        console.log(`yt-dlp exited with code ${code}`);
         if (code === 0 && fs.existsSync(fullPath)) {
           try {
+            console.log('Uploading to S3...');
             const fileBuffer = fs.readFileSync(fullPath);
             const s3Key = `temp_videos/${outputFilename}`;
             
@@ -122,8 +144,10 @@ export async function POST(req: Request) {
             const tempUrl = `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${s3Key}`;
             if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
 
+            console.log('Upload success:', tempUrl);
             resolve(NextResponse.json({ success: true, tempUrl, filename: outputFilename }));
           } catch (uploadError: any) {
+            console.error('S3 Upload Error:', uploadError);
             resolve(NextResponse.json({ error: 'Cloud ga yuklashda xato: ' + uploadError.message }, { status: 500 }));
           }
         } else {
@@ -139,9 +163,10 @@ export async function POST(req: Request) {
             userMessage = 'Videoni qayta ishlashda (trimming) xatolik yuz berdi. FFmpeg dasturi o\'rnatilganini tekshiring.';
           }
 
+          console.error('Download failed:', userMessage, errorOutput);
           resolve(NextResponse.json({ 
             error: userMessage, 
-            details: errorOutput.substring(0, 500) 
+            details: errorOutput || lastOutput || 'Noma\'lum xatolik'
           }, { status: 500 }));
         }
       });
