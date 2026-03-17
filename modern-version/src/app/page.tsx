@@ -15,10 +15,9 @@ import { apiClient } from "@/lib/api-client";
 export default function Home() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  
-  useScrollPersistence('home-scroll', !initialLoading);
-  
   const [activeTab, setActiveTab] = useState('products');
+  
+  useScrollPersistence(`home-scroll-${activeTab}`, activeTab === 'products' ? !initialLoading : true);
   const [mounted, setMounted] = useState(false);
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
