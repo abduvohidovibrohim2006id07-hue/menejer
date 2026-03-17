@@ -17,6 +17,7 @@ export async function POST(req: Request) {
     let model = config.model || 'openai/gpt-oss-120b';
     let messages: any[] = [];
     let responseFormat: any = undefined;
+    let visualDescription = "";
 
     if (action === 'generate_from_image') {
       const images = context?.images || [];
@@ -25,10 +26,9 @@ export async function POST(req: Request) {
       if (!imageUrl) {
         return NextResponse.json({ error: 'Rasm topilmadi.' }, { status: 400 });
       }
-
-      let visualDescription = "";
       
       try {
+        console.log("[AI LOG] Step 1: Vision analysis starting for:", imageUrl);
         const imgResponse = await fetch(imageUrl);
         if (!imgResponse.ok) throw new Error("Rasmni serverdan yuklab bo'lmadi.");
         
@@ -36,7 +36,6 @@ export async function POST(req: Request) {
         const base64Image = Buffer.from(arrayBuffer).toString('base64');
         const contentType = imgResponse.headers.get('content-type') || 'image/jpeg';
 
-        // Vision logic with database context
         const visionPrompt = `Ushbu rasmdagi mahsulotni identifikatsiya qiling. 
           Bazadagi ma'lumot: Brend: ${context?.brand || "No'malum"}, Model: ${context?.model || "No'malum"}. 
           Rasmga qarab ushbu ma'lumotlarni tasdiqlang yoki aniqrog'ini ayting (rang, brend, model).`;
@@ -64,21 +63,26 @@ export async function POST(req: Request) {
 
         const visionData = await visionResponse.json();
         visualDescription = visionData.choices?.[0]?.message?.content || "";
+        console.log("[AI LOG] Vision Result:", visualDescription);
         
         if (!visualDescription || visualDescription.length < 5) {
+          console.error("[AI LOG] Vision failed or returned empty.");
           return NextResponse.json({ error: "Vizual AI rasmni taniy olmadi." }, { status: 400 });
         }
       } catch (vError: any) {
+        console.error("[AI LOG] Vision Error:", vError);
         return NextResponse.json({ error: `Vizual tahlil xatosi: ${vError.message}` }, { status: 400 });
       }
 
-      // Step 2: Reasoning + Internet Search using GPT-OSS 120B
+      // Step 2: Reasoning
       model = config.model || 'openai/gpt-oss-120b';
+      console.log("[AI LOG] Step 2: Generating description using:", model);
+      
       messages = [
-        { role: 'system', content: 'Siz mahsulotlar bo\'yicha tahlilchisiz. Internetdan (browser_search) foydalanib mahsulotning aniq xususiyatlarini toping. JAVOB FAQAT JSON BO\'LSIN.' },
-        { role: 'user', content: `Vizual tahlil natijasi: ${visualDescription}. 
-          ILTIMOS, ushbu mahsulotni INTERNETDAN (browser_search) qidiring va uning materiallari, o'lchamlari va professional tavsifini toping.
-          Natijani JSON formatda qaytaring:
+        { role: 'system', content: 'Siz mahsulotlar bo\'yicha tahlilchisiz. JAVOB FAQAT JSON BO\'LSIN.' },
+        { role: 'user', content: `Vizual tahlil: ${visualDescription}. 
+          ILTIMOS, ushbu mahsulot haqida professional tavsif yozing.
+          JSON formatda qaytaring:
           { "uz": { "name": "...", "short": "...", "full": "..." }, "ru": { "name": "...", "short": "...", "full": "..." }, "brand": "...", "model": "...", "color": "...", "category": "..." }` 
         }
       ];
@@ -97,7 +101,7 @@ export async function POST(req: Request) {
             break;
           case 'generate_full':
             model = 'openai/gpt-oss-120b';
-            prompt = `Ushbu mahsulotni haqida INTERNETDAN (browser_search) qidiruv o'tkazing va professional tavsif yozing: ${JSON.stringify(context || {})}.\nFormat JSON: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}`;
+            prompt = `Professional JSON tavsif yozing: ${JSON.stringify(context || {})}.\nFormat JSON: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}`;
             responseFormat = { type: 'json_object' };
             break;
           default:
@@ -109,34 +113,59 @@ export async function POST(req: Request) {
       messages = [{ role: 'user', content: prompt }];
     }
 
+    console.log("[AI LOG] Requesting Groq with model:", model);
+    const body: any = {
+      model,
+      messages,
+      temperature: 0.2,
+    };
+    if (responseFormat) {
+      body.response_format = responseFormat;
+    }
+
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model,
-        messages,
-        temperature: 0.2, // Lower temperature for more factual search results
-        response_format: responseFormat,
-        tools: model.includes('oss-120b') ? [{ type: 'browser_search' }] : undefined,
-      }),
+      body: JSON.stringify(body),
     });
 
     const data = await response.json();
+    console.log("[AI LOG] Groq Raw Response Status:", response.status);
+    
+    if (data.error) {
+      console.error("[AI LOG] Groq API Error:", data.error);
+      return NextResponse.json({ error: data.error.message }, { status: 400 });
+    }
+
     let resultText = data.choices?.[0]?.message?.content || "";
+    console.log("[AI LOG] Groq Result Preview:", resultText.substring(0, 100) + "...");
 
     try {
       if (responseFormat?.type === 'json_object' || action === 'generate_from_image' || action === 'generate_full') {
         const jsonStr = resultText.replace(/```json|```/g, '').trim();
-        return NextResponse.json({ result: JSON.parse(jsonStr) });
+        const parsed = JSON.parse(jsonStr);
+        return NextResponse.json({ 
+          result: parsed,
+          debug: { visualDescription, raw: resultText }
+        });
       }
-      return NextResponse.json({ result: resultText });
+      return NextResponse.json({ 
+        result: resultText,
+        debug: { visualDescription }
+      });
     } catch (e) {
-       return NextResponse.json({ result: resultText });
+       console.error("[AI LOG] JSON Parse Error:", e);
+       return NextResponse.json({ 
+         result: resultText, 
+         error: "JSON formatda xatolik",
+         debug: { visualDescription, raw: resultText }
+       });
     }
-} catch (error: any) {
+  } catch (error: any) {
+    console.error("[AI LOG] Global Router Error:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

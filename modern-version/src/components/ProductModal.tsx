@@ -78,6 +78,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         })
       });
       const data = await response.json();
+      console.log("--- AI DEBUG LOGS ---", data);
       
       if (!response.ok) {
         alert(data.error || "AI xatoligi yuz berdi");
