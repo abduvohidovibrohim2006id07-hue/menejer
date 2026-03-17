@@ -34,13 +34,13 @@ export async function POST(req: Request) {
     }
 
     const args = [
-      '--format', 'bestvideo[height<=720]+bestaudio/best[height<=720]',
+      '--format', 'best[height<=720][ext=mp4]/best[height<=720]',
       '--ffmpeg-location', FFMPEG_BIN,
-      '--downloader', 'ffmpeg',
       '--recode-video', 'mp4',
       '-o', fullPath,
-      '--fixup', 'force',
-      '--no-check-certificate'
+      '--fixup', 'warn',
+      '--no-check-certificate',
+      '--max-filesize', '100M'
     ];
 
     // Trimming logic if parameters provided
