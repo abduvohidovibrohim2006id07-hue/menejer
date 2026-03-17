@@ -17,11 +17,11 @@ export async function GET() {
         },
         'generate_full': {
           model: 'openai/gpt-oss-120b',
-          prompt: 'Matn asosida professional JSON tavsif yozing. Format: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}'
+          prompt: 'Matn asosida professional va sotuvchi (marketing) JSON tavsif yozing. \nQOIDALAR: \n1. Qisqa tavsif ("short") - MAKSIMAL 350 ta belgi. \n2. To\'liq tavsif ("full") - MINIMAL 1000, MAKSIMAL 5000 ta belgi. \n3. Tavsif shunday bo\'lsinki, mijozda hech qanday savol qolmasin va sotib olishga kuchli qiziqish uyg\'otsin. \nFormat: {"uz": {"name": "...", "short": "...", "full": "..."}, "ru": {"name": "...", "short": "...", "full": "..."}}'
         },
         'generate_from_image': {
           model: 'openai/gpt-oss-120b',
-          prompt: 'Vizual tahlil natijasiga ko\'ra professional tavsif yozing. JAVOB FAQAT JSON BO\'LSIN.'
+          prompt: 'Vizual tahlil natijasiga ko\'ra professional va mukammal marketing tavsifi yozing. \nQOIDALAR: \n1. Qisqa tavsif ("short") - MAKSIMAL 350 ta belgi. \n2. To\'liq tavsif ("full") - MINIMAL 1000, MAKSIMAL 5000 ta belgi. \n3. To\'liq tavsifda mahsulotning barcha xususiyatlarini yoritib bering, mijozda qiziqish uyg\'otsin. \nJAVOB FAQAT TOZA JSON BO\'LSIN.'
         }
       });
     }
