@@ -234,24 +234,6 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
           &#10095;
         </button>
 
-        {/* FLOATING STATUS BADGE OVER GALLERY */}
-        <div className="absolute top-4 left-4 z-30 flex flex-col gap-2">
-          {(product.status === 'active' || !product.status) && (
-            <span className="px-3 py-1.5 bg-emerald-500 text-white text-[10px] font-black rounded-xl shadow-lg shadow-emerald-200/50 border border-emerald-400/50 backdrop-blur-sm animate-in fade-in slide-in-from-left-2">
-              ✅ FAOL
-            </span>
-          )}
-          {product.status === 'quarantine' && (
-            <span className="px-3 py-1.5 bg-amber-500 text-white text-[10px] font-black rounded-xl shadow-lg shadow-amber-200/50 border border-amber-400/50 backdrop-blur-sm animate-in fade-in slide-in-from-left-2">
-              ⚠️ KARANTIN
-            </span>
-          )}
-          {product.status === 'archive' && (
-            <span className="px-3 py-1.5 bg-slate-700 text-white text-[10px] font-black rounded-xl shadow-lg shadow-slate-900/20 border border-slate-600/50 backdrop-blur-sm animate-in fade-in slide-in-from-left-2">
-              📁 ARXIV
-            </span>
-          )}
-        </div>
       </div>
 
       {/* Right: Content Section */}
@@ -269,6 +251,22 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
                 <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 bg-indigo-50 text-indigo-500 rounded-lg">
                   🆔 {product.id}
                 </span>
+
+                {(product.status === 'active' || !product.status) && (
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 bg-emerald-100 text-emerald-700 rounded-lg">
+                    ✅ FAOL
+                  </span>
+                )}
+                {product.status === 'quarantine' && (
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 bg-amber-100 text-amber-700 rounded-lg">
+                    ⚠️ KARANTIN
+                  </span>
+                )}
+                {product.status === 'archive' && (
+                  <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 bg-slate-200 text-slate-700 rounded-lg">
+                    📁 ARXIV
+                  </span>
+                )}
               </div>
             </div>
             <div className="shrink-0">
