@@ -28,18 +28,29 @@ export const POST = withGateway(async (req) => {
   // 3. Find Cabinet and Token
   let bearerToken = '';
   let shopId = '';
+  let email = '';
+  let password = '';
   
   marketData.accounts?.forEach((acc: any) => {
     acc.cabinets?.forEach((cab: any) => {
       if (cab.id === cabinetId) {
         bearerToken = cab.bearer_token;
-        shopId = cab.id; // Usually cabinetId is the shopId in Uzum context based on user's docs
+        shopId = cab.id;
+        email = acc.email;
+        password = acc.password;
       }
     });
   });
 
+  // AVTOMATIK TOKEN YANGILASH (Agar token bo'lmasa)
+  if (!bearerToken && email && password) {
+    console.log('[Sync] Token yo\'q, yangilashga urunish...');
+    const { refreshUzumToken } = require('@/lib/markets/uzum-auth');
+    bearerToken = await refreshUzumToken(email, password, cabinetId);
+  }
+
   if (!bearerToken) {
-    throw { message: 'Bearer token topilmadi. Iltimos, Market Managerda tokenni yangilang.', status: 400 };
+    throw { message: 'Bearer token topilmadi va avto-login amalga oshmadi.', status: 401 };
   }
 
   const uzum = new UzumMarketAPI(bearerToken, shopId);
