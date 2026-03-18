@@ -49,38 +49,53 @@ export async function POST(req: Request) {
         }
 
         const photos = msg.photo ? [msg.photo[msg.photo.length - 1].file_id] : [];
-
-        // Oddiy 'salom' kabi yozuvlarga javob qaytarish, ularni maxsulot sifatida saqlamaslik
+        const mediaGroupId = msg.media_group_id || null;
+        
+        // Oddiy 'salom' kabi yozuvlarga javob qaytarish
         if (photos.length === 0 && text.trim().length <= 15) {
             await sendMessage(chatId, "Iltimos rasm va batafsilroq mahsulot ma'lumotlarini (narx, brend, nomi) yuboring.");
             return NextResponse.json({ ok: true });
         }
 
-        // Hozirgi Serverless (Vercel) cheklovlari doirasida Media Group (bir nechta rasm) 
-        // bilan ishlash qiyinroq, chunki har bir rasm alohida xabar bo'lib keladi.
-        // Hozir har bir xabarni alohida bitta rasmli / matnli sifatida qabul qilamiz.
-        if (photos.length > 0 || text.length > 0) {
-            // Javobni darhol qaytarib yubormaslik muammosi bor (Next.js Serverless), 
-            // Vercel kutib turishi uchun await qilamiz.
-            
-            await sendMessage(chatId, "⏳ Ma'lumot qabul qilindi! AI uni Vercel serverlarida tahlil qilmoqda...");
+        // 1. PRODUCT ID NIKLASH: Media group kelsa id bir xil bo'ladi, aks holda yangi
+        const productId = mediaGroupId || db.collection('products').doc().id;
 
-            let downloadedFiles: Array<Buffer> = [];
-
-            // Rasmlarni Telegram serveridan yuklab olish
-            for(let fileId of photos) {
-                const url = await getFileUrl(fileId);
-                if (url) {
-                    const response = await fetch(url);
-                    const buffer = Buffer.from(await response.arrayBuffer());
-                    downloadedFiles.push(buffer);
-                }
+        // 2. RASM YUKLASH (Har bir so'rov kirib kelgan o'zining rasmini yuklaydi)
+        if (photos.length > 0) {
+            const url = await getFileUrl(photos[0]);
+            if (url) {
+                const response = await fetch(url);
+                const fileBuffer = Buffer.from(await response.arrayBuffer());
+                
+                // Random ism beramiz, sababi parallel kelganda ustiga yozmasligi uchun
+                const fileKey = `images/${productId}/image_${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`;
+                
+                await s3Client.send(new PutObjectCommand({
+                    Bucket: BUCKET_NAME, 
+                    Key: fileKey, 
+                    Body: fileBuffer, 
+                    ContentType: 'image/jpeg',
+                }));
             }
+        }
 
-            // AI orqali tahlil
-            let name = "No'malum", brand = "", model = "", price = "0", old_price = "0";
+        // 3. AI TAHLIL VA BAZAGA YOZISH: 
+        // Telegram Media Group da rasm 10 ta kelsa 10 ta zapros yuboradi. Ammo matn faqatgina 1 tasida (yoki birinchisida) bo'ladi.
+        // Biz faqat Matnli qism kelganida yoki Yakka (media_group siz) kelganidagina AI ni ishlatamiz! Bo'sh xabarlar (qo'shimcha rasmlar) ohista yopiladi.
+        if (text.trim().length > 0 || !mediaGroupId) {
+            await sendMessage(chatId, "⏳ AI mahsulotni ro'yxatga olmoqda...");
+
+            let name = "Rasmli mahsulot", brand = "", model = "", price = 0, old_price = 0;
+            
             if (text) {
-                const aiPrompt = `Siz e-commerce tahlilchisisiz. Matn: "${text}".\nMahsulot ma'lumotlarini qisqa qilib JSON formatida qaytaring:\n{ "name": "...", "brand": "...", "model": "...", "price": "...", "old_price": "..." }`;
+                const aiPrompt = `Siz e-commerce tahlilchisisiz. Matn: "${text}".
+Mahsulot ma'lumotlarini JSON qilib qaytaring: { "name": "...", "brand": "...", "model": "...", "price": 0, "old_price": 0 }
+QOIDALAR:
+1. "price" va "old_price" qismi FAQAT va FAQAT raqam ko'rinishida bo'lsin.
+2. Agar "850min", "850 ming" bo'lsa -> 850000 raqamiga aylantirib yozing! M: 850min = 850000.
+3. Agar "85$", "$85" bo'lsa dollarni 12500 so'm kursiga ko'paytirib, Sum qilib yozing! M: 85*12500 = 1062500.
+4. Agar umuman narx ko'rsatilmagan bo'lsa 0 qaytaring.`;
+
                 const aiResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
@@ -91,6 +106,7 @@ export async function POST(req: Request) {
                         response_format: { type: 'json_object' }
                     })
                 });
+                
                 const aiData = await aiResponse.json();
                 const resultText = aiData.choices?.[0]?.message?.content || "{}";
                 try {
@@ -98,39 +114,25 @@ export async function POST(req: Request) {
                     name = parsed.name || text.substring(0, 30);
                     brand = parsed.brand || "";
                     model = parsed.model || "";
-                    price = (parsed.price || "0").toString().replace(/\D/g, '');
-                    old_price = (parsed.old_price || "0").toString().replace(/\D/g, '');
+                    // Toza raqam olamiz (faqat \d)
+                    price = parseInt((parsed.price || "0").toString().replace(/\D/g, '')) || 0;
+                    old_price = parseInt((parsed.old_price || "0").toString().replace(/\D/g, '')) || 0;
                 } catch(e) { name = text.substring(0, 30); }
-            } else {
-                name = "Rasmli mahsulot";
             }
 
-            // Bazaga saqlash
-            const newProductRef = db.collection('products').doc();
-            const productId = newProductRef.id;
-
-            await newProductRef.set({
+            // Bazaga Saqlaymiz yoki Qo'shib qoyamiz (merge: true)
+            await db.collection('products').doc(productId).set({
                name_uz: name, name_ru: name,
                brand: brand.toLowerCase(), model: model.toLowerCase(),
-               price: parseFloat(price) || 0, old_price: parseFloat(old_price) || 0,
+               price: price, old_price: old_price,
                description_uz: text, description_ru: text,
                status: 'quarantine',
-               created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
+               updated_at: new Date().toISOString(),
                created_by_bot: true,
-               media_group_id: msg.media_group_id || null // Birlashtirish uchun belgi
-            });
+               media_group_id: mediaGroupId
+            }, { merge: true });
 
-            // S3 Yandex ga saqlash
-            if (photos.length > 0) {
-                for(let i=0; i < downloadedFiles.length; i++) {
-                    const fileKey = `images/${productId}/image_${i+1}.jpg`;
-                    await s3Client.send(new PutObjectCommand({
-                        Bucket: BUCKET_NAME, Key: fileKey, Body: downloadedFiles[i], ContentType: 'image/jpeg',
-                    }));
-                }
-            }
-
-            await sendMessage(chatId, `✅ Vercel serverlarida saqlandi!\n\n🏷 Nomi: ${name}\nID: ${productId}\n🟢 Status: Karantin.`);
+            await sendMessage(chatId, `✅ Vercel orqali saqlandi!\n\n🏷 Nomi: ${name}\n💰 Narx: ${price.toLocaleString()} so'm\nID: ${productId}`);
         }
 
         return NextResponse.json({ ok: true });
