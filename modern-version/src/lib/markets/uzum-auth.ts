@@ -1,5 +1,5 @@
 import { chromium } from 'playwright-chromium';
-import { db } from './firebase-admin';
+import { db } from '@/lib/firebase-admin';
 
 const LOGIN_URL = 'https://seller.uzum.uz/seller/signin';
 const TARGET_URL = 'https://seller.uzum.uz/fbs-orders';
