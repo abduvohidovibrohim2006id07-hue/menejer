@@ -20,9 +20,22 @@ export const POST = withGateway(async (req) => {
   const batch = db.batch();
   let count = 0;
 
+  // Dublikatlarni tekshirish uchun barcha mahsulotlarni bir marta olib kelamiz
+  const productsSnapshot = await db.collection('products').get();
+  const allExistingProducts = productsSnapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data() as any
+  }));
+
+  const normalize = (val: any) => (val || '').toString().trim().toLowerCase().replace(/\s+/g, '');
+
   for (const row of data) {
     const id = row['ID']?.toString();
     if (!id) continue;
+
+    const brand = normalize(row['Brend']);
+    const model = normalize(row['Model']);
+    const color = normalize(row['Rang']);
 
     // Media havolalarini qayta ishlash
     const rasmText = row['Rasm havolalari'] || '';
@@ -34,6 +47,20 @@ export const POST = withGateway(async (req) => {
     // Barchasini birlashtirish
     const local_images = [...imagesArray, ...videosArray];
 
+    let rowStatus = row['Status'] || 'active';
+
+    // Dublikatni tekshirish
+    if (brand && model && color) {
+      const isDuplicate = allExistingProducts.some(p => {
+        if (p.id === id) return false;
+        return normalize(p.brand) === brand && normalize(p.model) === model && normalize(p.color) === color;
+      });
+
+      if (isDuplicate) {
+        rowStatus = 'quarantine';
+      }
+    }
+
     const productData: any = {
       name: row['Nomi'] || '',
       name_ru: row['Nomi RU'] || '',
@@ -42,7 +69,7 @@ export const POST = withGateway(async (req) => {
       category: row['Kategoriya'] || '',
       color: row['Rang'] || '',
       price: row['Narx']?.toString() || '0',
-      status: row['Status'] || 'active',
+      status: rowStatus,
       marketplaces: (row['Sotuv bozorlari'] || '').split(',').map((m: string) => m.trim()).filter((m: string) => m !== ''),
       description_short: row['Qisqa Tavsif'] || '',
       description_full: row['To\'liq Tavsif'] || '',
