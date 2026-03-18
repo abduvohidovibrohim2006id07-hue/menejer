@@ -42,6 +42,12 @@ export async function POST(req: Request) {
         }
 
         const text = msg.caption || msg.text || '';
+        
+        if (text === '/start') {
+            await sendMessage(chatId, "Assalomu alaykum! Menga rasm va mahsulot ma'lumotlarini yuboring. Men ularni qabul qilib olaman.");
+            return NextResponse.json({ ok: true });
+        }
+
         const photos = msg.photo ? [msg.photo[msg.photo.length - 1].file_id] : [];
 
         // Hozirgi Serverless (Vercel) cheklovlari doirasida Media Group (bir nechta rasm) 

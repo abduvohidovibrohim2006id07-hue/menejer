@@ -73,6 +73,13 @@ bot.on('message', async (msg) => {
     // Single image case
     if (msg.photo || msg.text) {
         const text = msg.caption || msg.text || '';
+        
+        // /start komandasi tekshiruvi
+        if (text === '/start') {
+            bot.sendMessage(msg.chat.id, "Assalomu alaykum! Menga rasm va mahsulot ma'lumotlarini yuboring. Men ularni qabul qilib olaman.");
+            return;
+        }
+
         const photos = msg.photo ? [msg.photo[msg.photo.length - 1].file_id] : [];
         await processData(msg.chat.id, text, photos);
     }
