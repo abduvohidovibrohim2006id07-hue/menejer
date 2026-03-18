@@ -59,7 +59,7 @@ export const POST = withGateway(async (req) => {
   // This is a complex part. We need to map our product to Uzum structure.
   // For now, let's just try to update stock and price if Uzum productId exists in warehouse_data
   
-  const uzumProductIdKey = `uzum_product_id_${cabinetId}`;
+  const uzumProductIdKey = `marketId_uzum_${cabinetId}`;
   const uzumProductId = productData.warehouse_data?.[uzumProductIdKey];
 
   if (!uzumProductId) {
