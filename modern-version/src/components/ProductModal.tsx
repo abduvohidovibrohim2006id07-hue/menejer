@@ -324,13 +324,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             <div className="col-span-1 md:col-span-3 bg-white p-6 rounded-[24px] border border-slate-200">
               <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Sotuv bozorlari (Marketplaces)</label>
               <div className="flex flex-wrap gap-3">
-                {(markets.length > 0 ? markets : [
-                  { id: 'uzum', name: 'Uzum Market', color: '#7000FF', textColor: 'white', icon: 'U' },
-                  { id: 'yandex', name: 'Yandex', color: '#FFCC00', textColor: 'black', icon: 'Y' },
-                  { id: 'olx', name: 'OLX', color: '#002f34', textColor: '#23e5db', icon: 'OLX' },
-                  { id: 'wildberries', name: 'WB', color: '#cb11ab', textColor: 'white', icon: 'WB' },
-                  { id: 'instagram', name: 'Insta', color: 'gradient', textColor: 'white', icon: '📸' }
-                ]).map((m) => {
+                {markets.map((m) => {
                   const isSelected = formData.marketplaces?.includes(m.id);
                   const isInstagram = m.id === 'instagram';
                   
@@ -365,6 +359,9 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                     </button>
                   );
                 })}
+                {markets.length === 0 && (
+                  <p className="text-xs text-slate-400 italic">Hali hech qanday do'kon sozlanmagan.</p>
+                )}
               </div>
             </div>
           </div>
