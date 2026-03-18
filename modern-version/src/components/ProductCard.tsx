@@ -260,7 +260,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh
           )}
           
           <div 
-            className="relative max-w-5xl w-full h-full flex items-center justify-center"
+            className="relative max-w-screen-2xl w-full h-full flex items-center justify-center p-2 md:p-6"
             onClick={e => e.stopPropagation()}
           >
             {previewUrl.toLowerCase().includes('.mp4') || previewUrl.toLowerCase().includes('.mov') ? (
