@@ -113,12 +113,19 @@ export default function Home() {
     }
 
     if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((p: any) => 
-        p.name?.toLowerCase().includes(q) || 
-        p.id?.toString().toLowerCase().includes(q) ||
-        p.category?.toLowerCase().includes(q)
-      );
+      const q = searchQuery.toLowerCase().trim();
+      result = result.filter((p: any) => {
+        const searchPool = [
+          p.name || '',
+          p.name_ru || '',
+          p.brand || '',
+          p.model || '',
+          p.color || '',
+          p.id?.toString() || ''
+        ].map(val => val.toLowerCase());
+
+        return searchPool.some(val => val.includes(q));
+      });
     }
 
     if (brandFilter) {
