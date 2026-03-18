@@ -39,8 +39,37 @@ export default function Home() {
 
   useEffect(() => {
     setMounted(true);
-    const saved = sessionStorage.getItem('activeTab');
-    if (saved) setActiveTab(saved);
+    
+    // Load persisted states
+    const savedTab = sessionStorage.getItem('activeTab');
+    if (savedTab) setActiveTab(savedTab);
+    
+    const savedCategory = sessionStorage.getItem('filters-category');
+    if (savedCategory) setSelectedCategory(savedCategory);
+    
+    const savedStatus = sessionStorage.getItem('filters-status');
+    if (savedStatus) setStatusFilter(savedStatus);
+    
+    const savedMarket = sessionStorage.getItem('filters-market');
+    if (savedMarket) setMarketFilter(savedMarket);
+    
+    const savedSearch = sessionStorage.getItem('filters-search');
+    if (savedSearch) setSearchQuery(savedSearch);
+    
+    const savedBrand = sessionStorage.getItem('filters-brand');
+    if (savedBrand) setBrandFilter(savedBrand);
+    
+    const savedColor = sessionStorage.getItem('filters-color');
+    if (savedColor) setColorFilter(savedColor);
+    
+    const savedMinPrice = sessionStorage.getItem('filters-minPrice');
+    if (savedMinPrice) setMinPrice(savedMinPrice);
+    
+    const savedMaxPrice = sessionStorage.getItem('filters-maxPrice');
+    if (savedMaxPrice) setMaxPrice(savedMaxPrice);
+    
+    const savedPanelOpen = sessionStorage.getItem('filters-panelOpen');
+    if (savedPanelOpen === 'true') setIsFilterPanelOpen(true);
   }, []);
 
   const toggleSelection = (id: string) => {
@@ -100,6 +129,19 @@ export default function Home() {
   useEffect(() => {
     sessionStorage.setItem('activeTab', activeTab);
   }, [activeTab]);
+
+  useEffect(() => {
+    if (!mounted) return;
+    sessionStorage.setItem('filters-category', selectedCategory);
+    sessionStorage.setItem('filters-status', statusFilter);
+    sessionStorage.setItem('filters-market', marketFilter);
+    sessionStorage.setItem('filters-search', searchQuery);
+    sessionStorage.setItem('filters-brand', brandFilter);
+    sessionStorage.setItem('filters-color', colorFilter);
+    sessionStorage.setItem('filters-minPrice', minPrice);
+    sessionStorage.setItem('filters-maxPrice', maxPrice);
+    sessionStorage.setItem('filters-panelOpen', isFilterPanelOpen.toString());
+  }, [selectedCategory, statusFilter, marketFilter, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, isFilterPanelOpen, mounted]);
 
   useEffect(() => {
     fetchData();
