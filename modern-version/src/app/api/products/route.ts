@@ -24,7 +24,7 @@ export const POST = withGateway(async (req) => {
   
   if (brand && model && color) {
     const productsSnapshot = await db.collection('products').get();
-    const isDuplicate = productsSnapshot.docs.some(doc => {
+    const isDuplicate = productsSnapshot.docs.some((doc: any) => {
       if (doc.id === id.toString()) return false;
       const d = doc.data();
       const dBrand = (d.brand || '').toString().trim().toLowerCase().replace(/\s+/g, '');

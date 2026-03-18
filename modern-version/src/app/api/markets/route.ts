@@ -5,7 +5,7 @@ import { withGateway } from '@/lib/api-gateway';
 // FETCH MARKETS
 export const GET = withGateway(async () => {
   const snapshot = await db.collection('markets').get();
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  return snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
 });
 
 // CREATE/UPDATE MARKET

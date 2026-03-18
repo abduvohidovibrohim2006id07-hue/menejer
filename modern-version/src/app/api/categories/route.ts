@@ -3,7 +3,7 @@ import { withGateway } from '@/lib/api-gateway';
 
 export const GET = withGateway(async () => {
   const snapshot = await db.collection('categories').get();
-  return snapshot.docs.map(doc => ({
+  return snapshot.docs.map((doc: any) => ({
     id: doc.id,
     name: doc.data().name
   })).filter(c => c.name);
