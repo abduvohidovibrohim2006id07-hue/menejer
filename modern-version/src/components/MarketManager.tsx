@@ -69,7 +69,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
   const handleDelete = async (id: string) => {
     if (!confirm("Ushbu do'konni o'chiramizmi? Bunga bog'langan barcha akkauntlar o'chib ketadi!")) return;
     try {
-      await apiClient.delete('/api/markets', { id });
+      await apiClient.delete('/api/markets', id);
       onRefresh();
     } catch (e: any) {
       alert("Xatolik: " + e.message);
