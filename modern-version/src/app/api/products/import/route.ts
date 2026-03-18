@@ -42,6 +42,8 @@ export const POST = withGateway(async (req) => {
       category: row['Kategoriya'] || '',
       color: row['Rang'] || '',
       price: row['Narx']?.toString() || '0',
+      status: row['Status'] || 'active',
+      marketplaces: (row['Sotuv bozorlari'] || '').split(',').map((m: string) => m.trim()).filter((m: string) => m !== ''),
       description_short: row['Qisqa Tavsif'] || '',
       description_full: row['To\'liq Tavsif'] || '',
       description_short_ru: row['Qisqa Tavsif RU'] || '',

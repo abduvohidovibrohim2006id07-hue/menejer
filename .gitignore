@@ -9,3 +9,6 @@ firebase-key.json
 ffmpeg/
 modern-version/.next/
 modern-version/node_modules/
+modern-version/.env*
+.DS_Store
+*.log

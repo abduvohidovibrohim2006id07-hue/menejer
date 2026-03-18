@@ -46,6 +46,8 @@ export const GET = withGateway(async (req) => {
       'Kategoriya': data.category || '',
       'Rang': data.color || '',
       'Narx': data.price || '0',
+      'Status': data.status || 'active',
+      'Sotuv bozorlari': (data.marketplaces || []).join(', '),
       'Rasm havolalari': images,
       'Video havolalari': videos,
       'Qisqa Tavsif': data.description_short || '',
