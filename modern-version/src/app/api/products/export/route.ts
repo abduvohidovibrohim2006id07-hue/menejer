@@ -34,8 +34,12 @@ export const GET = withGateway(async (req) => {
     const allMedia = (data.local_images || []) as string[];
     
     // Ajratish: Rasmlar va Videolar
-    const images = allMedia.filter(url => !url.toLowerCase().endsWith('.mp4')).join('; ');
-    const videos = allMedia.filter(url => url.toLowerCase().endsWith('.mp4')).join('; ');
+    const isVideo = (url: string) => {
+      const u = url.toLowerCase();
+      return u.includes('.mp4') || u.includes('.mov');
+    };
+    const images = allMedia.filter(url => !isVideo(url)).join('; ');
+    const videos = allMedia.filter(url => isVideo(url)).join('; ');
 
     return {
       'ID': doc.id,
