@@ -50,6 +50,12 @@ export async function POST(req: Request) {
 
         const photos = msg.photo ? [msg.photo[msg.photo.length - 1].file_id] : [];
 
+        // Oddiy 'salom' kabi yozuvlarga javob qaytarish, ularni maxsulot sifatida saqlamaslik
+        if (photos.length === 0 && text.trim().length <= 15) {
+            await sendMessage(chatId, "Iltimos rasm va batafsilroq mahsulot ma'lumotlarini (narx, brend, nomi) yuboring.");
+            return NextResponse.json({ ok: true });
+        }
+
         // Hozirgi Serverless (Vercel) cheklovlari doirasida Media Group (bir nechta rasm) 
         // bilan ishlash qiyinroq, chunki har bir rasm alohida xabar bo'lib keladi.
         // Hozir har bir xabarni alohida bitta rasmli / matnli sifatida qabul qilamiz.
