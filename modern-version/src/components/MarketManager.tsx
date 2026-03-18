@@ -6,7 +6,6 @@ import { apiClient } from '@/lib/api-client';
 interface Warehouse {
   id: string;
   name: string;
-  stock: number;
 }
 
 interface Cabinet {
@@ -145,7 +144,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
   const addWarehouse = (accIndex: number, cabIndex: number) => {
     setFormData(prev => {
       const accs = [...prev.accounts];
-      accs[accIndex].cabinets[cabIndex].warehouses.push({ id: Date.now().toString(), name: '', stock: 0 });
+      accs[accIndex].cabinets[cabIndex].warehouses.push({ id: Date.now().toString(), name: '' });
       return { ...prev, accounts: accs };
     });
   };
@@ -375,18 +374,12 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                                  className="flex-[2] w-full bg-white border border-slate-200 rounded-lg p-2 text-[11px] font-bold text-slate-800 placeholder-slate-400"
                                  value={wh.name} onChange={(e) => updateWarehouse(aIdx, cIdx, wIdx, 'name', e.target.value)}
                                />
-                               <div className="flex items-center gap-2 w-full sm:w-auto">
-                                 <span className="text-[10px] font-black text-slate-400 ml-1">QOLDIQ:</span>
-                                 <input 
-                                   type="number" placeholder="0" 
-                                   className="w-20 bg-amber-50 border border-amber-200 text-amber-800 text-center rounded-lg p-2 text-[11px] font-black placeholder-amber-400/70"
-                                   value={wh.stock} onChange={(e) => updateWarehouse(aIdx, cIdx, wIdx, 'stock', parseFloat(e.target.value) || 0)}
-                                 />
+                               <div className="flex items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0">
                                  <button 
                                    onClick={() => deleteWarehouse(aIdx, cIdx, wIdx)} 
-                                   className="p-2 text-red-400 hover:bg-red-50 rounded-lg transition-colors"
-                                 >🗑</button>
-                               </div>
+                                   className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors font-black mr-2 text-sm"
+                                 >O'chirish</button>
+                               </div> 
                              </div>
                            ))}
                          </div>

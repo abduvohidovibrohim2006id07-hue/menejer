@@ -26,6 +26,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     description_full_ru: '',
     status: 'active',
     marketplaces: [],
+    warehouse_data: {},
   });
 
   const [loading, setLoading] = useState(false);
@@ -48,6 +49,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         description_full_ru: product.description_full_ru || '',
         status: product.status || 'active',
         marketplaces: product.marketplaces || [],
+        warehouse_data: product.warehouse_data || {},
       });
     } else {
       setFormData({
@@ -65,6 +67,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         description_full_ru: '',
         status: 'active',
         marketplaces: [],
+        warehouse_data: {},
       });
     }
   }, [product, isOpen]);
@@ -341,9 +344,15 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                       }}
                       className={`px-5 py-3 rounded-2xl font-black text-xs transition-all flex items-center gap-3 border-2 ${
                         isSelected 
-                          ? 'border-indigo-600 shadow-lg shadow-indigo-100 scale-[1.05] z-10' 
+                          ? 'border-indigo-600 shadow-lg scale-[1.05] z-10' 
                           : 'border-transparent bg-slate-50 text-slate-500 hover:bg-white hover:border-slate-200'
                       }`}
+                      style={isSelected ? {
+                        borderColor: m.color,
+                        boxShadow: `0 10px 15px -3px ${m.color}40`,
+                        backgroundColor: `${m.color}15`,
+                        color: m.color
+                      } : {}}
                     >
                       <div 
                         className="w-6 h-6 rounded-lg flex items-center justify-center text-[10px] shadow-sm"
@@ -363,6 +372,58 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                   <p className="text-xs text-slate-400 italic">Hali hech qanday do'kon sozlanmagan.</p>
                 )}
               </div>
+
+              {/* DYNAMIC WAREHOUSE SETTINGS PER SELECTED MARKET */}
+              {formData.marketplaces?.length > 0 && markets.filter((m: any) => formData.marketplaces.includes(m.id)).some((m: any) => m.accounts?.length > 0) && (
+                 <div className="mt-6 space-y-4">
+                   {markets.filter((m: any) => formData.marketplaces.includes(m.id)).map((m: any) => {
+                      if (!m.accounts?.length) return null;
+                      const whs: any[] = [];
+                      m.accounts.forEach((acc: any) => acc.cabinets?.forEach((cab: any) => cab.warehouses?.forEach((wh: any) => whs.push({ acc, cab, wh }))));
+                      if (whs.length === 0) return null;
+                      
+                      return (
+                        <div key={m.id} className="p-4 border rounded-[20px] transition-all" style={{ borderColor: `${m.color}40`, backgroundColor: `${m.color}08` }}>
+                          <h6 className="text-[10px] font-black uppercase mb-3 flex items-center gap-2" style={{ color: m.color }}>
+                            {m.icon} {m.name} do'kon omborlari va SKU'lar
+                          </h6>
+                          <div className="space-y-3">
+                            {whs.map((w, i) => {
+                               const skuKey = `sku_${m.id}_${w.wh.id}`;
+                               const stockKey = `stock_${m.id}_${w.wh.id}`;
+                               return (
+                                 <div key={i} className="flex flex-col sm:flex-row gap-3 bg-white/70 p-3 rounded-xl border border-white shadow-sm hover:shadow-md transition-shadow">
+                                   <div className="flex-1 flex flex-col justify-center">
+                                     <p className="text-[10px] text-slate-400 font-bold mb-0.5 tracking-widest uppercase">Ombor ({w.cab.name})</p>
+                                     <p className="text-xs font-black text-slate-700">{w.wh.name}</p>
+                                   </div>
+                                   <input 
+                                     type="text" 
+                                     placeholder="Tovar kodi (SKU/Barcode)" 
+                                     className="border border-slate-200 p-2.5 rounded-xl text-xs font-bold text-slate-800 placeholder-slate-400 flex-1 focus:ring-2 outline-none" 
+
+                                     value={formData.warehouse_data?.[skuKey] || ''} 
+                                     onChange={e => setFormData((p: any) => ({...p, warehouse_data: {...p.warehouse_data, [skuKey]: e.target.value}}))} 
+                                   />
+                                   <div className="flex items-center gap-2 bg-amber-50 rounded-xl pr-2 border border-amber-100">
+                                     <span className="text-[9px] font-black text-amber-600 ml-3 tracking-widest uppercase">Qoldiq:</span>
+                                     <input 
+                                       type="number" 
+                                       placeholder="0" 
+                                       className="w-20 bg-transparent border-0 p-2.5 text-xs font-black text-amber-900 text-center outline-none" 
+                                       value={formData.warehouse_data?.[stockKey] || ''} 
+                                       onChange={e => setFormData((p: any) => ({...p, warehouse_data: {...p.warehouse_data, [stockKey]: parseInt(e.target.value) || 0}}))} 
+                                     />
+                                   </div>
+                                 </div>
+                               )
+                            })}
+                          </div>
+                        </div>
+                      )
+                   })}
+                 </div>
+              )}
             </div>
           </div>
 
