@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import { createPortal } from 'react-dom';
 import { MediaUpload } from './MediaUpload';
 
 interface Product {
@@ -226,7 +227,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh
       </div>
 
       {/* Media Preview Modal (Lightbox) */}
-      {previewUrl && (
+      {previewUrl && typeof document !== 'undefined' && createPortal(
         <div 
           className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex items-center justify-center p-4 md:p-10 animate-in fade-in duration-300"
           onClick={() => setPreviewUrl(null)}
@@ -284,7 +285,8 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh
               {currentIndex + 1} / {product.local_images?.length}
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
       {/* Left: Gallery Section */}
