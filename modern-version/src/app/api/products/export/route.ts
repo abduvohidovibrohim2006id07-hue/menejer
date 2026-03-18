@@ -2,35 +2,22 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import * as XLSX from 'xlsx';
 import { withGateway } from '@/lib/api-gateway';
+import { getProducts } from '@/lib/data-service';
 
 export const GET = withGateway(async (req) => {
   const { searchParams } = new URL(req.url);
   const idsParam = searchParams.get('ids');
   
-  let query: any = db.collection('products');
+  let allProducts = await getProducts();
   
   if (idsParam) {
     const idList = idsParam.split(',').filter(id => id.trim() !== '');
     if (idList.length > 0) {
-      // Note: Firestore 'in' query limit is 30. If more, we handle manually.
-      if (idList.length <= 30) {
-        query = query.where('__name__', 'in', idList);
-      }
+      allProducts = allProducts.filter((p: any) => idList.includes(p.id));
     }
   }
 
-  const snapshot = await query.get();
-  
-  let docs = snapshot.docs;
-  if (idsParam) {
-    const idList = idsParam.split(',').filter(id => id.trim() !== '');
-    if (idList.length > 30) {
-      docs = docs.filter((doc: any) => idList.includes(doc.id));
-    }
-  }
-
-  const products = docs.map((doc: any) => {
-    const data = doc.data();
+  const products = allProducts.map((data: any) => {
     const allMedia = (data.local_images || []) as string[];
     
     // Ajratish: Rasmlar va Videolar
@@ -38,11 +25,11 @@ export const GET = withGateway(async (req) => {
       const u = url.toLowerCase();
       return u.includes('.mp4') || u.includes('.mov');
     };
-    const images = allMedia.filter(url => !isVideo(url)).join('; ');
-    const videos = allMedia.filter(url => isVideo(url)).join('; ');
+    const images = allMedia.filter((url: string) => !isVideo(url)).join('; ');
+    const videos = allMedia.filter((url: string) => isVideo(url)).join('; ');
 
     return {
-      'ID': doc.id,
+      'ID': data.id,
       'Nomi': data.name || '',
       'Nomi RU': data.name_ru || '',
       'Model': data.model || '',
