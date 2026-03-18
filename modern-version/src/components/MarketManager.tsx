@@ -218,7 +218,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                      type="text" 
                      disabled={isEditing}
                      placeholder="uzum" 
-                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white font-bold transition-all disabled:opacity-50"
+                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white font-bold text-slate-800 placeholder-slate-400 transition-all disabled:opacity-50"
                      value={formData.id}
                      onChange={(e) => setFormData({...formData, id: e.target.value.toLowerCase()})}
                    />
@@ -228,7 +228,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                    <input 
                      type="text" 
                      placeholder="Uzum Market" 
-                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white font-bold transition-all"
+                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white font-bold text-slate-800 placeholder-slate-400 transition-all"
                      value={formData.name}
                      onChange={(e) => setFormData({...formData, name: e.target.value})}
                    />
@@ -238,7 +238,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                    <input 
                      type="text" 
                      placeholder="🛍" 
-                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white font-bold transition-all text-xl"
+                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white font-bold text-xl text-slate-800 placeholder-slate-400 transition-all"
                      value={formData.icon}
                      onChange={(e) => setFormData({...formData, icon: e.target.value})}
                    />
@@ -289,7 +289,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                 <input 
                   type="text" 
                   placeholder="shop@misol.uz" 
-                  className="w-full md:w-1/2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 font-bold outline-none"
+                  className="w-full md:w-1/2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 font-bold text-slate-800 placeholder-slate-400 outline-none"
                   value={acc.email}
                   onChange={(e) => updateAccount(aIdx, 'email', e.target.value)}
                 />
@@ -324,7 +324,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                            <label className="block text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 mb-1">Kabinet ID</label>
                            <input 
                              type="text" placeholder="cabinet_uzum_1" 
-                             className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                             className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 placeholder-slate-400"
                              value={cab.id} onChange={(e) => updateCabinet(aIdx, cIdx, 'id', e.target.value)}
                            />
                          </div>
@@ -332,7 +332,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                            <label className="block text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 mb-1">Kabinet Nomi</label>
                            <input 
                              type="text" placeholder="Asosiy Kabinet" 
-                             className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold"
+                             className="w-full p-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 placeholder-slate-400"
                              value={cab.name} onChange={(e) => updateCabinet(aIdx, cIdx, 'name', e.target.value)}
                            />
                          </div>
@@ -340,7 +340,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                            <label className="block text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 mb-1">Api Key (Maxfiy)*</label>
                            <input 
                              type="password" placeholder="••••••••••••••••" 
-                             className="w-full p-2.5 text-xs bg-indigo-50 border border-indigo-100 text-indigo-800 rounded-xl font-mono tracking-widest"
+                             className="w-full p-2.5 text-xs bg-indigo-50 border border-indigo-100 text-indigo-800 rounded-xl font-mono tracking-widest placeholder-indigo-300"
                              value={cab.api_key} onChange={(e) => updateCabinet(aIdx, cIdx, 'api_key', e.target.value)}
                            />
                          </div>
@@ -367,19 +367,19 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                              <div key={wh.id || wIdx} className="flex flex-col sm:flex-row gap-2 items-center bg-slate-50 p-2 rounded-xl border border-slate-100">
                                <input 
                                  type="text" placeholder="Ombor ID (masalan: 1243)" 
-                                 className="flex-1 w-full bg-white border border-slate-200 rounded-lg p-2 text-[11px] font-bold"
+                                 className="flex-1 w-full bg-white border border-slate-200 rounded-lg p-2 text-[11px] font-bold text-slate-800 placeholder-slate-400"
                                  value={wh.id} onChange={(e) => updateWarehouse(aIdx, cIdx, wIdx, 'id', e.target.value)}
                                />
                                <input 
                                  type="text" placeholder="Nomi (masalan: MChJ ombor)" 
-                                 className="flex-[2] w-full bg-white border border-slate-200 rounded-lg p-2 text-[11px] font-bold"
+                                 className="flex-[2] w-full bg-white border border-slate-200 rounded-lg p-2 text-[11px] font-bold text-slate-800 placeholder-slate-400"
                                  value={wh.name} onChange={(e) => updateWarehouse(aIdx, cIdx, wIdx, 'name', e.target.value)}
                                />
                                <div className="flex items-center gap-2 w-full sm:w-auto">
                                  <span className="text-[10px] font-black text-slate-400 ml-1">QOLDIQ:</span>
                                  <input 
                                    type="number" placeholder="0" 
-                                   className="w-20 bg-amber-50 border border-amber-200 text-amber-800 text-center rounded-lg p-2 text-[11px] font-black"
+                                   className="w-20 bg-amber-50 border border-amber-200 text-amber-800 text-center rounded-lg p-2 text-[11px] font-black placeholder-amber-400/70"
                                    value={wh.stock} onChange={(e) => updateWarehouse(aIdx, cIdx, wIdx, 'stock', parseFloat(e.target.value) || 0)}
                                  />
                                  <button 
