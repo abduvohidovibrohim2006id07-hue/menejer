@@ -50,10 +50,7 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
     });
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const uploadFile = async (file: File) => {
     setUploading(true);
     try {
       const processedFile = await processImage(file);
@@ -74,9 +71,34 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
       onSuccess();
     } catch (error) {
       console.error("Upload failed", error);
+      alert("Yuklashda xatolik yuz berdi");
     } finally {
       setUploading(false);
     }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) await uploadFile(file);
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    let foundImage = false;
+
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          foundImage = true;
+          // Clipboard files usually don't have a useful name, let's give it one
+          const customFile = new File([file], `pasted-image-${Date.now()}.jpg`, { type: file.type });
+          await uploadFile(customFile);
+        }
+      }
+    }
+    
+    // If it's a URL (text), let the default behavior happen (it will fill the input)
   };
 
   const handleUrlSubmit = async (e: React.FormEvent) => {
@@ -181,6 +203,7 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
               className="w-full h-full bg-transparent text-[11px] font-bold text-slate-900 outline-none px-2 placeholder:text-slate-300"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
+              onPaste={handlePaste}
             />
             <button 
               type="submit"
