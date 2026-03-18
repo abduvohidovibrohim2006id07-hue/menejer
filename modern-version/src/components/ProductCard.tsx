@@ -20,6 +20,7 @@ interface Product {
 
 interface ProductCardProps {
   product: Product;
+  markets?: any[];
   onEdit: (p: Product) => void;
   onDelete: (id: string) => void;
   onRefresh: () => void;
@@ -27,7 +28,7 @@ interface ProductCardProps {
   onSelectToggle: (id: string) => void;
 }
 
-export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, onSelectToggle }: ProductCardProps) => {
+export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh, selected, onSelectToggle }: ProductCardProps) => {
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [confirmDeleteImg, setConfirmDeleteImg] = React.useState<string | null>(null);
   const [imageValidations, setImageValidations] = React.useState<Record<string, { w: number, h: number, isValid: boolean }>>({});
@@ -447,15 +448,32 @@ export const ProductCard = ({ product, onEdit, onDelete, onRefresh, selected, on
           <div className="flex flex-wrap gap-3 mb-6">
             <span className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] w-full mb-1">Sotuvda:</span>
             {product.marketplaces && product.marketplaces.length > 0 ? (
-              product.marketplaces.map((m: string) => (
-                <div key={m} className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
-                   {m === 'uzum' && <><div className="w-4 h-4 bg-[#7000FF] rounded flex items-center justify-center text-[8px] text-white font-bold">U</div> <span className="text-[10px] font-black text-slate-600">Uzum</span></>}
-                   {m === 'yandex' && <><div className="w-4 h-4 bg-[#FFCC00] rounded flex items-center justify-center text-[8px] text-black font-bold">Y</div> <span className="text-[10px] font-black text-slate-600">Yandex</span></>}
-                   {m === 'olx' && <><div className="w-4 h-4 bg-[#002f34] rounded flex items-center justify-center text-[6px] text-white font-bold">olx</div> <span className="text-[10px] font-black text-slate-600">OLX</span></>}
-                   {m === 'wildberries' && <><div className="w-4 h-4 bg-[#cb11ab] rounded flex items-center justify-center text-[6px] text-white font-bold">wb</div> <span className="text-[10px] font-black text-slate-600">WB</span></>}
-                   {m === 'instagram' && <><div className="w-4 h-4 bg-gradient-to-tr from-[#f9ce34] via-[#ee2a7b] to-[#6228d7] rounded flex items-center justify-center text-[8px] text-white font-bold">📸</div> <span className="text-[10px] font-black text-slate-600">Insta</span></>}
-                </div>
-              ))
+              product.marketplaces.map((mid: string) => {
+                const config = (markets || []).find(m => m.id === mid);
+                const isInstagram = mid === 'instagram';
+                
+                return (
+                  <div key={mid} className="flex items-center gap-2 px-3 py-2 bg-slate-50 border border-slate-100 rounded-xl shadow-sm">
+                    {config ? (
+                      <>
+                        <div 
+                          className="w-4 h-4 rounded flex items-center justify-center text-[8px] font-bold shadow-sm"
+                          style={{ 
+                            backgroundColor: config.color !== 'gradient' ? config.color : undefined,
+                            background: isInstagram || config.color === 'gradient' ? 'linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7)' : undefined,
+                            color: config.textColor || 'white'
+                          }}
+                        >
+                          {config.icon || config.short || config.name.charAt(0)}
+                        </div>
+                        <span className="text-[10px] font-black text-slate-600">{config.name}</span>
+                      </>
+                    ) : (
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">{mid}</span>
+                    )}
+                  </div>
+                );
+              })
             ) : (
               <span className="text-[10px] font-bold text-slate-300 italic">Hech qayerda sotuvda emas</span>
             )}

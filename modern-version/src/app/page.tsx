@@ -334,6 +334,7 @@ export default function Home() {
                     <ProductCard 
                       key={product.id} 
                       product={product} 
+                      markets={markets}
                       selected={selectedIds.has(product.id)}
                       onSelectToggle={toggleSelection}
                       onEdit={(p: any) => {

@@ -95,29 +95,36 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {markets.map((m) => (
-          <div key={m.id} className="p-6 bg-white border border-slate-100 rounded-[28px] hover:border-indigo-200 hover:shadow-xl transition-all duration-300 group">
-            <div className="flex items-center gap-4 mb-4">
-              <div 
-                className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl text-white shadow-lg"
-                style={{ backgroundColor: m.color }}
-              >
-                {m.icon || m.name.charAt(0)}
+      {markets.length === 0 ? (
+        <div className="py-20 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
+           <p className="text-xl text-slate-300 font-black italic">Hozircha hech qanday do'kon qo'shilmagan</p>
+           <p className="text-sm text-slate-400 font-medium mt-2">Yuqoridagi formadan foydalanib yangi do'kon qo'shishingiz mumkin</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {markets.map((m) => (
+            <div key={m.id} className="p-6 bg-white border border-slate-100 rounded-[28px] hover:border-indigo-200 hover:shadow-xl transition-all duration-300 group">
+              <div className="flex items-center gap-4 mb-4">
+                <div 
+                  className="w-12 h-12 rounded-2xl flex items-center justify-center font-black text-xl text-white shadow-lg"
+                  style={{ backgroundColor: m.color }}
+                >
+                  {m.icon || m.name.charAt(0)}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-black text-slate-800 truncate">{m.name}</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{m.id}</p>
+                </div>
               </div>
-              <div className="flex-1 min-w-0">
-                <h4 className="font-black text-slate-800 truncate">{m.name}</h4>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{m.id}</p>
+              
+              <div className="flex gap-2 pt-4 border-t border-slate-50">
+                <button onClick={() => handleEdit(m)} className="flex-1 py-2.5 bg-slate-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 transition-colors text-xs">✏️ Tahrirlash</button>
+                <button onClick={() => handleDelete(m.id)} className="flex-1 py-2.5 bg-slate-50 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-colors text-xs">🗑️ O'chirish</button>
               </div>
             </div>
-            
-            <div className="flex gap-2 pt-4 border-t border-slate-50">
-              <button onClick={() => handleEdit(m)} className="flex-1 py-2.5 bg-slate-50 text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 transition-colors text-xs">✏️ Tahrirlash</button>
-              <button onClick={() => handleDelete(m.id)} className="flex-1 py-2.5 bg-slate-50 text-red-600 font-bold rounded-xl hover:bg-red-50 transition-colors text-xs">🗑️ O'chirish</button>
-            </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
