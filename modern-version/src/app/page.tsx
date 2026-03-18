@@ -83,6 +83,14 @@ export default function Home() {
 
   const clearSelection = () => setSelectedIds(new Set());
 
+  const handleSelectAll = () => {
+    if (selectedIds.size === filteredProducts.length && filteredProducts.length > 0) {
+      clearSelection();
+    } else {
+      setSelectedIds(new Set(filteredProducts.map(p => p.id)));
+    }
+  };
+
   const handleBulkDelete = async () => {
     if (!confirm(`${selectedIds.size} ta mahsulot o'chirilsinmi?`)) return;
     setRefreshing(true);
@@ -236,7 +244,14 @@ export default function Home() {
                 </p>
               </div>
               
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
+                <button 
+                  onClick={handleSelectAll}
+                  className={`px-6 py-4 rounded-2xl border font-bold transition-all flex items-center gap-2 ${selectedIds.size > 0 && selectedIds.size === filteredProducts.length ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-400'}`}
+                >
+                  <span className="text-lg">{selectedIds.size === filteredProducts.length && filteredProducts.length > 0 ? '☑' : '☐'}</span>
+                  {selectedIds.size === filteredProducts.length && filteredProducts.length > 0 ? "Tanlovni yopish" : "Hammasini tanlash"}
+                </button>
                 <button 
                   onClick={() => setIsFilterPanelOpen(!isFilterPanelOpen)}
                   className={`px-6 py-4 rounded-2xl border font-bold transition-all flex items-center gap-2 ${isFilterPanelOpen ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-white border-slate-200 text-slate-600 hover:border-indigo-400'}`}
