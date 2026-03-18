@@ -94,7 +94,9 @@ QOIDALAR:
 1. "price" va "old_price" qismi FAQAT va FAQAT raqam ko'rinishida bo'lsin.
 2. Agar "850min", "850 ming" bo'lsa -> 850000 raqamiga aylantirib yozing! M: 850min = 850000.
 3. Agar "85$", "$85" bo'lsa dollarni 12500 so'm kursiga ko'paytirib, Sum qilib yozing! M: 85*12500 = 1062500.
-4. Agar umuman narx ko'rsatilmagan bo'lsa 0 qaytaring.`;
+4. Agar umuman narx ko'rsatilmagan bo'lsa 0 qaytaring.
+5. "name" (Nomi) qat'iy ravishda O'ZBEK tilida olingan (Lotin alifbosida) bo'lishi shart, Rus tilida emas!
+6. "brand" va "model" qiymatlari BARCHA HARFLARI KATTA bilan (UPPERCASE) yozilishi shart (masalan: MAC STYLER).`;
 
                 const aiResponse = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
@@ -112,8 +114,8 @@ QOIDALAR:
                 try {
                     const parsed = JSON.parse(resultText);
                     name = parsed.name || text.substring(0, 30);
-                    brand = parsed.brand || "";
-                    model = parsed.model || "";
+                    brand = (parsed.brand || "").toUpperCase();
+                    model = (parsed.model || "").toUpperCase();
                     // Toza raqam olamiz (faqat \d)
                     price = parseInt((parsed.price || "0").toString().replace(/\D/g, '')) || 0;
                     old_price = parseInt((parsed.old_price || "0").toString().replace(/\D/g, '')) || 0;
@@ -122,8 +124,8 @@ QOIDALAR:
 
             // Bazaga Saqlaymiz yoki Qo'shib qoyamiz (merge: true)
             await db.collection('products').doc(productId).set({
-               name_uz: name, name_ru: name,
-               brand: brand.toLowerCase(), model: model.toLowerCase(),
+               name: name, name_ru: name,
+               brand: brand, model: model,
                price: price, old_price: old_price,
                description_uz: text, description_ru: text,
                status: 'quarantine',
