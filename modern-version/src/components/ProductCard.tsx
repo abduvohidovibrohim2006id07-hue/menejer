@@ -33,6 +33,8 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh
   const [confirmDeleteImg, setConfirmDeleteImg] = React.useState<string | null>(null);
   const [imageValidations, setImageValidations] = React.useState<Record<string, { w: number, h: number, isValid: boolean }>>({});
   const [fixing, setFixing] = React.useState<string | null>(null);
+  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [deletingImg, setDeletingImg] = React.useState<string | null>(null);
 
   const processImage = (file: File): Promise<File> => {
     return new Promise((resolve) => {
@@ -128,17 +130,24 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh
   };
 
   const handleDeleteImg = async (filename: string) => {
-    try {
-      await fetch('/api/products/delete-image', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: product.id, filename })
-      });
-      setConfirmDeleteImg(null);
-      onRefresh(); 
-    } catch (e) {
-      console.error(e);
-    }
+    setDeletingImg(filename);
+    setConfirmDeleteImg(null);
+    
+    // Smooth delay for animation
+    setTimeout(async () => {
+      try {
+        await fetch('/api/products/delete-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: product.id, filename })
+        });
+        onRefresh(); 
+      } catch (e) {
+        console.error(e);
+      } finally {
+        setDeletingImg(null);
+      }
+    }, 400);
   };
 
   const [confirmDeleteProduct, setConfirmDeleteProduct] = React.useState(false);
@@ -170,7 +179,15 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh
   }, [previewUrl, currentIndex]);
 
   return (
-    <div className={`bg-white rounded-3xl p-6 border transition-all flex flex-col md:flex-row gap-8 items-stretch group/card relative ${selected ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg bg-indigo-50/10' : 'border-slate-200 shadow-sm hover:shadow-xl'}`}>
+    <div className={`bg-white rounded-3xl p-6 border transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex flex-col md:flex-row gap-8 items-stretch group/card relative ${selected ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg bg-indigo-50/10' : 'border-slate-200 shadow-sm hover:shadow-xl'} ${isDeleting ? 'scale-0 rotate-[10deg] opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}>
+      {/* DELETING INDICATOR LOG */}
+      {isDeleting && (
+        <div className="absolute top-4 left-4 z-[60] bg-red-600 text-white px-4 py-2 rounded-full font-black text-[10px] animate-pulse shadow-lg flex items-center gap-2">
+           <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
+           O'CHIRILMOQDA...
+        </div>
+      )}
+
       {/* PRODUCT DELETE OVERLAY */}
       {confirmDeleteProduct && (
         <div className="absolute inset-0 z-[45] bg-red-600/95 backdrop-blur-xl rounded-3xl flex flex-col items-center justify-center p-10 text-center animate-in fade-in zoom-in-95 duration-200">
@@ -180,8 +197,9 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh
           <div className="flex gap-4 w-full max-w-sm">
             <button 
               onClick={() => {
-                onDelete(product.id);
+                setIsDeleting(true);
                 setConfirmDeleteProduct(false);
+                setTimeout(() => onDelete(product.id), 500);
               }}
               className="flex-1 py-4 bg-white text-red-600 font-black rounded-2xl hover:bg-slate-100 active:scale-95 transition-all shadow-xl"
             >
@@ -286,12 +304,20 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh
             product.local_images.map((img, idx) => {
               const filename = img.split('/').pop()?.split('?')[0] || '';
               const isVideo = img.toLowerCase().includes('.mp4') || img.toLowerCase().includes('.mov');
+              const isDeletingThis = deletingImg === filename;
               return (
                 <div 
                   key={idx} 
-                  className="flex-none w-full aspect-[3/4] md:w-[300px] md:h-[400px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 snap-start relative group/item shadow-sm cursor-zoom-in"
-                  onClick={() => !confirmDeleteImg && setPreviewUrl(img)}
+                  className={`flex-none w-full aspect-[3/4] md:w-[300px] md:h-[400px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 snap-start relative group/item shadow-sm cursor-zoom-in transition-all duration-500 ease-in-out ${isDeletingThis ? 'scale-50 opacity-0 rotate-12 blur-lg pointer-events-none' : 'scale-100 opacity-100'}`}
+                  onClick={() => !confirmDeleteImg && !isDeletingThis && setPreviewUrl(img)}
                 >
+                  {isDeletingThis && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
+                      <div className="bg-red-600 text-white px-3 py-1 rounded-full font-black text-[9px] animate-bounce shadow-xl uppercase tracking-tighter">
+                        O'chirilmoqda...
+                      </div>
+                    </div>
+                  )}
                   {isVideo ? (
                     <video 
                       src={img} 
