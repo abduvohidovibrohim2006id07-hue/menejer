@@ -47,6 +47,13 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
   const [formData, setFormData] = useState<Market>(defaultForm);
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openNewModal = () => {
+    setFormData(defaultForm);
+    setIsEditing(false);
+    setIsModalOpen(true);
+  };
 
   const handleSave = async () => {
     if (!formData.id || !formData.name) {
@@ -58,6 +65,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
       await apiClient.post('/api/markets', formData);
       setFormData(defaultForm);
       setIsEditing(false);
+      setIsModalOpen(false);
       onRefresh();
     } catch (e: any) {
       alert("Xatolik: " + e.message);
@@ -82,6 +90,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
     if (!cloned.accounts) cloned.accounts = [];
     setFormData(cloned);
     setIsEditing(true);
+    setIsModalOpen(true);
   };
 
   // Nested Add/Remove functions
@@ -165,71 +174,88 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
 
   return (
     <div className="space-y-8">
-      {/* ADD/EDIT FORM */}
-      <div className="bg-white p-6 md:p-8 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/20">
-        <div className="flex justify-between items-center mb-6">
-           <div>
-             <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">
-               {isEditing ? "Do'konni Tahrirlash" : "Yangi Do'kon Yaratish"}
-             </h3>
-             <p className="text-slate-500 font-medium">Professional integratsiyalar bilan to'liq boshqaruv</p>
-           </div>
-           {isEditing && (
-             <button 
-               onClick={() => { setFormData(defaultForm); setIsEditing(false); }}
-               className="text-xs bg-slate-100 px-4 py-2 hover:bg-slate-200 rounded-xl font-bold flex items-center transition-colors"
-             >
-               Yangi qo'shish rejimiga qaytish
-             </button>
-           )}
+      {/* HEADER WITH ADD BUTTON */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm">
+        <div>
+          <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Do'konlar (Markets)</h3>
+          <p className="text-sm text-slate-500 font-medium mt-1">Barcha sotuv platformalarini boshqaring ({markets.length} ta)</p>
         </div>
-        
-        {/* Market Base Fields */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-5 bg-slate-50 rounded-[24px] border border-slate-200 mb-6">
-          <div>
-             <label className="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-2 tracking-widest">ID (masalan: uzum)</label>
-             <input 
-               type="text" 
-               disabled={isEditing}
-               placeholder="uzum" 
-               className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 font-bold transition-all disabled:opacity-50"
-               value={formData.id}
-               onChange={(e) => setFormData({...formData, id: e.target.value.toLowerCase()})}
-             />
-          </div>
-          <div>
-             <label className="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-2 tracking-widest">Nomi</label>
-             <input 
-               type="text" 
-               placeholder="Uzum Market" 
-               className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 font-bold transition-all"
-               value={formData.name}
-               onChange={(e) => setFormData({...formData, name: e.target.value})}
-             />
-          </div>
-          <div>
-             <label className="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-2 tracking-widest">Ikonka</label>
-             <input 
-               type="text" 
-               placeholder="🛍" 
-               className="w-full p-4 bg-white border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 font-bold transition-all text-xl"
-               value={formData.icon}
-               onChange={(e) => setFormData({...formData, icon: e.target.value})}
-             />
-          </div>
-          <div>
-             <label className="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-2 tracking-widest">Rang</label>
-             <div className="flex bg-white p-2 border border-slate-200 rounded-2xl h-[58px] shadow-sm items-center gap-2">
-               <input 
-                 type="color" 
-                 className="w-12 h-10 border-0 rounded-xl cursor-pointer"
-                 value={formData.color}
-                 onChange={(e) => setFormData({...formData, color: e.target.value})}
-               />
-               <span className="font-bold text-xs text-slate-500 uppercase flex-1 text-center">{formData.color}</span>
-             </div>
-          </div>
-        </div>
+        <button 
+          onClick={openNewModal}
+          className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 active:scale-95 transition-all flex items-center gap-2"
+        >
+          <span className="text-lg leading-none">+</span> Yangi do'kon qo'shish
+        </button>
+      </div>
+
+      {/* MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+          <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[32px] overflow-hidden shadow-2xl flex flex-col animate-in fade-in zoom-in-95 duration-300">
+            {/* MODAL HEADER */}
+            <div className="p-6 md:p-8 border-b border-indigo-500 flex justify-between items-center bg-indigo-600 text-white relative">
+               <div>
+                 <h3 className="text-xl md:text-3xl font-black tracking-tight">
+                   {isEditing ? "Do'konni Tahrirlash" : "Yangi Do'kon Yaratish"}
+                 </h3>
+                 <p className="text-indigo-100 font-medium mt-1">Professional integratsiyalar bilan to'liq boshqaruv</p>
+               </div>
+               <button 
+                 onClick={() => setIsModalOpen(false)} 
+                 className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/20 transition-colors text-3xl font-light"
+               >
+                 &times;
+               </button>
+            </div>
+
+            {/* MODAL BODY */}
+            <div className="flex-1 overflow-y-auto p-6 md:p-8 bg-slate-50/50 space-y-8">
+              {/* Market Base Fields */}
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-5 bg-white shadow-sm rounded-[24px] border border-slate-200">
+                <div>
+                   <label className="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-2 tracking-widest">ID (masalan: uzum)</label>
+                   <input 
+                     type="text" 
+                     disabled={isEditing}
+                     placeholder="uzum" 
+                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white font-bold transition-all disabled:opacity-50"
+                     value={formData.id}
+                     onChange={(e) => setFormData({...formData, id: e.target.value.toLowerCase()})}
+                   />
+                </div>
+                <div>
+                   <label className="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-2 tracking-widest">Nomi</label>
+                   <input 
+                     type="text" 
+                     placeholder="Uzum Market" 
+                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white font-bold transition-all"
+                     value={formData.name}
+                     onChange={(e) => setFormData({...formData, name: e.target.value})}
+                   />
+                </div>
+                <div>
+                   <label className="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-2 tracking-widest">Ikonka</label>
+                   <input 
+                     type="text" 
+                     placeholder="🛍" 
+                     className="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl focus:ring-4 focus:ring-indigo-500/10 focus:bg-white font-bold transition-all text-xl"
+                     value={formData.icon}
+                     onChange={(e) => setFormData({...formData, icon: e.target.value})}
+                   />
+                </div>
+                <div>
+                   <label className="block text-[10px] font-black uppercase text-slate-400 mb-1 ml-2 tracking-widest">Rang</label>
+                   <div className="flex bg-slate-50 p-2 border border-slate-200 rounded-2xl h-[58px] items-center gap-2 transition-all">
+                     <input 
+                       type="color" 
+                       className="w-12 h-10 border-0 rounded-xl cursor-pointer"
+                       value={formData.color}
+                       onChange={(e) => setFormData({...formData, color: e.target.value})}
+                     />
+                     <span className="font-bold text-xs text-slate-500 uppercase flex-1 text-center">{formData.color}</span>
+                   </div>
+                </div>
+              </div>
 
         {/* NESTED FIELDS: Accounts -> Cabinets -> Warehouses */}
         <div className="space-y-6">
@@ -372,21 +398,29 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
             </div>
           ))}
         </div>
-
-        {/* Submit Button */}
-        <div className="mt-8 flex justify-end">
-          <button 
-             onClick={handleSave}
-             disabled={loading}
-             className="px-10 py-5 bg-indigo-600 text-white font-black rounded-[20px] hover:bg-indigo-700 active:scale-95 transition-all shadow-2xl shadow-indigo-600/30 text-sm flex items-center gap-3 disabled:opacity-50"
-          >
-             {loading ? "Saqlanmoqda..." : "🚀 Barcha ma'lumotlarni Saqlash"}
-          </button>
-        </div>
       </div>
+            
+      {/* MODAL FOOTER */}
+      <div className="p-6 md:p-8 border-t border-slate-100 flex justify-end gap-4 bg-white">
+              <button 
+                onClick={() => setIsModalOpen(false)} 
+                className="px-8 py-4 font-black text-slate-500 hover:bg-slate-100 rounded-[20px] transition-all"
+              >
+                Bekor qilish
+              </button>
+              <button 
+                 onClick={handleSave}
+                 disabled={loading}
+                 className="px-10 py-4 bg-indigo-600 text-white font-black rounded-[20px] hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-600/30 text-sm flex items-center gap-2 disabled:opacity-50"
+              >
+                 {loading ? "Saqlanmoqda..." : "Yaratilgan do'konni Saqlash!"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* MARKETS LIST */}
-      <h3 className="text-xl font-black text-slate-800 tracking-tight mt-12 mb-6 px-2">Barcha sozlangan do'konlar ({markets.length})</h3>
       
       {markets.length === 0 ? (
         <div className="py-16 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
