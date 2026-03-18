@@ -12,12 +12,14 @@ interface Cabinet {
   id: string;
   name: string;
   api_key: string;
+  bearer_token?: string;
   warehouses: Warehouse[];
 }
 
 interface Account {
   id: string;
   email: string;
+  password?: string;
   cabinets: Cabinet[];
 }
 
@@ -96,7 +98,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
   const addAccount = () => {
     setFormData(prev => ({
       ...prev,
-      accounts: [...prev.accounts, { id: Date.now().toString(), email: '', cabinets: [] }]
+      accounts: [...prev.accounts, { id: Date.now().toString(), email: '', password: '', cabinets: [] }]
     }));
   };
 
@@ -118,7 +120,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
   const addCabinet = (accIndex: number) => {
     setFormData(prev => {
       const accs = [...prev.accounts];
-      accs[accIndex].cabinets.push({ id: Date.now().toString(), name: '', api_key: '', warehouses: [] });
+      accs[accIndex].cabinets.push({ id: Date.now().toString(), name: '', api_key: '', bearer_token: '', warehouses: [] });
       return { ...prev, accounts: accs };
     });
   };
@@ -283,15 +285,27 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                 title="Akkauntni o'chirish"
               >&times;</button>
               
-              <div className="px-6 pb-4">
-                <label className="block text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-1.5 ml-2">Akkaunt Email / Login'i</label>
-                <input 
-                  type="text" 
-                  placeholder="shop@misol.uz" 
-                  className="w-full md:w-1/2 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 font-bold text-slate-800 placeholder-slate-400 outline-none"
-                  value={acc.email}
-                  onChange={(e) => updateAccount(aIdx, 'email', e.target.value)}
-                />
+              <div className="px-6 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-1.5 ml-2">Akkaunt Email / Login'i</label>
+                  <input 
+                    type="text" 
+                    placeholder="shop@misol.uz" 
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 font-bold text-slate-800 placeholder-slate-400 outline-none"
+                    value={acc.email}
+                    onChange={(e) => updateAccount(aIdx, 'email', e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-1.5 ml-2">Parol (Avto-Login uchun)</label>
+                  <input 
+                    type="text" 
+                    placeholder="••••••••" 
+                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 font-bold text-slate-800 placeholder-slate-400 outline-none"
+                    value={acc.password || ''}
+                    onChange={(e) => updateAccount(aIdx, 'password', e.target.value)}
+                  />
+                </div>
               </div>
 
               {/* Cabinets Section */}
@@ -318,7 +332,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                         className="absolute top-3 right-3 w-6 h-6 flex items-center justify-center text-red-400 hover:bg-red-50 rounded-lg transition-colors text-lg"
                       >&times;</button>
 
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pr-8 mb-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pr-8 mb-4">
                          <div>
                            <label className="block text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 mb-1">Kabinet ID</label>
                            <input 
@@ -336,11 +350,19 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                            />
                          </div>
                          <div>
-                           <label className="block text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 mb-1">Api Key (Maxfiy)*</label>
+                           <label className="block text-[9px] font-black uppercase text-slate-400 tracking-widest pl-1 mb-1">Open Api Key (Maxfiy)</label>
                            <input 
                              type="password" placeholder="••••••••••••••••" 
                              className="w-full p-2.5 text-xs bg-indigo-50 border border-indigo-100 text-indigo-800 rounded-xl font-mono tracking-widest placeholder-indigo-300"
                              value={cab.api_key} onChange={(e) => updateCabinet(aIdx, cIdx, 'api_key', e.target.value)}
+                           />
+                         </div>
+                         <div>
+                           <label className="block text-[9px] font-black uppercase text-emerald-500 tracking-widest pl-1 mb-1">Bearer Token (Vaqtinchalik yuklash uchun)</label>
+                           <input 
+                             type="password" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI..." 
+                             className="w-full p-2.5 text-xs bg-emerald-50 border border-emerald-100 text-emerald-800 rounded-xl font-mono tracking-widest placeholder-emerald-300 focus:ring-2 focus:ring-emerald-500/20 outline-none"
+                             value={cab.bearer_token || ''} onChange={(e) => updateCabinet(aIdx, cIdx, 'bearer_token', e.target.value)}
                            />
                          </div>
                       </div>

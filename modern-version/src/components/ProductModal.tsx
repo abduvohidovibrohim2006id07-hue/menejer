@@ -99,7 +99,8 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             brand: data.result.brand || prev.brand,
             model: data.result.model || prev.model,
             color: data.result.color || prev.color,
-            category: data.result.category || prev.category
+            category: data.result.category || prev.category,
+            marketId: data.result.marketId || prev.marketId,
           }));
         } else {
           setFormData((prev: any) => ({ ...prev, [targetField]: data.result }));
@@ -108,6 +109,31 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     } catch (error: any) {
       console.error("AI action failed", error);
       alert(error.message || "AI xatoligi yuz berdi");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const syncProductToMarket = async (market: any, cabinet: any) => {
+    if (!product?.id) {
+       alert("Avval mahsulotni saqlang!");
+       return;
+    }
+    
+    setLoading(true);
+    try {
+      const res = await apiClient.post('/api/markets/uzum/sync', {
+        productId: product.id,
+        cabinetId: cabinet.id,
+      });
+      
+      if (res.success) {
+        alert(res.message);
+      } else {
+        alert("Xato: " + res.message);
+      }
+    } catch (err: any) {
+      alert("Xatolik yuz berdi: " + (err.message || "Noalum xato"));
     } finally {
       setLoading(false);
     }
@@ -398,23 +424,33 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                                         <p className="text-[10px] text-slate-400 font-bold mb-0.5 tracking-widest uppercase">Ombor ({w.cab.name})</p>
                                         <p className="text-sm font-black text-slate-800">{w.wh.name}</p>
                                      </div>
-                                     <div className="flex items-center justify-between sm:justify-start gap-2 bg-amber-50 rounded-xl pr-2 border border-amber-200">
-                                        <span className="text-[10px] font-black text-amber-700 ml-4 tracking-widest uppercase">Qoldiq:</span>
-                                        <input
-                                          type="number"
-                                          placeholder="0"
-                                          className="w-24 bg-transparent border-0 p-2.5 text-sm font-black text-amber-900 text-center outline-none"
-                                          value={formData.warehouse_data?.[stockKey] || ''}
-                                          onChange={e => setFormData((p: any) => ({...p, warehouse_data: {...p.warehouse_data, [stockKey]: parseInt(e.target.value) || 0}}))}
-                                        />
+                                     <div className="flex items-center gap-3">
+                                       <button 
+                                         type="button"
+                                         onClick={() => syncProductToMarket(m, w.cab)}
+                                         className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-black transition-all shadow-lg active:scale-95"
+                                       >
+                                         🚀 Uzumga Yuklash
+                                       </button>
+                                       <div className="flex items-center justify-between sm:justify-start gap-2 bg-amber-50 rounded-xl pr-2 border border-amber-200">
+                                          <span className="text-[10px] font-black text-amber-700 ml-4 tracking-widest uppercase">Qoldiq:</span>
+                                          <input 
+                                            type="number" 
+                                            placeholder="0" 
+                                            className="w-24 bg-transparent border-0 p-2.5 text-sm font-black text-amber-900 text-center outline-none" 
+                                            value={formData.warehouse_data?.[stockKey] || ''} 
+                                            onChange={e => setFormData((p: any) => ({...p, warehouse_data: {...p.warehouse_data, [stockKey]: parseInt(e.target.value) || 0}}))} 
+                                          />
+                                       </div>
                                      </div>
                                    </div>
                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200/60">
                                      {[
-                                       { k: 'sku', l: 'SKU Kod' },
-                                       { k: 'skuId', l: 'SKU ID' },
-                                       { k: 'groupId', l: 'Grup ID' },
-                                       { k: 'groupSku', l: 'Grup SKU Kod' }
+                                       { k: 'sku', l: 'SKU Kod' }, 
+                                       { k: 'skuId', l: 'SKU ID' }, 
+                                       { k: 'groupId', l: 'Grup ID' }, 
+                                       { k: 'groupSku', l: 'Grup SKU Kod' },
+                                       { k: 'marketId', l: 'Bozordagi ID (Uzum)' }
                                      ].map(f => {
                                         const key = `${f.k}_${m.id}_${w.wh.id}`;
                                         return (
