@@ -392,28 +392,44 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                                const skuKey = `sku_${m.id}_${w.wh.id}`;
                                const stockKey = `stock_${m.id}_${w.wh.id}`;
                                return (
-                                 <div key={i} className="flex flex-col sm:flex-row gap-3 bg-white/70 p-3 rounded-xl border border-white shadow-sm hover:shadow-md transition-shadow">
-                                   <div className="flex-1 flex flex-col justify-center">
-                                     <p className="text-[10px] text-slate-400 font-bold mb-0.5 tracking-widest uppercase">Ombor ({w.cab.name})</p>
-                                     <p className="text-xs font-black text-slate-700">{w.wh.name}</p>
+                                                    <div key={i} className="bg-white/70 p-4 rounded-[20px] border border-white shadow-sm hover:shadow-md transition-shadow">
+                                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+                                     <div>
+                                        <p className="text-[10px] text-slate-400 font-bold mb-0.5 tracking-widest uppercase">Ombor ({w.cab.name})</p>
+                                        <p className="text-sm font-black text-slate-800">{w.wh.name}</p>
+                                     </div>
+                                     <div className="flex items-center justify-between sm:justify-start gap-2 bg-amber-50 rounded-xl pr-2 border border-amber-200">
+                                        <span className="text-[10px] font-black text-amber-700 ml-4 tracking-widest uppercase">Qoldiq:</span>
+                                        <input
+                                          type="number"
+                                          placeholder="0"
+                                          className="w-24 bg-transparent border-0 p-2.5 text-sm font-black text-amber-900 text-center outline-none"
+                                          value={formData.warehouse_data?.[stockKey] || ''}
+                                          onChange={e => setFormData((p: any) => ({...p, warehouse_data: {...p.warehouse_data, [stockKey]: parseInt(e.target.value) || 0}}))}
+                                        />
+                                     </div>
                                    </div>
-                                   <input 
-                                     type="text" 
-                                     placeholder="Tovar kodi (SKU/Barcode)" 
-                                     className="border border-slate-200 p-2.5 rounded-xl text-xs font-bold text-slate-800 placeholder-slate-400 flex-1 focus:ring-2 outline-none" 
-
-                                     value={formData.warehouse_data?.[skuKey] || ''} 
-                                     onChange={e => setFormData((p: any) => ({...p, warehouse_data: {...p.warehouse_data, [skuKey]: e.target.value}}))} 
-                                   />
-                                   <div className="flex items-center gap-2 bg-amber-50 rounded-xl pr-2 border border-amber-100">
-                                     <span className="text-[9px] font-black text-amber-600 ml-3 tracking-widest uppercase">Qoldiq:</span>
-                                     <input 
-                                       type="number" 
-                                       placeholder="0" 
-                                       className="w-20 bg-transparent border-0 p-2.5 text-xs font-black text-amber-900 text-center outline-none" 
-                                       value={formData.warehouse_data?.[stockKey] || ''} 
-                                       onChange={e => setFormData((p: any) => ({...p, warehouse_data: {...p.warehouse_data, [stockKey]: parseInt(e.target.value) || 0}}))} 
-                                     />
+                                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-slate-50/50 p-4 rounded-2xl border border-slate-200/60">
+                                     {[
+                                       { k: 'sku', l: 'SKU Kod' },
+                                       { k: 'skuId', l: 'SKU ID' },
+                                       { k: 'groupId', l: 'Grup ID' },
+                                       { k: 'groupSku', l: 'Grup SKU Kod' }
+                                     ].map(f => {
+                                        const key = `${f.k}_${m.id}_${w.wh.id}`;
+                                        return (
+                                           <div key={f.k}>
+                                             <label className="block text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1.5 ml-1">{f.l}</label>
+                                             <input
+                                               type="text"
+                                               placeholder="Kodni kiriting"
+                                               className="w-full border border-slate-200 bg-white p-2.5 rounded-xl text-xs font-bold text-slate-800 placeholder-slate-300 focus:ring-2 outline-none focus:ring-indigo-500/20 shadow-sm"
+                                               value={formData.warehouse_data?.[key] || ''}
+                                               onChange={e => setFormData((p: any) => ({...p, warehouse_data: {...p.warehouse_data, [key]: e.target.value}}))}
+                                             />
+                                           </div>
+                                        )
+                                     })}
                                    </div>
                                  </div>
                                )
