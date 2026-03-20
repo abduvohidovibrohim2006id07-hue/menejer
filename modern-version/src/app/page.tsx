@@ -207,12 +207,25 @@ export default function Home() {
     setFilteredProducts(result);
   }, [allProducts, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, marketFilter]);
 
+  const handleUpdate = (id: string, updates: any) => {
+    setAllProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+  };
+
   const handleDelete = async (id: string) => {
+    // Optimistically update the UI FIRST
+    const originalProducts = [...allProducts];
+    setAllProducts(prev => prev.filter(p => p.id !== id));
+
     try {
-      await apiClient.delete('/api/products', id);
-      fetchData(true);
+      // Perform deletion in background
+      apiClient.delete('/api/products', id).catch(e => {
+        console.error("Background delete error:", e);
+        // Rollback only on critical error
+        setAllProducts(originalProducts);
+        alert("Mahsulotni o'chirishda xatolik: " + e.message);
+      });
     } catch (e: any) {
-      alert("Xatolik: " + e.message);
+      console.error(e);
     }
   };
 
@@ -406,6 +419,7 @@ export default function Home() {
                         setIsModalOpen(true);
                       }}
                       onDelete={handleDelete}
+                      onUpdate={handleUpdate}
                       onRefresh={() => fetchData(true)}
                     />
                   ))}

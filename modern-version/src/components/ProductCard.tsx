@@ -24,12 +24,13 @@ interface ProductCardProps {
   markets?: any[];
   onEdit: (p: Product) => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, updates: Partial<Product>) => void;
   onRefresh: () => void;
   selected: boolean;
   onSelectToggle: (id: string) => void;
 }
 
-export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh, selected, onSelectToggle }: ProductCardProps) => {
+export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate, onRefresh, selected, onSelectToggle }: ProductCardProps) => {
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [confirmDeleteImg, setConfirmDeleteImg] = React.useState<string | null>(null);
   const [imageValidations, setImageValidations] = React.useState<Record<string, { w: number, h: number, isValid: boolean }>>({});
@@ -134,21 +135,26 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onRefresh
     setDeletingImg(filename);
     setConfirmDeleteImg(null);
     
-    // Smooth delay for animation
-    setTimeout(async () => {
-      try {
-        await fetch('/api/products/delete-image', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ id: product.id, filename })
-        });
-        onRefresh(); 
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setDeletingImg(null);
-      }
-    }, 400);
+    try {
+      // Smooth delay for animation to finish (matching duration-500)
+      await new Promise(r => setTimeout(r, 500));
+      
+      // OPTIMISTIC UI: Remove image from local state first
+      const newImages = (product.local_images || []).filter(img => !img.includes(filename));
+      onUpdate(product.id, { local_images: newImages });
+
+      // Perform deletion in background
+      fetch('/api/products/delete-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: product.id, filename })
+      }).catch(e => console.error("Background delete image error:", e));
+
+    } catch (e: any) {
+      console.error(e);
+      setDeletingImg(null);
+      alert("Xatolik: " + e.message);
+    }
   };
 
   const [confirmDeleteProduct, setConfirmDeleteProduct] = React.useState(false);
