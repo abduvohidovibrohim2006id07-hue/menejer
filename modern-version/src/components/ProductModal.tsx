@@ -8,9 +8,10 @@ interface ProductModalProps {
   onSuccess: () => void;
   categories?: any[];
   markets?: any[];
+  allProducts?: any[];
 }
 
-export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories = [], markets = [] }: ProductModalProps) => {
+export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories = [], markets = [], allProducts = [] }: ProductModalProps) => {
   const [formData, setFormData] = useState<any>({
     id: '',
     name: '',
@@ -54,8 +55,17 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         price_retail: product.price_retail || '',
       });
     } else {
+      // Automatic ID generation for NEW product
+      let nextId = "10001";
+      if (allProducts.length > 0) {
+        const ids = allProducts.map(p => parseInt(p.id) || 0).filter(id => !isNaN(id));
+        if (ids.length > 0) {
+          nextId = (Math.max(...ids) + 1).toString();
+        }
+      }
+
       setFormData({
-        id: '',
+        id: nextId,
         name: '',
         name_ru: '',
         price: '',
@@ -73,7 +83,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         price_retail: '',
       });
     }
-  }, [product, isOpen]);
+  }, [product, isOpen, allProducts]);
 
   const handleAIAction = async (action: string, field: string, targetField: string) => {
     setLoading(true);
@@ -189,9 +199,9 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
               <input 
                 type="text" 
                 required 
-                disabled={!!product}
-                placeholder="Masalan: 1001"
-                className="w-full p-4 rounded-2xl border border-slate-200 bg-slate-100 text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all disabled:opacity-50"
+                disabled={true} // System generates ID
+                placeholder="Tizim ozi yozadi..."
+                className="w-full p-4 rounded-2xl border border-slate-200 bg-slate-100 text-slate-500 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all cursor-not-allowed"
                 value={formData.id}
                 onChange={(e) => setFormData({...formData, id: e.target.value})}
               />

@@ -27,12 +27,14 @@ interface ProductCardProps {
   onDelete: (id: string) => void;
   onUpdate: (id: string, updates: Partial<Product>) => void;
   onRefresh: () => void;
+  onDuplicate?: (p: Product) => void;
   selected: boolean;
   onSelectToggle: (id: string) => void;
 }
 
-export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate, onRefresh, selected, onSelectToggle }: ProductCardProps) => {
+export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate, onRefresh, onDuplicate, selected, onSelectToggle }: ProductCardProps) => {
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const [showMoreMenu, setShowMoreMenu] = React.useState(false);
   const [confirmDeleteImg, setConfirmDeleteImg] = React.useState<string | null>(null);
   const [imageValidations, setImageValidations] = React.useState<Record<string, { w: number, h: number, isValid: boolean }>>({});
   const [fixing, setFixing] = React.useState<string | null>(null);
@@ -174,6 +176,14 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
       setPreviewUrl(product.local_images[currentIndex - 1]);
     }
   };
+
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (showMoreMenu) setShowMoreMenu(false);
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showMoreMenu]);
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -530,12 +540,43 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
           >
             ✏️ Tahrirlash
           </button>
-          <button 
-            onClick={() => setConfirmDeleteProduct(true)}
-            className="col-span-1 py-4 px-4 bg-red-50 text-red-600 font-black rounded-2xl hover:bg-red-600 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2"
-          >
-            🗑️ O'chirish
-          </button>
+          
+          <div className="col-span-1 relative">
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowMoreMenu(!showMoreMenu);
+              }}
+              className="w-full py-4 px-4 bg-slate-50 text-slate-500 font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2 border border-slate-100"
+            >
+              <span>⚙️</span> Batafsil
+            </button>
+
+            {showMoreMenu && (
+              <div className="absolute bottom-full mb-3 right-0 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 overflow-hidden">
+                <button 
+                  onClick={() => {
+                    if (onDuplicate) onDuplicate(product);
+                    setShowMoreMenu(false);
+                  }}
+                  className="w-full text-left px-5 py-4 hover:bg-indigo-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                >
+                  <span className="text-lg">📋</span>
+                  <span className="font-bold text-slate-600">Nusxalash</span>
+                </button>
+                <button 
+                  onClick={() => {
+                    setConfirmDeleteProduct(true);
+                    setShowMoreMenu(false);
+                  }}
+                  className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors text-red-600"
+                >
+                  <span className="text-lg">🗑️</span>
+                  <span className="font-bold">O'chirish</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </div>

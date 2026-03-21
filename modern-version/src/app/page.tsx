@@ -251,6 +251,31 @@ export default function Home() {
     }
   };
 
+  const handleDuplicate = async (product: any) => {
+    setRefreshing(true);
+    try {
+      // Generate next numeric ID
+      let nextId = "10001";
+      const ids = allProducts.map(p => parseInt(p.id) || 0).filter(id => !isNaN(id));
+      if (ids.length > 0) {
+        nextId = (Math.max(...ids) + 1).toString();
+      }
+
+      const clone = { 
+        ...product, 
+        id: nextId,
+        updated_at: new Date().toISOString()
+      };
+      
+      await apiClient.post('/api/products', clone);
+      await fetchData(true);
+    } catch (e: any) {
+      alert("Nusxalashda xatolik: " + e.message);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   if (!mounted) return null;
 
   return (
@@ -454,6 +479,7 @@ export default function Home() {
                         setEditingProduct(p);
                         setIsModalOpen(true);
                       }}
+                      onDuplicate={handleDuplicate}
                       onDelete={handleDelete}
                       onUpdate={handleUpdate}
                       onRefresh={() => fetchData(true)}
@@ -502,6 +528,7 @@ export default function Home() {
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
         product={editingProduct}
+        allProducts={allProducts}
         onSuccess={() => fetchData(true)}
         categories={categories}
         markets={markets}
