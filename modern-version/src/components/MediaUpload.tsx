@@ -88,7 +88,11 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
     e.target.value = '';
   };
 
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    let foundImage = false;
     const files: File[] = [];
+
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
         const file = items[i].getAsFile();
