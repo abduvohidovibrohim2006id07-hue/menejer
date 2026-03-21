@@ -50,52 +50,57 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
     });
   };
 
-  const uploadFile = async (file: File) => {
+  const uploadFiles = async (files: File[]) => {
     setUploading(true);
     try {
-      const processedFile = await processImage(file);
-      
-      const res = await fetch('/api/products/upload', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id: productId, filename: processedFile.name, contentType: processedFile.type })
-      });
-      const { uploadUrl } = await res.json();
+      for (const file of files) {
+        console.log(`MediaUpload: Processing ${file.name}`);
+        const processedFile = await processImage(file);
+        
+        const res = await fetch('/api/products/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: productId, filename: processedFile.name, contentType: processedFile.type })
+        });
+        const { uploadUrl } = await res.json();
 
-      await fetch(uploadUrl, {
-        method: 'PUT',
-        body: processedFile,
-        headers: { 'Content-Type': processedFile.type }
-      });
-
-      onSuccess();
-    } catch (error) {
+        await fetch(uploadUrl, {
+          method: 'PUT',
+          body: processedFile,
+          headers: { 'Content-Type': processedFile.type }
+        });
+        
+        // Refresh after each successful upload to show progress
+        onSuccess();
+      }
+    } catch (error: any) {
       console.error("Upload failed", error);
-      alert("Yuklashda xatolik yuz berdi");
+      alert("Yuklashda xatolik yuz berdi: " + error.message);
     } finally {
       setUploading(false);
     }
   };
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) await uploadFile(file);
+    const files = Array.from(e.target.files || []);
+    if (files.length > 0) await uploadFiles(files);
+    // Reset input to allow re-uploading the same files if needed
+    e.target.value = '';
   };
 
-  const handlePaste = async (e: React.ClipboardEvent) => {
-    const items = e.clipboardData.items;
-    let foundImage = false;
-
+    const files: File[] = [];
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf('image') !== -1) {
         const file = items[i].getAsFile();
         if (file) {
           foundImage = true;
-          // Clipboard files usually don't have a useful name, let's give it one
-          const customFile = new File([file], `pasted-image-${Date.now()}.jpg`, { type: file.type });
-          await uploadFile(customFile);
+          files.push(new File([file], `pasted-image-${Date.now()}-${i}.jpg`, { type: file.type }));
         }
       }
+    }
+    
+    if (files.length > 0) {
+      await uploadFiles(files);
     }
     
     // If it's a URL (text), let the default behavior happen (it will fill the input)
@@ -186,6 +191,7 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
           <>
             <input 
               type="file" 
+              multiple
               className="absolute inset-0 opacity-0 cursor-pointer z-10" 
               onChange={handleFileChange}
               accept="image/*,video/*"
