@@ -34,7 +34,7 @@ export default function Home() {
   const [minPrice, setMinPrice] = useState("");
   const [maxPrice, setMaxPrice] = useState("");
   const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'active', 'quarantine', 'archive'
-  const [marketFilter, setMarketFilter] = useState("all"); // 'all', 'uzum', 'yandex', etc.
+  const [selectedMarkets, setSelectedMarkets] = useState<string[]>([]);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
 
   useEffect(() => {
@@ -50,8 +50,14 @@ export default function Home() {
     const savedStatus = sessionStorage.getItem('filters-status');
     if (savedStatus) setStatusFilter(savedStatus);
     
-    const savedMarket = sessionStorage.getItem('filters-market');
-    if (savedMarket) setMarketFilter(savedMarket);
+    const savedMarkets = sessionStorage.getItem('filters-markets');
+    if (savedMarkets) {
+      try {
+        setSelectedMarkets(JSON.parse(savedMarkets));
+      } catch (e) {
+        setSelectedMarkets([]);
+      }
+    }
     
     const savedSearch = sessionStorage.getItem('filters-search');
     if (savedSearch) setSearchQuery(savedSearch);
@@ -125,7 +131,15 @@ export default function Home() {
       
       setAllProducts(Array.isArray(prodData) ? prodData : []);
       setCategories(Array.isArray(catsData) ? catsData : []);
-      setMarkets(Array.isArray(marketsData) ? marketsData : []);
+      
+      const mData = Array.isArray(marketsData) ? marketsData : [];
+      setMarkets(mData);
+
+      // Initialize selected markets if none saved
+      const savedMarkets = sessionStorage.getItem('filters-markets');
+      if (!savedMarkets && mData.length > 0) {
+        setSelectedMarkets(mData.map((m: any) => m.id));
+      }
     } catch (e: any) {
       console.error("Fetch Data Error:", e.message);
     } finally {
@@ -142,14 +156,14 @@ export default function Home() {
     if (!mounted) return;
     sessionStorage.setItem('filters-category', selectedCategory);
     sessionStorage.setItem('filters-status', statusFilter);
-    sessionStorage.setItem('filters-market', marketFilter);
+    sessionStorage.setItem('filters-markets', JSON.stringify(selectedMarkets));
     sessionStorage.setItem('filters-search', searchQuery);
     sessionStorage.setItem('filters-brand', brandFilter);
     sessionStorage.setItem('filters-color', colorFilter);
     sessionStorage.setItem('filters-minPrice', minPrice);
     sessionStorage.setItem('filters-maxPrice', maxPrice);
     sessionStorage.setItem('filters-panelOpen', isFilterPanelOpen.toString());
-  }, [selectedCategory, statusFilter, marketFilter, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, isFilterPanelOpen, mounted]);
+  }, [selectedCategory, statusFilter, selectedMarkets, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, isFilterPanelOpen, mounted]);
 
   useEffect(() => {
     fetchData();
@@ -200,12 +214,20 @@ export default function Home() {
       result = result.filter((p: any) => (p.status || 'active') === statusFilter);
     }
 
-    if (marketFilter !== "all") {
-      result = result.filter((p: any) => p.marketplaces?.includes(marketFilter));
+    if (selectedMarkets.length > 0) {
+      result = result.filter((p: any) => {
+        const prodMarkets = p.marketplaces || [];
+        // Show product if it has NO markets (available for all) OR its marketplace is selected
+        if (prodMarkets.length === 0) return true;
+        return prodMarkets.some((m: string) => selectedMarkets.includes(m));
+      });
+    } else {
+      // If no markets selected at all, show only products with no markets?
+      result = result.filter((p: any) => (p.marketplaces || []).length === 0);
     }
     
     setFilteredProducts(result);
-  }, [allProducts, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, marketFilter]);
+  }, [allProducts, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets]);
 
   const handleUpdate = (id: string, updates: any) => {
     setAllProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
@@ -328,31 +350,45 @@ export default function Home() {
                     onChange={(e) => setMaxPrice(e.target.value)}
                   />
                 </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] uppercase font-black text-slate-400 ml-1">Sotuv bozori</label>
-                  <select 
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold appearance-none cursor-pointer"
-                    value={marketFilter}
-                    onChange={(e) => setMarketFilter(e.target.value)}
-                  >
-                    <option value="all">Barchasi (Hamma bozorlar)</option>
-                    <option value="uzum">🟣 Uzum Market</option>
-                    <option value="yandex">🟡 Yandex Market</option>
-                    <option value="olx">🟢 OLX</option>
-                    <option value="wildberries">💗 Wildberries</option>
-                    <option value="instagram">📸 Instagram</option>
-                  </select>
+                <div className="space-y-3 md:col-span-4">
+                  <label className="text-[10px] uppercase font-black text-slate-400 ml-1">Sotuv bozorlari</label>
+                  <div className="flex flex-wrap gap-2">
+                    {markets.map((m: any) => {
+                      const isSelected = selectedMarkets.includes(m.id);
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedMarkets(prev => 
+                              isSelected ? prev.filter(id => id !== m.id) : [...prev, m.id]
+                            );
+                          }}
+                          className={`px-4 py-3 rounded-xl border-2 font-black text-[10px] uppercase tracking-wider transition-all flex items-center gap-2 ${
+                            isSelected 
+                              ? 'bg-white border-indigo-600 text-indigo-600 shadow-md scale-[1.02]' 
+                              : 'bg-slate-50 border-transparent text-slate-400 grayscale opacity-60 hover:grayscale-0 hover:opacity-100'
+                          }`}
+                        >
+                          <span className="text-sm">{isSelected ? '✅' : '⬜'}</span>
+                          <span>{m.icon}</span>
+                          {m.name}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-                {(brandFilter || colorFilter || minPrice || maxPrice || marketFilter !== 'all') && (
+                {(brandFilter || colorFilter || minPrice || maxPrice || statusFilter !== 'all' || selectedMarkets.length !== markets.length) && (
                   <button 
                     onClick={() => {
                       setBrandFilter("");
                       setColorFilter("");
                       setMinPrice("");
                       setMaxPrice("");
-                      setMarketFilter("all");
+                      setStatusFilter("all");
+                      setSelectedMarkets(markets.map((m: any) => m.id));
                     }}
-                    className="md:col-span-5 mt-2 text-xs font-black text-red-500 hover:text-red-700 uppercase tracking-widest text-right"
+                    className="md:col-span-4 mt-2 text-xs font-black text-red-500 hover:text-red-700 uppercase tracking-widest text-right"
                   >
                     Filtrlarni tozalash
                   </button>
