@@ -179,7 +179,10 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
 
   React.useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (showMoreMenu) setShowMoreMenu(false);
+      const target = event.target as HTMLElement;
+      if (showMoreMenu && !target.closest('.more-menu-container')) {
+        setShowMoreMenu(false);
+      }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
@@ -541,7 +544,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
             ✏️ Tahrirlash
           </button>
           
-          <div className="col-span-1 relative">
+          <div className="col-span-1 relative more-menu-container">
             <button 
               onClick={(e) => {
                 e.stopPropagation();
@@ -553,9 +556,13 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
             </button>
 
             {showMoreMenu && (
-              <div className="absolute bottom-full mb-3 right-0 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 overflow-hidden">
+              <div 
+                onClick={(e) => e.stopPropagation()}
+                className="absolute bottom-full mb-3 right-0 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 overflow-hidden"
+              >
                 <button 
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     if (onDuplicate) onDuplicate(product);
                     setShowMoreMenu(false);
                   }}
@@ -565,7 +572,8 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                   <span className="font-bold text-slate-600">Nusxalash</span>
                 </button>
                 <button 
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation();
                     setConfirmDeleteProduct(true);
                     setShowMoreMenu(false);
                   }}
