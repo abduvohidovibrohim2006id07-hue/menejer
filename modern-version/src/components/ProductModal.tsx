@@ -27,6 +27,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     status: 'active',
     marketplaces: [],
     warehouse_data: {},
+    price_retail: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -50,6 +51,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         status: product.status || 'active',
         marketplaces: product.marketplaces || [],
         warehouse_data: product.warehouse_data || {},
+        price_retail: product.price_retail || '',
       });
     } else {
       setFormData({
@@ -68,6 +70,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         status: 'active',
         marketplaces: [],
         warehouse_data: {},
+        price_retail: '',
       });
     }
   }, [product, isOpen]);
@@ -267,6 +270,17 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                 className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
                 value={formData.price}
                 onChange={(e) => setFormData({...formData, price: e.target.value})}
+              />
+            </div>
+
+            <div className="col-span-1">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Chakana narx</label>
+              <input 
+                type="text"
+                placeholder="350000"
+                className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                value={formData.price_retail}
+                onChange={(e) => setFormData({...formData, price_retail: e.target.value})}
               />
             </div>
 

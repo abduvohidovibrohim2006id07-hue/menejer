@@ -17,6 +17,7 @@ interface Product {
   sku?: string;
   status?: 'active' | 'quarantine' | 'archive';
   marketplaces?: string[];
+  price_retail?: string;
 }
 
 interface ProductCardProps {
@@ -472,10 +473,15 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                 )}
               </div>
             </div>
-            <div className="shrink-0">
+            <div className="shrink-0 flex flex-col items-end gap-1">
               <span className="bg-emerald-50 text-emerald-600 text-2xl font-black px-6 py-3 rounded-2xl block shadow-sm border border-emerald-100/50">
                 {Number(product.price).toLocaleString()} so'm
               </span>
+              {product.price_retail && (
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">
+                   Chakana: <span className="text-slate-600">{Number(product.price_retail).toLocaleString()} so'm</span>
+                </span>
+              )}
             </div>
           </div>
 
