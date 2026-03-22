@@ -257,7 +257,9 @@ export default function Home() {
     try {
       // Generate next numeric ID
       let nextId = "10001";
-      const ids = allProducts.map(p => parseInt(p.id) || 0).filter(id => !isNaN(id));
+      const ids = allProducts
+        .map(p => parseInt(String(p.id)) || 0)
+        .filter(id => !isNaN(id) && id < 1000000); // Ignore long Uzum IDs
       if (ids.length > 0) {
         nextId = (Math.max(...ids) + 1).toString();
       }

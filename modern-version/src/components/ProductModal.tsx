@@ -58,7 +58,9 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
       // Automatic ID generation for NEW product
       let nextId = "10001";
       if (allProducts.length > 0) {
-        const ids = allProducts.map(p => parseInt(p.id) || 0).filter(id => !isNaN(id));
+        const ids = allProducts
+          .map(p => parseInt(String(p.id)) || 0)
+          .filter(id => !isNaN(id) && id < 1000000); // Filter out 17+ digit Uzum IDs
         if (ids.length > 0) {
           nextId = (Math.max(...ids) + 1).toString();
         }
