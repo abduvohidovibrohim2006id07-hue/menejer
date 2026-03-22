@@ -3,6 +3,7 @@
 import React from 'react';
 import { createPortal } from 'react-dom';
 import { MediaUpload } from './MediaUpload';
+import { PriceCalculatorModal } from './PriceCalculatorModal';
 
 interface Product {
   id: string;
@@ -40,6 +41,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
   const [fixing, setFixing] = React.useState<string | null>(null);
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [deletingImg, setDeletingImg] = React.useState<string | null>(null);
+  const [showPriceCalc, setShowPriceCalc] = React.useState(false);
 
   const processImage = (file: File): Promise<File> => {
     return new Promise((resolve) => {
@@ -560,33 +562,50 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                 onClick={(e) => e.stopPropagation()}
                 className="absolute bottom-full mb-3 right-0 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 overflow-hidden"
               >
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (onDuplicate) onDuplicate(product);
-                    setShowMoreMenu(false);
-                  }}
-                  className="w-full text-left px-5 py-4 hover:bg-indigo-50 flex items-center gap-3 transition-colors border-b border-slate-50"
-                >
-                  <span className="text-lg">📋</span>
-                  <span className="font-bold text-slate-600">Nusxalash</span>
-                </button>
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setConfirmDeleteProduct(true);
-                    setShowMoreMenu(false);
-                  }}
-                  className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors text-red-600"
-                >
-                  <span className="text-lg">🗑️</span>
-                  <span className="font-bold">O'chirish</span>
-                </button>
-              </div>
-            )}
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowPriceCalc(true);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full text-left px-5 py-4 hover:bg-emerald-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                  >
+                    <span className="text-lg">🧮</span>
+                    <span className="font-bold text-slate-600">Narx hisoblash</span>
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (onDuplicate) onDuplicate(product);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full text-left px-5 py-4 hover:bg-indigo-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                  >
+                    <span className="text-lg">📋</span>
+                    <span className="font-bold text-slate-600">Nusxalash</span>
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setConfirmDeleteProduct(true);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors text-red-600"
+                  >
+                    <span className="text-lg">🗑️</span>
+                    <span className="font-bold">O'chirish</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
+          <PriceCalculatorModal 
+            isOpen={showPriceCalc} 
+            onClose={() => setShowPriceCalc(false)} 
+            initialPrice={product.price}
+            productName={`${product.category} ${product.brand || ''} ${product.model || ''}`}
+          />
         </div>
       </div>
-    </div>
-  );
+    );
 };
