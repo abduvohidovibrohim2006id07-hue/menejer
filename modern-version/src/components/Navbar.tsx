@@ -83,6 +83,12 @@ export const Navbar = ({ onAddProduct, onTabChange, onRefreshProducts, activeTab
           >
             🏢 Do'konlar
           </button>
+          <button 
+            onClick={() => onTabChange('notes')}
+            className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'notes' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
+          >
+            📒 Eslatmalar
+          </button>
         </div>
       </div>
 
@@ -93,7 +99,8 @@ export const Navbar = ({ onAddProduct, onTabChange, onRefreshProducts, activeTab
           { id: 'video', label: '🎥 Video' },
           { id: 'categories', label: '📁 Kategoriyalar' },
           { id: 'ai', label: '🤖 AI Panel' },
-          { id: 'markets', label: '🏢 Do\'konlar' }
+          { id: 'markets', label: '🏢 Do\'konlar' },
+          { id: 'notes', label: '📒 Eslatmalar' }
         ].map(tab => (
           <button 
             key={tab.id}

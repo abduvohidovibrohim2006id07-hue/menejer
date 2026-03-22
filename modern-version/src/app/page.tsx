@@ -9,6 +9,7 @@ import { CategoryManager } from "@/components/CategoryManager";
 import { AiSettingsManager } from "@/components/AiSettingsManager";
 import { VideoDownloader } from "@/components/VideoDownloader";
 import { MarketManager } from "@/components/MarketManager";
+import { NotesManager } from "@/components/NotesManager";
 import { useScrollPersistence } from "@/hooks/useScrollPersistence";
 import { apiClient } from "@/lib/api-client";
 
@@ -520,6 +521,12 @@ export default function Home() {
         {activeTab === "markets" && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
             <MarketManager markets={markets} onRefresh={() => fetchData(true)} />
+          </div>
+        )}
+
+        {activeTab === "notes" && (
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <NotesManager />
           </div>
         )}
       </div>
