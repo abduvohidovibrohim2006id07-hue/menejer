@@ -3,6 +3,8 @@ import { getProducts } from '@/lib/data-service';
 import { db } from '@/lib/firebase-admin';
 import { withGateway } from '@/lib/api-gateway';
 
+export const dynamic = 'force-dynamic';
+
 // FETCH PRODUCTS
 export const GET = withGateway(async () => {
   return await getProducts();

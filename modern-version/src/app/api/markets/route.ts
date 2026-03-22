@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/firebase-admin';
 import { withGateway } from '@/lib/api-gateway';
 
+export const dynamic = 'force-dynamic';
+
 // FETCH MARKETS
 export const GET = withGateway(async () => {
   const snapshot = await db.collection('markets').get();

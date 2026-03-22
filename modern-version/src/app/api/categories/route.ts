@@ -1,6 +1,8 @@
 import { db } from '@/lib/firebase-admin';
 import { withGateway } from '@/lib/api-gateway';
 
+export const dynamic = 'force-dynamic';
+
 export const GET = withGateway(async () => {
   const snapshot = await db.collection('categories').get();
   return snapshot.docs.map((doc: any) => ({
