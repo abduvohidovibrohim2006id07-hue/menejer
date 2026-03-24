@@ -27,11 +27,12 @@ export const PriceCalculatorModal = ({ isOpen, onClose, initialPrice = '0', init
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
       <div 
-        className="bg-white w-full max-w-2xl rounded-[32px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-300 border border-slate-100"
+        className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[40px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-300 border border-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-indigo-600 to-violet-600 text-white flex justify-between items-center relative overflow-hidden">
+        <div className="p-10 border-b border-slate-100 bg-gradient-to-r from-indigo-600 to-violet-600 text-white flex justify-between items-center relative overflow-hidden">
+
           <div className="relative z-10">
             <h3 className="text-2xl font-black tracking-tight">Narx Hisoblagich</h3>
             <p className="text-indigo-100 text-sm font-medium mt-1 truncate max-w-[400px]">
@@ -50,7 +51,7 @@ export const PriceCalculatorModal = ({ isOpen, onClose, initialPrice = '0', init
           <div className="absolute -left-4 -bottom-4 w-24 h-24 bg-indigo-400/20 rounded-full blur-xl"></div>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8 space-y-8 bg-slate-50/30">
+        <div className="flex-1 overflow-y-auto p-10 space-y-10 bg-slate-50/30">
           {/* Main Inputs Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
@@ -119,7 +120,7 @@ export const PriceCalculatorModal = ({ isOpen, onClose, initialPrice = '0', init
           </div>
 
           {/* Results Display */}
-          <div className="bg-white rounded-[32px] p-8 border border-slate-100 shadow-xl space-y-6 relative overflow-hidden">
+          <div className="bg-white rounded-[40px] p-10 border border-slate-100 shadow-xl space-y-8 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-4">
                <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-3 py-1 rounded-full uppercase tracking-widest">UZUM MARKET</span>
             </div>
@@ -167,10 +168,10 @@ export const PriceCalculatorModal = ({ isOpen, onClose, initialPrice = '0', init
           </div>
         </div>
 
-        <div className="p-8 border-t border-slate-50 flex justify-center bg-white">
+        <div className="p-10 border-t border-slate-50 flex justify-center bg-white">
           <button 
             onClick={onClose}
-            className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-black active:scale-[0.98] transition-all shadow-xl text-sm uppercase tracking-widest"
+            className="w-full py-5 bg-slate-900 text-white font-black rounded-2xl hover:bg-black active:scale-[0.98] transition-all shadow-xl text-sm uppercase tracking-widest"
           >
             Tushunarli
           </button>

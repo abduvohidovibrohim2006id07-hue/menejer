@@ -37,10 +37,11 @@ export const CompetitorsModal = ({ isOpen, onClose, competitors = [], onUpdate, 
   return (
     <div className="fixed inset-0 z-[110] flex items-center justify-center bg-slate-900/60 backdrop-blur-md p-4 animate-in fade-in duration-300">
       <div 
-        className="bg-white w-full max-w-2xl rounded-[32px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-300 border border-slate-100"
+        className="bg-white w-full max-w-4xl max-h-[90vh] rounded-[40px] overflow-hidden shadow-2xl flex flex-col animate-in zoom-in-95 duration-300 border border-slate-100"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="p-8 border-b border-slate-100 bg-gradient-to-r from-red-600 to-rose-700 text-white flex justify-between items-center relative overflow-hidden">
+        <div className="p-10 border-b border-slate-100 bg-gradient-to-r from-red-600 to-rose-700 text-white flex justify-between items-center relative overflow-hidden">
+
           <div className="relative z-10">
             <h3 className="text-2xl font-black tracking-tight">Raqobat Tahlili</h3>
             <p className="text-red-100 text-sm font-medium mt-1 truncate max-w-[400px]">
@@ -55,7 +56,7 @@ export const CompetitorsModal = ({ isOpen, onClose, competitors = [], onUpdate, 
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-slate-50/30">
+        <div className="flex-1 overflow-y-auto p-10 space-y-10 bg-slate-50/30">
           {/* Add New Competitor */}
           <div className="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
             <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Yangi raqobatchi qo&apos;shish</h4>
@@ -119,10 +120,10 @@ export const CompetitorsModal = ({ isOpen, onClose, competitors = [], onUpdate, 
           </div>
         </div>
 
-        <div className="p-8 border-t border-slate-50 flex justify-center bg-white">
+        <div className="p-10 border-t border-slate-50 flex justify-center bg-white">
           <button 
             onClick={onClose}
-            className="w-full py-4 bg-slate-900 text-white font-black rounded-2xl hover:bg-black active:scale-[0.98] transition-all shadow-xl text-sm uppercase tracking-widest"
+            className="w-full py-5 bg-slate-900 text-white font-black rounded-2xl hover:bg-black active:scale-[0.98] transition-all shadow-xl text-sm uppercase tracking-widest"
           >
             Yopish
           </button>
