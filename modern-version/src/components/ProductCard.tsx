@@ -207,7 +207,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
       {isDeleting && (
         <div className="absolute top-4 left-4 z-[60] bg-red-600 text-white px-4 py-2 rounded-full font-black text-[10px] animate-pulse shadow-lg flex items-center gap-2">
            <div className="w-2 h-2 bg-white rounded-full animate-ping"></div>
-           O'CHIRILMOQDA...
+           O&apos;CHIRILMOQDA...
         </div>
       )}
 
@@ -215,8 +215,8 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
       {confirmDeleteProduct && (
         <div className="absolute inset-0 z-[45] bg-red-600/95 backdrop-blur-xl rounded-3xl flex flex-col items-center justify-center p-10 text-center animate-in fade-in zoom-in-95 duration-200">
           <span className="text-6xl mb-6">🗑️</span>
-          <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Mahsulotni o'chiramizmi?</h3>
-          <p className="text-white/80 font-medium mb-8">Ushbu amalni ortga qaytarib bo'lmaydi.</p>
+          <h3 className="text-2xl font-black text-white uppercase tracking-tighter mb-2">Mahsulotni o&apos;chiramizmi?</h3>
+          <p className="text-white/80 font-medium mb-8">Ushbu amalni ortga qaytarib bo&apos;lmaydi.</p>
           <div className="flex gap-4 w-full max-w-sm">
             <button 
               onClick={() => {
@@ -226,13 +226,13 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
               }}
               className="flex-1 py-4 bg-white text-red-600 font-black rounded-2xl hover:bg-slate-100 active:scale-95 transition-all shadow-xl"
             >
-              HA, O'CHIRILSIN
+              HA, O&apos;CHIRILSIN
             </button>
             <button 
               onClick={() => setConfirmDeleteProduct(false)}
               className="flex-1 py-4 bg-transparent text-white border-2 border-white/30 font-black rounded-2xl hover:bg-white/10 active:scale-95 transition-all"
             >
-              YO'Q, QOLSIN
+              YO&apos;Q, QOLSIN
             </button>
           </div>
         </div>
@@ -338,7 +338,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                   {isDeletingThis && (
                     <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
                       <div className="bg-red-600 text-white px-3 py-1 rounded-full font-black text-[9px] animate-bounce shadow-xl uppercase tracking-tighter">
-                        O'chirilmoqda...
+                        O&apos;chirilmoqda...
                       </div>
                     </div>
                   )}
@@ -366,7 +366,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                       <div className="flex items-center justify-between gap-2 mb-1">
                         <div className="flex items-center gap-2">
                           <span className="text-sm">⚠️</span>
-                          <span className="text-[10px] font-black text-white uppercase tracking-wider">Noto'g'ri o'lcham!</span>
+                          <span className="text-[10px] font-black text-white uppercase tracking-wider">Noto&apos;g&apos;ri o&apos;lcham!</span>
                         </div>
                         <button
                           onClick={(e) => {
@@ -389,19 +389,19 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                   {/* CONFIRM DELETE OVERLAY */}
                   {confirmDeleteImg === filename && (
                     <div className="absolute inset-0 z-40 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
-                      <p className="text-white font-black text-sm uppercase tracking-widest mb-4">Rostdan ham o'chirilsinmi?</p>
+                      <p className="text-white font-black text-sm uppercase tracking-widest mb-4">Rostdan ham o&apos;chirilsinmi?</p>
                       <div className="flex gap-3 w-full">
                         <button 
                           onClick={() => handleDeleteImg(filename)}
                           className="flex-1 py-3 bg-red-600 text-white font-black rounded-xl hover:bg-red-700 active:scale-95 transition-all text-xs"
                         >
-                          HA, O'CHIR
+                          HA, O&apos;CHIR
                         </button>
                         <button 
                           onClick={() => setConfirmDeleteImg(null)}
                           className="flex-1 py-3 bg-white/20 text-white font-black rounded-xl hover:bg-white/30 active:scale-95 transition-all text-xs border border-white/10"
                         >
-                          YO'Q
+                          YO&apos;Q
                         </button>
                       </div>
                     </div>
@@ -490,11 +490,11 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
             </div>
             <div className="shrink-0 flex flex-col items-end gap-1">
               <span className="bg-emerald-50 text-emerald-600 text-2xl font-black px-6 py-3 rounded-2xl block shadow-sm border border-emerald-100/50">
-                {Number(product.price).toLocaleString()} so'm
+                {Number(product.price).toLocaleString()} so&apos;m
               </span>
               {product.price_retail && (
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">
-                   Chakana: <span className="text-slate-600">{Number(product.price_retail).toLocaleString()} so'm</span>
+                   Chakana: <span className="text-slate-600">{Number(product.price_retail).toLocaleString()} so&apos;m</span>
                 </span>
               )}
             </div>
@@ -593,7 +593,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                     className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors text-red-600"
                   >
                     <span className="text-lg">🗑️</span>
-                    <span className="font-bold">O'chirish</span>
+                    <span className="font-bold">O&apos;chirish</span>
                   </button>
                 </div>
               )}

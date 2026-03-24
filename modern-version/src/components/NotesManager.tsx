@@ -186,7 +186,7 @@ const NoteEditor = ({
           {/* TODO LIST */}
           {draft.type === 'todo' && (
             <div className="space-y-2">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vazifalar ro'yxati</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Vazifalar ro&apos;yxati</p>
               <div className="space-y-1.5">
                 {draft.todos.map(td => (
                   <div key={td.id} className="flex items-center gap-3 group">
@@ -331,7 +331,7 @@ const NoteCard = ({
               </div>
             ))}
             {note.todos.length > 4 && (
-              <p className="text-[10px] text-slate-400 font-bold ml-5">+{note.todos.length - 4} ta ko'proq...</p>
+              <p className="text-[10px] text-slate-400 font-bold ml-5">+{note.todos.length - 4} ta ko&apos;proq...</p>
             )}
           </div>
         </div>
@@ -354,11 +354,11 @@ const NoteCard = ({
       {/* Confirm delete overlay */}
       {confirmDel && (
         <div className="absolute inset-0 rounded-[24px] bg-white/95 backdrop-blur flex flex-col items-center justify-center gap-4 z-10 animate-in fade-in duration-150">
-          <p className="font-black text-slate-700 text-sm text-center px-4">Bu eslatmani o'chirmoqchimisiz?</p>
+          <p className="font-black text-slate-700 text-sm text-center px-4">Bu eslatmani o&apos;chirmoqchimisiz?</p>
           <div className="flex gap-2">
             <button onClick={onDelete}
               className="px-5 py-2.5 bg-red-600 text-white font-black rounded-xl text-xs hover:bg-red-700 active:scale-95 transition">
-              O'chirish
+              O&apos;chirish
             </button>
             <button onClick={() => setConfirmDel(false)}
               className="px-5 py-2.5 bg-slate-100 text-slate-600 font-black rounded-xl text-xs hover:bg-slate-200 active:scale-95 transition">
@@ -373,20 +373,20 @@ const NoteCard = ({
 
 /* ─── MAIN COMPONENT ────────────────────────────────────────── */
 export const NotesManager = () => {
-  const [notes, setNotes] = useState<Note[]>([]);
+  const [notes, setNotes] = useState<Note[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('notes_v2');
+        if (saved) return JSON.parse(saved);
+      } catch { /* ignore */ }
+    }
+    return [];
+  });
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | NoteType>('all');
   const [filterPrio, setFilterPrio] = useState<'all' | Priority>('all');
   const [editing, setEditing] = useState<Note | null>(null);
   const [isNew, setIsNew] = useState(false);
-
-  // Load from localStorage
-  useEffect(() => {
-    try {
-      const saved = localStorage.getItem('notes_v2');
-      if (saved) setNotes(JSON.parse(saved));
-    } catch { /* ignore */ }
-  }, []);
 
   // Persist
   useEffect(() => {

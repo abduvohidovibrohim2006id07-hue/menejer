@@ -1,18 +1,56 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { apiClient } from '@/lib/api-client';
+
+interface CategoryItem {
+  id?: string | number;
+  name: string;
+}
+
+interface MarketItem {
+  id: string;
+  name: string;
+  color?: string;
+  icon?: React.ReactNode;
+  textColor?: string;
+  short?: string;
+  label?: string;
+  accounts?: { cabinets?: { id: string; name: string; warehouses?: { id: string; name: string; }[] }[] }[];
+}
+
+interface ProductItem {
+  id?: string | number;
+  name?: string;
+  name_ru?: string;
+  price?: string | number;
+  category?: string;
+  brand?: string;
+  model?: string;
+  color?: string;
+  description_short?: string;
+  description_full?: string;
+  description_short_ru?: string;
+  description_full_ru?: string;
+  status?: string;
+  marketplaces?: string[];
+  warehouse_data?: Record<string, number | string>;
+  price_retail?: string | number;
+  local_images?: string[];
+  marketId?: string;
+  [key: string]: unknown; // Allow other fields safely
+}
 
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  product?: any;
+  product?: ProductItem | null;
   onSuccess: () => void;
-  categories?: any[];
-  markets?: any[];
-  allProducts?: any[];
+  categories?: CategoryItem[];
+  markets?: MarketItem[];
+  allProducts?: ProductItem[];
 }
 
 export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories = [], markets = [], allProducts = [] }: ProductModalProps) => {
-  const [formData, setFormData] = useState<any>({
+  const [formData, setFormData] = useState<ProductItem>({
     id: '',
     name: '',
     name_ru: '',
@@ -128,6 +166,24 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
       setLoading(false);
     }
   };
+
+  const filteredCategories = useMemo(() => {
+    return categories.filter(c => c.name.toLowerCase().includes((formData.category || "").toLowerCase()));
+  }, [categories, formData.category]);
+
+  const activeMarkets = useMemo(() => {
+    return markets.filter((m: any) => formData.marketplaces?.includes(m.id));
+  }, [markets, formData.marketplaces]);
+
+  const activeMarketWarehouses = useMemo(() => {
+    return activeMarkets.map((m: any) => {
+      if (!m.accounts?.length) return null;
+      const whs: any[] = [];
+      m.accounts.forEach((acc: any) => acc.cabinets?.forEach((cab: any) => cab.warehouses?.forEach((wh: any) => whs.push({ acc, cab, wh }))));
+      if (whs.length === 0) return null;
+      return { m, whs };
+    }).filter(Boolean);
+  }, [activeMarkets]);
 
   const syncProductToMarket = async (market: any, cabinet: any) => {
     if (!product?.id) {
@@ -321,14 +377,10 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                      <div className="sticky top-0 bg-slate-50 p-3 text-[10px] font-black text-slate-400 uppercase tracking-widest border-b border-slate-100">
                        Mavjud kategoriyalar
                      </div>
-                     {categories
-                       .filter(c => c.name.toLowerCase().includes((formData.category || "").toLowerCase()))
-                       .length > 0 ? (
-                         categories
-                           .filter(c => c.name.toLowerCase().includes((formData.category || "").toLowerCase()))
-                           .map((c, i) => (
+                     {filteredCategories.length > 0 ? (
+                         filteredCategories.map((c, i) => (
                              <button
-                               key={i}
+                               key={c.id || i}
                                type="button"
                                onClick={() => {
                                  setFormData({...formData, category: c.name});
@@ -426,21 +478,16 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
               </div>
 
               {/* DYNAMIC WAREHOUSE SETTINGS PER SELECTED MARKET */}
-              {formData.marketplaces?.length > 0 && markets.filter((m: any) => formData.marketplaces.includes(m.id)).some((m: any) => m.accounts?.length > 0) && (
+              {activeMarketWarehouses.length > 0 && (
                  <div className="mt-6 space-y-4">
-                   {markets.filter((m: any) => formData.marketplaces.includes(m.id)).map((m: any) => {
-                      if (!m.accounts?.length) return null;
-                      const whs: any[] = [];
-                      m.accounts.forEach((acc: any) => acc.cabinets?.forEach((cab: any) => cab.warehouses?.forEach((wh: any) => whs.push({ acc, cab, wh }))));
-                      if (whs.length === 0) return null;
-                      
+                   {activeMarketWarehouses.map(({ m, whs }: any) => {
                       return (
                         <div key={m.id} className="p-4 border rounded-[20px] transition-all" style={{ borderColor: `${m.color}40`, backgroundColor: `${m.color}08` }}>
                           <h6 className="text-[10px] font-black uppercase mb-3 flex items-center gap-2" style={{ color: m.color }}>
                             {m.icon} {m.name} do'kon omborlari va SKU'lar
                           </h6>
                           <div className="space-y-3">
-                            {whs.map((w, i) => {
+                            {whs.map((w: any, i: number) => {
                                const skuKey = `sku_${m.id}_${w.wh.id}`;
                                const stockKey = `stock_${m.id}_${w.wh.id}`;
                                return (

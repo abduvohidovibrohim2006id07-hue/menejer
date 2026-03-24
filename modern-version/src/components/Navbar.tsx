@@ -81,7 +81,7 @@ export const Navbar = ({ onAddProduct, onTabChange, onRefreshProducts, activeTab
             onClick={() => onTabChange('markets')}
             className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'markets' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
           >
-            🏢 Do'konlar
+            🏢 Do&apos;konlar
           </button>
           <button 
             onClick={() => onTabChange('notes')}
@@ -141,7 +141,7 @@ export const Navbar = ({ onAddProduct, onTabChange, onRefreshProducts, activeTab
           onClick={onAddProduct}
           className="flex-1 md:flex-none px-4 md:px-6 py-3.5 md:py-4 text-xs md:text-sm font-black text-white bg-indigo-600 rounded-2xl hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
         >
-          <span className="text-lg">+</span> <span className="hidden sm:inline">Yangi mahsulot</span><span className="sm:hidden">Qo'shish</span>
+          <span className="text-lg">+</span> <span className="hidden sm:inline">Yangi mahsulot</span><span className="sm:hidden">Qo&apos;shish</span>
         </button>
       </div>
     </nav>

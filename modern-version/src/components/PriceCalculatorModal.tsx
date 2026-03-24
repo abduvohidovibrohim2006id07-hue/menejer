@@ -15,23 +15,11 @@ export const PriceCalculatorModal = ({ isOpen, onClose, initialPrice = '0', prod
   const [commissionPercent, setCommissionPercent] = useState<number>(17);
   const [logisticsFee, setLogisticsFee] = useState<number>(8000);
   
-  // Results
-  const [commissionAmount, setCommissionAmount] = useState<number>(0);
-  const [payout, setPayout] = useState<number>(0);
-  const [netProfit, setNetProfit] = useState<number>(0);
-  const [profitMargin, setProfitMargin] = useState<number>(0);
-
-  useEffect(() => {
-    const comm = Math.round(sellingPrice * (commissionPercent / 100));
-    const pay = sellingPrice - comm - logisticsFee;
-    const profit = pay - productCost;
-    const margin = sellingPrice > 0 ? (profit / sellingPrice) * 100 : 0;
-
-    setCommissionAmount(comm);
-    setPayout(pay);
-    setNetProfit(profit);
-    setProfitMargin(margin);
-  }, [sellingPrice, productCost, commissionPercent, logisticsFee]);
+  // Results (Calculated synchronously to avoid micro-stutters)
+  const commissionAmount = Math.round(sellingPrice * (commissionPercent / 100));
+  const payout = sellingPrice - commissionAmount - logisticsFee;
+  const netProfit = payout - productCost;
+  const profitMargin = sellingPrice > 0 ? (netProfit / sellingPrice) * 100 : 0;
 
   if (!isOpen) return null;
 

@@ -101,7 +101,7 @@ export const VideoDownloader = () => {
           Video Yuklagich <span className="text-indigo-600">Pro</span>
         </h1>
         <p className="text-slate-500 text-sm md:text-base max-w-xl mx-auto font-medium px-4">
-          .m3u8 formatidagi videolarni MP4 ga o'girib, ideal sifatda bulutga yuklang.
+          .m3u8 formatidagi videolarni MP4 ga o&apos;girib, ideal sifatda bulutga yuklang.
         </p>
       </header>
 

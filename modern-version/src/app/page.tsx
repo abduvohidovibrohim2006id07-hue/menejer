@@ -303,7 +303,7 @@ export default function Home() {
                   Galereya
                 </h2>
                 <p className="text-slate-500 mt-2 font-medium">
-                  Hozirda <span className="text-indigo-600 font-bold">{filteredProducts.length}</span> ta mahsulot ko'rsatilmoqda
+                  Hozirda <span className="text-indigo-600 font-bold">{filteredProducts.length}</span> ta mahsulot ko&apos;rsatilmoqda
                 </p>
               </div>
               
@@ -467,7 +467,7 @@ export default function Home() {
               {initialLoading ? (
                 <div className="py-40 flex flex-col items-center justify-center gap-4">
                   <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                  <p className="text-slate-500 font-bold animate-pulse uppercase tracking-[0.2em] text-xs">Ma'lumotlar yuklanmoqda...</p>
+                  <p className="text-slate-500 font-bold animate-pulse uppercase tracking-[0.2em] text-xs">Ma&apos;lumotlar yuklanmoqda...</p>
                 </div>
               ) : (
                 <div className="flex flex-col gap-6 animate-in fade-in duration-500">
@@ -570,7 +570,7 @@ export default function Home() {
                   title="O'chirish"
                   className="px-4 md:px-6 py-3 md:py-4 bg-red-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-2xl hover:bg-red-700 transition-all flex items-center gap-2"
                 >
-                  <span>🗑️</span> <span className="hidden sm:inline">O'chirish</span>
+                  <span>🗑️</span> <span className="hidden sm:inline">O&apos;chirish</span>
                 </button>
              </div>
           </div>

@@ -67,7 +67,7 @@ export const CategoryManager = ({ categories, onRefresh }: CategoryManagerProps)
             onClick={handleAdd}
             className="px-8 py-4 bg-indigo-600 text-white font-black rounded-2xl hover:bg-indigo-700 active:scale-95 transition-all shadow-xl shadow-indigo-100 flex items-center gap-2"
           >
-            <span>+</span> Qo'shish
+            <span>+</span> Qo&apos;shish
           </button>
         </div>
       </div>
@@ -85,7 +85,7 @@ export const CategoryManager = ({ categories, onRefresh }: CategoryManagerProps)
         ))}
         {categories.length === 0 && (
            <div className="col-span-full py-20 text-center bg-slate-50 border-2 border-dashed border-slate-200 rounded-[32px]">
-              <p className="text-slate-400 font-bold italic">Hozircha hech qanday kategoriya yo'q</p>
+              <p className="text-slate-400 font-bold italic">Hozircha hech qanday kategoriya yo&apos;q</p>
            </div>
         )}
       </div>

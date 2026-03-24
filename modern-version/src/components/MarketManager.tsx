@@ -178,14 +178,14 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
       {/* HEADER WITH ADD BUTTON */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-6 rounded-[28px] border border-slate-100 shadow-sm">
         <div>
-          <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Do'konlar (Markets)</h3>
+          <h3 className="text-2xl md:text-3xl font-black text-slate-800 tracking-tight">Do&apos;konlar (Markets)</h3>
           <p className="text-sm text-slate-500 font-medium mt-1">Barcha sotuv platformalarini boshqaring ({markets.length} ta)</p>
         </div>
         <button 
           onClick={openNewModal}
           className="bg-indigo-600 text-white px-8 py-4 rounded-2xl font-black hover:bg-indigo-700 shadow-xl shadow-indigo-600/20 active:scale-95 transition-all flex items-center gap-2"
         >
-          <span className="text-lg leading-none">+</span> Yangi do'kon qo'shish
+          <span className="text-lg leading-none">+</span> Yangi do&apos;kon qo&apos;shish
         </button>
       </div>
 
@@ -199,7 +199,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                  <h3 className="text-xl md:text-3xl font-black tracking-tight">
                    {isEditing ? "Do'konni Tahrirlash" : "Yangi Do'kon Yaratish"}
                  </h3>
-                 <p className="text-indigo-100 font-medium mt-1">Professional integratsiyalar bilan to'liq boshqaruv</p>
+                 <p className="text-indigo-100 font-medium mt-1">Professional integratsiyalar bilan to&apos;liq boshqaruv</p>
                </div>
                <button 
                  onClick={() => setIsModalOpen(false)} 
@@ -261,18 +261,18 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
         {/* NESTED FIELDS: Accounts -> Cabinets -> Warehouses */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
-            <h4 className="font-black text-slate-700 text-lg flex items-center gap-2">📧 Do'kon Akkauntlari</h4>
+            <h4 className="font-black text-slate-700 text-lg flex items-center gap-2">📧 Do&apos;kon Akkauntlari</h4>
             <button 
               onClick={addAccount}
               className="px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 rounded-xl font-bold text-xs transition-colors flex items-center gap-2"
             >
-              <span className="text-lg leading-none">+</span> Akkaunt qo'shish
+              <span className="text-lg leading-none">+</span> Akkaunt qo&apos;shish
             </button>
           </div>
 
           {formData.accounts.length === 0 && (
             <div className="p-8 text-center border-2 border-dashed border-slate-200 bg-slate-50 rounded-[24px]">
-               <p className="text-slate-400 font-medium text-sm">Hali akkauntlar qo'shilmagan.</p>
+               <p className="text-slate-400 font-medium text-sm">Hali akkauntlar qo&apos;shilmagan.</p>
             </div>
           )}
 
@@ -287,7 +287,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
               
               <div className="px-6 pb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-1.5 ml-2">Akkaunt Email / Login'i</label>
+                  <label className="block text-[10px] font-black uppercase text-indigo-400 tracking-widest mb-1.5 ml-2">Akkaunt Email / Login&apos;i</label>
                   <input 
                     type="text" 
                     placeholder="shop@misol.uz" 
@@ -316,12 +316,12 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                     onClick={() => addCabinet(aIdx)}
                     className="px-3 py-1.5 bg-white border border-slate-200 text-slate-700 hover:border-slate-300 rounded-xl font-bold text-[10px] transition-colors shadow-sm"
                   >
-                    + Kabinet qo'shish
+                    + Kabinet qo&apos;shish
                   </button>
                 </div>
 
                 {acc.cabinets.length === 0 && (
-                  <p className="text-slate-400 font-medium text-[11px] italic">Ushbu akkauntda kabinet o'rnatilmagan</p>
+                  <p className="text-slate-400 font-medium text-[11px] italic">Ushbu akkauntda kabinet o&apos;rnatilmagan</p>
                 )}
 
                 <div className="grid grid-cols-1 gap-4">
@@ -375,13 +375,13 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                              onClick={() => addWarehouse(aIdx, cIdx)}
                              className="text-[9px] px-2 py-1 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-md font-black uppercase transition-colors tracking-widest"
                            >
-                             + Qo'shish
+                             + Qo&apos;shish
                            </button>
                          </div>
                          
                          <div className="space-y-2">
                            {cab.warehouses.length === 0 && (
-                             <p className="text-slate-400 font-medium text-[10px] italic">Omborlar yo'q</p>
+                             <p className="text-slate-400 font-medium text-[10px] italic">Omborlar yo&apos;q</p>
                            )}
                            
                            {cab.warehouses.map((wh, wIdx) => (
@@ -400,7 +400,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                                  <button 
                                    onClick={() => deleteWarehouse(aIdx, cIdx, wIdx)} 
                                    className="p-2 text-red-500 hover:bg-red-100 rounded-lg transition-colors font-black mr-2 text-sm"
-                                 >O'chirish</button>
+                                 >O&apos;chirish</button>
                                </div> 
                              </div>
                            ))}
@@ -439,7 +439,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
       
       {markets.length === 0 ? (
         <div className="py-16 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-100">
-           <p className="text-xl text-slate-300 font-black italic">Hozircha hech qanday do'kon qo'shilmagan</p>
+           <p className="text-xl text-slate-300 font-black italic">Hozircha hech qanday do&apos;kon qo&apos;shilmagan</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -482,7 +482,7 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
                 </div>
                 
                 <div className="flex gap-2 pt-4 border-t border-slate-50 relative z-10">
-                  <button onClick={() => handleEdit(m)} className="flex-[3] py-3 bg-indigo-50 text-indigo-700 font-black rounded-xl hover:bg-indigo-600 hover:text-white transition-all text-xs">🛠 O'zgartirish</button>
+                  <button onClick={() => handleEdit(m)} className="flex-[3] py-3 bg-indigo-50 text-indigo-700 font-black rounded-xl hover:bg-indigo-600 hover:text-white transition-all text-xs">🛠 O&apos;zgartirish</button>
                   <button onClick={() => handleDelete(m.id)} className="flex-1 py-3 bg-red-50 text-red-500 font-black rounded-xl hover:bg-red-500 hover:text-white transition-all flex items-center justify-center" title="O'chirish">🗑</button>
                 </div>
               </div>
