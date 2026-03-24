@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { MediaUpload } from './MediaUpload';
 import { PriceCalculatorModal } from './PriceCalculatorModal';
@@ -49,7 +50,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
   const processImage = (file: File): Promise<File> => {
     return new Promise((resolve) => {
       if (!file.type.startsWith('image/')) return resolve(file);
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         const canvas = document.createElement('canvas');
         canvas.width = 1080;
@@ -398,14 +399,17 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                       loop 
                       muted 
                       playsInline
+                      preload="metadata"
                       onMouseEnter={(e) => { e.currentTarget.play().catch(() => {}); }}
                       onMouseLeave={(e) => { e.currentTarget.pause(); }}
                     />
                   ) : (
-                    <img 
+                    <Image 
                       src={img} 
                       alt="" 
-                      className="w-full h-full object-cover transition-transform group-hover/item:scale-110 duration-500"
+                      fill
+                      sizes="(max-width: 768px) 100vw, 300px"
+                      className="object-cover transition-transform group-hover/item:scale-110 duration-500"
                       onLoad={(e) => handleImageLoad(img, e)}
                     />
                   )}
