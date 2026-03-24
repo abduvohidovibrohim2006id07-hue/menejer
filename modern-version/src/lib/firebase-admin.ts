@@ -8,13 +8,11 @@ if (!admin.apps.length) {
 
   try {
     if (serviceAccount) {
-      // Use the JSON service account string from Vercel/Env
       const cert = JSON.parse(serviceAccount.trim());
       admin.initializeApp({
         credential: admin.credential.cert(cert),
       });
     } else if (projectId && clientEmail && privateKey) {
-      // Fallback to individual keys
       admin.initializeApp({
         credential: admin.credential.cert({
           projectId,
@@ -25,10 +23,14 @@ if (!admin.apps.length) {
     } else {
       console.warn('Firebase configuration missing (FIREBASE_SERVICE_ACCOUNT or individual keys).');
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Firebase admin initialization failed:', error);
+    // Throw error so it's caught by the gateway
+    throw new Error(`Firebase initialization error: ${error.message}`);
   }
 }
 
-// Fixed type for Firestore to avoid "implicit any" in snapshot maps
-export const db = (admin.apps.length ? admin.firestore() : (null as any)) as admin.firestore.Firestore;
+export const db = (() => {
+  if (admin.apps.length) return admin.firestore();
+  throw new Error('Firebase Admin not initialized. Check environment variables.');
+})() as admin.firestore.Firestore;
