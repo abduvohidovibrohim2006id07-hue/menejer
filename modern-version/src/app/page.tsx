@@ -56,6 +56,7 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'active', 'quarantine', 'archive'
   const [selectedMarkets, setSelectedMarkets] = useState<string[]>([]);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [sortBy, setSortBy] = useState("newest"); // 'newest', 'oldest', 'name-asc', 'name-desc'
   const [visibleCount, setVisibleCount] = useState(12);
   const observerTarget = React.useRef<HTMLDivElement>(null);
 
@@ -241,6 +242,17 @@ export default function Home() {
         result = result.filter((p: any) => (p.marketplaces || []).length === 0);
       }
       
+      // Sorting
+      if (sortBy === 'newest') {
+        result.sort((a: any, b: any) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime());
+      } else if (sortBy === 'oldest') {
+        result.sort((a: any, b: any) => new Date(a.updated_at || 0).getTime() - new Date(b.updated_at || 0).getTime());
+      } else if (sortBy === 'name-asc') {
+        result.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
+      } else if (sortBy === 'name-desc') {
+        result.sort((a: any, b: any) => (b.name || '').localeCompare(a.name || ''));
+      }
+
       setFilteredProducts(result);
       setVisibleCount(12); // Har doim toza boshlanish uchun 12 qiymatga tushiramiz
     }, 300); // 300ms qotishsiz filtrlash taymeri
@@ -351,6 +363,21 @@ export default function Home() {
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
+                </div>
+                {/* SORTING SELECTOR */}
+                <div className="relative">
+                   <select 
+                     className="h-full pl-10 pr-10 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-bold text-slate-700 appearance-none cursor-pointer hover:border-indigo-400"
+                     value={sortBy}
+                     onChange={(e) => setSortBy(e.target.value)}
+                   >
+                      <option value="newest">🆕 Yangi sana</option>
+                      <option value="oldest">🕰 Eski sana</option>
+                      <option value="name-asc">🔤 Nom (A-Z)</option>
+                      <option value="name-desc">🔤 Nom (Z-A)</option>
+                   </select>
+                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none">⇅</span>
+                   <span className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none text-[10px]">▼</span>
                 </div>
               </div>
             </header>
