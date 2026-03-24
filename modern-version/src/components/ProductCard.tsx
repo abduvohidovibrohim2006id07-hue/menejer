@@ -7,6 +7,7 @@ import { MediaUpload } from './MediaUpload';
 import { PriceCalculatorModal } from './PriceCalculatorModal';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { CompetitorsModal } from './CompetitorsModal';
 
 interface Product {
   id: string;
@@ -30,6 +31,7 @@ interface Product {
   width_mm?: string | number;
   height_mm?: string | number;
   weight_g?: string | number;
+  competitors?: { shopName: string; url: string }[];
 }
 
 interface ProductCardProps {
@@ -53,6 +55,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [deletingImg, setDeletingImg] = React.useState<string | null>(null);
   const [showPriceCalc, setShowPriceCalc] = React.useState(false);
+  const [showCompetitors, setShowCompetitors] = React.useState(false);
   const [isDownloadingAll, setIsDownloadingAll] = React.useState(false);
 
   const processImage = (file: File): Promise<File> => {
@@ -709,6 +712,17 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                   <button 
                     onClick={(e) => {
                       e.stopPropagation();
+                      setShowCompetitors(true);
+                      setShowMoreMenu(false);
+                    }}
+                    className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                  >
+                    <span className="text-lg">📊</span>
+                    <span className="font-bold text-slate-600">Raqobat {product.competitors?.length ? `(${product.competitors.length})` : ''}</span>
+                  </button>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
                       if (onDuplicate) onDuplicate(product);
                       setShowMoreMenu(false);
                     }}
@@ -737,6 +751,13 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
             onClose={() => setShowPriceCalc(false)} 
             initialPrice={product.price}
             initialCost={product.price_retail}
+            productName={`${product.category} ${product.brand || ''} ${product.model || ''}`}
+          />
+          <CompetitorsModal 
+            isOpen={showCompetitors}
+            onClose={() => setShowCompetitors(false)}
+            competitors={product.competitors || []}
+            onUpdate={(next) => onUpdate(product.id, { competitors: next })}
             productName={`${product.category} ${product.brand || ''} ${product.model || ''}`}
           />
         </div>

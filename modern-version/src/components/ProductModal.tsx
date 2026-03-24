@@ -39,6 +39,7 @@ interface ProductItem {
   width_mm?: string | number;
   height_mm?: string | number;
   weight_g?: string | number;
+  competitors?: { shopName: string; url: string }[];
   marketId?: string;
   [key: string]: unknown; // Allow other fields safely
 }
@@ -75,6 +76,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     width_mm: '',
     height_mm: '',
     weight_g: '',
+    competitors: [],
   });
 
   const [loading, setLoading] = useState(false);
@@ -103,6 +105,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         width_mm: product.width_mm || '',
         height_mm: product.height_mm || '',
         weight_g: product.weight_g || '',
+        competitors: product.competitors || [],
       });
     } else {
       // Automatic ID generation for NEW product
