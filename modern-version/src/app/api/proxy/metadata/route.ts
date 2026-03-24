@@ -10,7 +10,10 @@ export async function GET(req: Request) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 9500); 
 
-    // UZUM MARKET STRATEGY (High Reliability)
+    // USE OPTIONAL USER-PROVIDED COOKIE FOR YANDEX/UZUM IF DEFINED
+    const customCookie = process.env.YANDEX_COOKIE || '';
+
+    // UZUM MARKET STRATEGY
     if (url.includes('uzum.uz')) {
       const idMatch = url.match(/-(\d+)(?:\?|$)/) || url.match(/\/product\/(\d+)/);
       if (idMatch) {
@@ -20,7 +23,8 @@ export async function GET(req: Request) {
             headers: {
               'x-authorization': 'Basic dXp1bS1tYXJrZXQ6Ym96YXItYXBpLXNlY3JldA==',
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-              'Referer': 'https://uzum.uz/'
+              'Referer': 'https://uzum.uz/',
+              'Cookie': customCookie // Use cookie if provided
             }
          });
          if (apiRes.ok) {
@@ -35,7 +39,7 @@ export async function GET(req: Request) {
                clearTimeout(timeoutId);
                return NextResponse.json({
                  title: p.title, image: finalImageUrl,
-                 price: firstSku.purchasePrice || firstSku.fullPrice || p.sellPrice,
+                 price: firstSku.purchasePrice || firstSku.fullPrice,
                  fullPrice: firstSku.fullPrice, rating: p.rating,
                  reviewsAmount: p.reviewsAmount, ordersAmount: p.ordersAmount,
                  deliveryDate: firstSku.stock?.deliveryTitle?.match(/\d+-\w+/)?.[0] || firstSku.stock?.deliveryTitle,
@@ -47,14 +51,15 @@ export async function GET(req: Request) {
       }
     }
 
-    // YANDEX & GENERIC STRATEGY
+    // YANDEX & GENERIC STRATEGY (WITH COOKIE SUPPORT)
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
         'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Referer': 'https://www.google.com/',
-        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8'
+        'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8',
+        'Cookie': customCookie // THIS IS THE KEY TO BYPASS CAPTCHA
       }
     });
 
@@ -64,13 +69,11 @@ export async function GET(req: Request) {
     clearTimeout(timeoutId);
 
     // Yandex Market: Advanced JSON State Extraction
-    if (url.includes('yandex.uz')) {
+    if (url.includes('yandex')) {
         const stateMatch = html.match(/__PRELOADED_STATE__\s*=\s*({.+?});/);
         if (stateMatch) {
             try {
                 const state = JSON.parse(stateMatch[1]);
-                // This is a complex object, but we can search for common keys
-                // Usually under state.entities.offer
                 const offers = state.entities?.offer || {};
                 const firstOfferId = Object.keys(offers)[0];
                 const offer = offers[firstOfferId];
@@ -82,12 +85,11 @@ export async function GET(req: Request) {
                         fullPrice: offer.prices?.discount?.oldPrice || offer.prices?.full,
                         rating: offer.rating?.value,
                         reviewsAmount: offer.rating?.count,
-                        shop: 'Yandex Market'
+                        shop: 'Yandex Market',
+                        source: 'preloaded_state'
                     });
                 }
-            } catch (e) {
-                console.error("Yandex JSON Parse error:", e);
-            }
+            } catch (e) { console.error("Yandex JSON error:", e); }
         }
     }
 
