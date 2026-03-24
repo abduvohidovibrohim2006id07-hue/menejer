@@ -398,6 +398,8 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                       loop 
                       muted 
                       playsInline
+                      onMouseEnter={(e) => { e.currentTarget.play().catch(() => {}); }}
+                      onMouseLeave={(e) => { e.currentTarget.pause(); }}
                     />
                   ) : (
                     <img 
