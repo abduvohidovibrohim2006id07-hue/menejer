@@ -485,7 +485,7 @@ export const NotesManager = () => {
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Qidirish (sarlavha, matn, teg)..."
-            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-400 transition"
+            className="w-full pl-11 pr-4 py-3 bg-white border border-slate-200 rounded-2xl shadow-sm text-sm font-medium text-slate-900 outline-none focus:ring-2 focus:ring-indigo-400 transition"
           />
         </div>
         {/* Type filter */}

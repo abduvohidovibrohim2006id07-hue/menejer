@@ -348,7 +348,7 @@ export default function Home() {
                   <input 
                     type="text"
                     placeholder="Qidirish (Nom, ID, Kategoriya)..."
-                    className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
+                    className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium text-slate-900"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                   />
@@ -364,7 +364,7 @@ export default function Home() {
                   <input 
                     type="text"
                     placeholder="Brend nomi..."
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold"
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold text-slate-900"
                     value={brandFilter}
                     onChange={(e) => setBrandFilter(e.target.value)}
                   />
@@ -374,7 +374,7 @@ export default function Home() {
                   <input 
                     type="text"
                     placeholder="Rangi..."
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold"
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold text-slate-900"
                     value={colorFilter}
                     onChange={(e) => setColorFilter(e.target.value)}
                   />
@@ -384,7 +384,7 @@ export default function Home() {
                   <input 
                     type="number"
                     placeholder="0"
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold"
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold text-slate-900"
                     value={minPrice}
                     onChange={(e) => setMinPrice(e.target.value)}
                   />
@@ -394,7 +394,7 @@ export default function Home() {
                   <input 
                     type="number"
                     placeholder="999 999 999"
-                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold"
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold text-slate-900"
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(e.target.value)}
                   />
