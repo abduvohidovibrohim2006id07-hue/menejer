@@ -291,7 +291,6 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                 src={previewUrl} 
                 className="max-w-full max-h-full rounded-2xl shadow-2xl"
                 controls
-                autoPlay
               />
             ) : (
               <img 
@@ -346,7 +345,6 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                     <video 
                       src={img} 
                       className="w-full h-full object-cover"
-                      autoPlay 
                       loop 
                       muted 
                       playsInline

@@ -201,7 +201,6 @@ export const VideoDownloader = () => {
               src={tempVideo.url} 
               className="w-full h-full object-contain"
               controls
-              autoPlay
             />
           </div>
 
