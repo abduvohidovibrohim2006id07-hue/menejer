@@ -10,7 +10,6 @@ export async function GET(req: Request) {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 9500); 
 
-    // USE OPTIONAL USER-PROVIDED COOKIE FOR YANDEX/UZUM IF DEFINED
     const customCookie = process.env.YANDEX_COOKIE || '';
 
     // UZUM MARKET STRATEGY
@@ -24,7 +23,7 @@ export async function GET(req: Request) {
               'x-authorization': 'Basic dXp1bS1tYXJrZXQ6Ym96YXItYXBpLXNlY3JldA==',
               'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
               'Referer': 'https://uzum.uz/',
-              'Cookie': customCookie // Use cookie if provided
+              'Cookie': customCookie
             }
          });
          if (apiRes.ok) {
@@ -51,15 +50,15 @@ export async function GET(req: Request) {
       }
     }
 
-    // YANDEX & GENERIC STRATEGY (WITH COOKIE SUPPORT)
+    // YANDEX & GENERIC STRATEGY
     const response = await fetch(url, {
       signal: controller.signal,
       headers: {
-        'User-Agent': 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_4 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.4 Mobile/15E148 Safari/604.1',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
         'Referer': 'https://www.google.com/',
         'Accept-Language': 'ru-RU,ru;q=0.9,en-US;q=0.8',
-        'Cookie': customCookie // THIS IS THE KEY TO BYPASS CAPTCHA
+        'Cookie': customCookie
       }
     });
 
@@ -68,32 +67,42 @@ export async function GET(req: Request) {
     const html = await response.text();
     clearTimeout(timeoutId);
 
-    // Yandex Market: Advanced JSON State Extraction
+    // Advanced Extraction based on HAR analysis
     if (url.includes('yandex')) {
-        const stateMatch = html.match(/__PRELOADED_STATE__\s*=\s*({.+?});/);
+        // Look for __PRELOADED_STATE__ or similar JSON blocks
+        const stateMatch = html.match(/__PRELOADED_STATE__\s*=\s*({.+?});/) || 
+                           html.match(/window\.init\s*=\s*({.+?});/) ||
+                           html.match(/["']productServiceSnippets["']:\s*({.+?})\s*,\s*["']meta["']/);
+        
         if (stateMatch) {
             try {
-                const state = JSON.parse(stateMatch[1]);
-                const offers = state.entities?.offer || {};
-                const firstOfferId = Object.keys(offers)[0];
-                const offer = offers[firstOfferId];
-                if (offer) {
+                const rawContent = stateMatch[1];
+                const state = JSON.parse(rawContent);
+                
+                // Strategy: Find any object that looks like an offer or product snippet
+                const offers = state.entities?.offer || state.productServiceSnippets || {};
+                const firstId = Object.keys(offers)[0];
+                const item = offers[firstId]?.productSnippet?.productPayload || offers[firstId];
+
+                if (item) {
                     return NextResponse.json({
-                        title: offer.titles?.raw || offer.title,
-                        image: offer.pictures?.[0]?.url,
-                        price: offer.prices?.value,
-                        fullPrice: offer.prices?.discount?.oldPrice || offer.prices?.full,
-                        rating: offer.rating?.value,
-                        reviewsAmount: offer.rating?.count,
+                        title: item.titles?.raw || item.title || item.name,
+                        image: item.pictures?.[0]?.url || item.image,
+                        price: item.prices?.value || item.price,
+                        fullPrice: item.prices?.discount?.oldPrice || item.prices?.full || item.fullPrice,
+                        rating: item.rating?.value || item.rating,
+                        reviewsAmount: item.rating?.count || item.reviewsAmount,
                         shop: 'Yandex Market',
-                        source: 'preloaded_state'
+                        source: 'extracted_json'
                     });
                 }
-            } catch (e) { console.error("Yandex JSON error:", e); }
+            } catch (e) {
+                console.error("Yandex extraction error:", e);
+            }
         }
     }
 
-    // Fallback Scraper Logic
+    // Generic metadata fallback
     const getMeta = (prop: string) => {
         const m = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i')) 
                || html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${prop}["']`, 'i'));

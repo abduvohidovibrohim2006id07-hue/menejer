@@ -1,0 +1,257 @@
+
+> modern-version@0.1.0 lint
+> eslint
+
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\ai\route.ts
+    1:10  warning  'NextResponse' is defined but never used  @typescript-eslint/no-unused-vars
+   16:17  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   17:23  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  147:14  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\categories\route.ts
+  8:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\markets\route.ts
+   1:10  warning  'NextResponse' is defined but never used  @typescript-eslint/no-unused-vars
+  10:34  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\markets\uzum\sync\route.ts
+    1:10  warning  'NextResponse' is defined but never used                @typescript-eslint/no-unused-vars
+   20:46  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   27:44  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   35:40  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   36:35  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+   49:36  error    A `require()` style import is forbidden                 @typescript-eslint/no-require-imports
+   73:9   error    'uzumProduct' is never reassigned. Use 'const' instead  prefer-const
+   73:22  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  107:50  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  110:22  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  121:57  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+  153:19  error    Unexpected any. Specify a different type                @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\products\delete-image\route.ts
+  21:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\products\export\route.ts
+   2:10  warning  'db' is defined but never used            @typescript-eslint/no-unused-vars
+  16:44  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  20:43  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\products\import\route.ts
+  15:15  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  27:22  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  30:27  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  64:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\products\route.ts
+   1:10  warning  'NextResponse' is defined but never used  @typescript-eslint/no-unused-vars
+  29:58  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\products\sync-uzum\route.ts
+  28:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\products\upload-url\route.ts
+  71:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\products\upload\route.ts
+  29:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\proxy\route.ts
+  21:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\settings\ai\route.ts
+  29:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  39:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\telegram\route.ts
+  122:25  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  141:21  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\video\confirm\route.ts
+  59:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\api\video\download\route.ts
+  149:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  175:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\app\page.tsx
+   23:50  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   24:48  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   25:42  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   26:60  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   30:56  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+   58:16  warning  'e' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+  110:17  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  142:42  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  144:17  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  171:6   warning  React Hook useEffect has a missing dependency: 'fetchData'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+  177:34  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  182:34  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  198:34  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  203:34  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  207:34  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  211:34  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  215:34  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  219:34  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  227:34  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  233:46  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  250:17  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  255:43  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  275:17  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  384:38  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  417:58  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  453:46  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  474:51  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+  481:35  error    Unexpected any. Specify a different type                                                                      @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\AiSettingsManager.tsx
+   5:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  41:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  48:24  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\CategoryManager.tsx
+  25:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\MarketManager.tsx
+  71:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  83:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\MediaUpload.tsx
+   76:21  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+  100:11  warning  'foundImage' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  159:21  error    Unexpected any. Specify a different type         @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\Navbar.tsx
+   4:10  warning  'apiClient' is defined but never used     @typescript-eslint/no-unused-vars
+  37:17  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\NotesManager.tsx
+  381:10  warning  'isNew' is assigned a value but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       @typescript-eslint/no-unused-vars
+  387:18  error    Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\NotesManager.tsx:387:18
+  385 |     try {
+  386 |       const saved = localStorage.getItem('notes_v2');
+> 387 |       if (saved) setNotes(JSON.parse(saved));
+      |                  ^^^^^^^^ Avoid calling setState() directly within an effect
+  388 |     } catch { /* ignore */ }
+  389 |   }, []);
+  390 |  react-hooks/set-state-in-effect
+  494:63  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  503:58  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         @typescript-eslint/no-explicit-any
+  525:36  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  react/no-unescaped-entities
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\PriceCalculatorModal.tsx
+   30:5    error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\PriceCalculatorModal.tsx:30:5
+  28 |     const margin = sellingPrice > 0 ? (profit / sellingPrice) * 100 : 0;
+  29 |
+> 30 |     setCommissionAmount(comm);
+     |     ^^^^^^^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  31 |     setPayout(pay);
+  32 |     setNetProfit(profit);
+  33 |     setProfitMargin(margin);  react-hooks/set-state-in-effect
+   68:119  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react/no-unescaped-entities
+  119:125  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react/no-unescaped-entities
+  141:136  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react/no-unescaped-entities
+  143:117  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react/no-unescaped-entities
+  152:72   error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react/no-unescaped-entities
+  165:58   error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react/no-unescaped-entities
+  174:108  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             react/no-unescaped-entities
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\ProductCard.tsx
+   26:13  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  113:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  158:17  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  202:6   warning  React Hook React.useEffect has missing dependencies: 'handleNext' and 'handlePrev'. Either include them or remove the dependency array                                                                                                                                                   react-hooks/exhaustive-deps
+  297:15  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  355:21  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\ProductModal.tsx
+    7:13   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+    9:16   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   10:13   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   11:17   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   15:44   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  106:30   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  121:30   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  124:21   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  137:31   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  141:34   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  143:18   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  144:32   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  144:68   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  144:105  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  150:46   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  150:60   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  168:19   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  182:21   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  208:77   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  218:110  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  218:123  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  438:83   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  445:61   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  449:49   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  449:70   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  452:42   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  453:38   warning  'skuKey' is assigned a value but never used                      @typescript-eslint/no-unused-vars
+  477:76   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  499:79   error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  560:21   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  578:21   error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\components\VideoDownloader.tsx
+  58:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  87:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\lib\api-client.ts
+  13:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:32  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\lib\api-gateway.ts
+   3:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   3:60  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   8:84  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  28:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\lib\data-service.ts
+  15:9   error  'allKeys' is never reassigned. Use 'const' instead  prefer-const
+  26:56  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  27:49  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+  38:33  error  Unexpected any. Specify a different type            @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\lib\firebase-admin.ts
+  34:69  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\lib\markets\uzum-api.ts
+  40:36  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:34  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  54:30  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\src\lib\markets\uzum-auth.ts
+   76:14  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  100:32  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  102:41  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\abduv\Desktop\cdvfd\modern-version\uzum-worker.mjs
+  143:26  warning  'err' is defined but never used  @typescript-eslint/no-unused-vars
+
+✖ 151 problems (133 errors, 18 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+
