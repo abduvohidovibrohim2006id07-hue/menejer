@@ -25,8 +25,8 @@ export const GET = withGateway(async (req) => {
       const u = url.toLowerCase();
       return u.includes('.mp4') || u.includes('.mov');
     };
-    const images = allMedia.filter((url: string) => !isVideo(url)).join('; ');
-    const videos = allMedia.filter((url: string) => isVideo(url)).join('; ');
+    const images = allMedia.filter((url: string) => !isVideo(url)).join(';');
+    const videos = allMedia.filter((url: string) => isVideo(url)).join(';');
 
     return {
       'ID': data.id,

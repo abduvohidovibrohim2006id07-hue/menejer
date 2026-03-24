@@ -14,12 +14,22 @@ export async function getProducts() {
     // 2. Fetch all image keys from S3 (optimistic approach as in old app)
     let allKeys: string[] = [];
     try {
-      const command = new ListObjectsV2Command({
-        Bucket: BUCKET_NAME,
-        Prefix: 'images/'
-      });
-      const s3Resp = await s3Client.send(command);
-      allKeys = s3Resp.Contents?.map(obj => obj.Key || '') || [];
+      let isTruncated = true;
+      let continuationToken: string | undefined = undefined;
+
+      while (isTruncated) {
+        const command = new ListObjectsV2Command({
+          Bucket: BUCKET_NAME,
+          Prefix: 'images/',
+          ContinuationToken: continuationToken
+        });
+        const s3Resp = await s3Client.send(command) as any;
+        const keys = s3Resp.Contents?.map((obj: any) => obj.Key || '') || [];
+        allKeys.push(...keys);
+
+        isTruncated = s3Resp.IsTruncated ?? false;
+        continuationToken = s3Resp.NextContinuationToken;
+      }
     } catch (s3Error) {
       console.error("S3 fetch error:", s3Error);
     }
