@@ -102,7 +102,7 @@ export async function GET(req: Request) {
         }
     }
 
-    // Generic metadata fallback
+    // Generic metadata fallback (only if not Yandex or if we are very confident)
     const getMeta = (prop: string) => {
         const m = html.match(new RegExp(`<meta[^>]+(?:property|name)=["']${prop}["'][^>]+content=["']([^"']+)["']`, 'i')) 
                || html.match(new RegExp(`<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']${prop}["']`, 'i'));
@@ -110,6 +110,12 @@ export async function GET(req: Request) {
     };
 
     const title = getMeta('og:title') || html.match(/<title>([^<]+)<\/title>/i)?.[1];
+    
+    // STRICT YANDEX BLOCK CHECK: If title is just "Яндекс" and it's a product URL, it's a block
+    if (url.includes('yandex.uz/product') && (title?.toLowerCase() === 'yandex' || title?.toLowerCase() === 'яндекс')) {
+         return NextResponse.json({ error: 'Yandex verification required. Update Cookie.' }, { status: 403 });
+    }
+
     const image = getMeta('og:image');
     let price = null;
     const pMatch = html.match(/"price":(\d+)/) || html.match(/"currentPrice":(\d+)/);
