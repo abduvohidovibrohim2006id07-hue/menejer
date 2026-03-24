@@ -1,7 +1,6 @@
 "use client";
 
 import React from 'react';
-import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { MediaUpload } from './MediaUpload';
 import { PriceCalculatorModal } from './PriceCalculatorModal';
@@ -404,12 +403,11 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                       onMouseLeave={(e) => { e.currentTarget.pause(); }}
                     />
                   ) : (
-                    <Image 
+                    <img 
                       src={img} 
                       alt="" 
-                      fill
-                      sizes="(max-width: 768px) 100vw, 300px"
-                      className="object-cover transition-transform group-hover/item:scale-110 duration-500"
+                      loading="lazy"
+                      className="w-full h-full object-cover transition-transform group-hover/item:scale-110 duration-500"
                       onLoad={(e) => handleImageLoad(img, e)}
                     />
                   )}
