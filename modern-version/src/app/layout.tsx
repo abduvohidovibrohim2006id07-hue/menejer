@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Outfit } from "next/font/google";
 import "./globals.css";
+import { Toaster } from 'react-hot-toast';
 
 const outfit = Outfit({
   subsets: ["latin"],
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="uz">
       <body className={`${outfit.variable} font-sans antialiased text-slate-900`}>
+        <Toaster position="top-right" toastOptions={{ className: 'font-bold text-sm tracking-wider font-sans rounded-2xl' }} />
         {children}
       </body>
     </html>

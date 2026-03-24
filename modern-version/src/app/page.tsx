@@ -14,17 +14,34 @@ const MarketManager = dynamic(() => import("@/components/MarketManager").then(mo
 const NotesManager = dynamic(() => import("@/components/NotesManager").then(mod => ({ default: mod.NotesManager })), { ssr: false });
 import { useScrollPersistence } from "@/hooks/useScrollPersistence";
 import { apiClient } from "@/lib/api-client";
+import useSWR from "swr";
+import toast from "react-hot-toast";
+import { ProductCardSkeleton } from "@/components/ProductCardSkeleton";
+
+const fetcher = (url: string) => apiClient.get(url);
 
 export default function Home() {
   const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   
-  useScrollPersistence(`home-scroll-${activeTab}`, activeTab === 'products' ? !initialLoading : true);
+  useScrollPersistence(`home-scroll-${activeTab}`, activeTab === 'products');
   const [mounted, setMounted] = useState(false);
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [markets, setMarkets] = useState<any[]>([]);
+
+  const { data: dbProds, error: pErr, mutate: mutateProducts, isLoading: pLoad, isValidating } = useSWR('/api/products', fetcher);
+  const { data: dbCats, isLoading: cLoad } = useSWR('/api/categories', fetcher);
+  const { data: dbMrkts, isLoading: mLoad } = useSWR('/api/markets', fetcher);
+  
+  const isLoadingData = pLoad || cLoad || mLoad;
+
+  useEffect(() => {
+    if (dbProds) setAllProducts(Array.isArray(dbProds) ? dbProds : []);
+    if (dbCats) setCategories(Array.isArray(dbCats) ? dbCats : []);
+    if (dbMrkts) setMarkets(Array.isArray(dbMrkts) ? dbMrkts : []);
+  }, [dbProds, dbCats, dbMrkts]);
   const [filteredProducts, setFilteredProducts] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState("Barchasi");
   const [searchQuery, setSearchQuery] = useState("");
@@ -126,8 +143,9 @@ export default function Home() {
       }
       setSelectedIds(new Set());
       await fetchData();
+      toast.success(`${selectedIds.size} ta mahsulot o'chirildi!`);
     } catch (e: any) {
-      alert("Xatolik: " + e.message);
+      toast.error("Xatolik: " + e.message);
     } finally {
       setRefreshing(false);
     }
@@ -140,32 +158,10 @@ export default function Home() {
 
   const fetchData = async (silent = false) => {
     if (silent) setRefreshing(true);
-    else if (allProducts.length === 0) setInitialLoading(true);
-
-    try {
-      const [prodData, catsData, marketsData] = await Promise.all([
-        apiClient.get('/api/products'),
-        apiClient.get('/api/categories'),
-        apiClient.get('/api/markets')
-      ]);
-      
-      setAllProducts(Array.isArray(prodData) ? prodData : []);
-      setCategories(Array.isArray(catsData) ? catsData : []);
-      
-      const mData = Array.isArray(marketsData) ? marketsData : [];
-      setMarkets(mData);
-
-      // Initialize selected markets if none saved
-      const savedMarkets = sessionStorage.getItem('filters-markets');
-      if (!savedMarkets && mData.length > 0) {
-        setSelectedMarkets(mData.map((m: any) => m.id));
-      }
-    } catch (e: any) {
-      console.error("Fetch Data Error:", e.message);
-    } finally {
-      setInitialLoading(false);
-      setRefreshing(false);
-    }
+    await Promise.all([
+      mutateProducts(),
+    ]);
+    setRefreshing(false);
   };
 
   useEffect(() => {
@@ -264,11 +260,12 @@ export default function Home() {
 
     try {
       // Perform deletion in background
-      apiClient.delete('/api/products', id).catch(e => {
+      apiClient.delete('/api/products', id).then(() => {
+        toast.success("Mahsulot o'chirildi!");
+      }).catch(e => {
         console.error("Background delete error:", e);
-        // Rollback only on critical error
         setAllProducts(originalProducts);
-        alert("Mahsulotni o'chirishda xatolik: " + e.message);
+        toast.error("Mahsulotni o'chirishda xatolik: " + e.message);
       });
     } catch (e: any) {
       console.error(e);
@@ -294,9 +291,10 @@ export default function Home() {
       };
       
       await apiClient.post('/api/products', clone);
+      toast.success("Mahsulot nusxalandi!");
       await fetchData(true);
     } catch (e: any) {
-      alert("Nusxalashda xatolik: " + e.message);
+      toast.error("Nusxalashda xatolik: " + e.message);
     } finally {
       setRefreshing(false);
     }
@@ -487,10 +485,11 @@ export default function Home() {
                  </div>
               )}
  
-              {initialLoading ? (
-                <div className="py-40 flex flex-col items-center justify-center gap-4">
-                  <div className="w-12 h-12 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
-                  <p className="text-slate-500 font-bold animate-pulse uppercase tracking-[0.2em] text-xs">Ma&apos;lumotlar yuklanmoqda...</p>
+              {isLoadingData ? (
+                <div className="flex flex-col gap-6">
+                  <ProductCardSkeleton />
+                  <ProductCardSkeleton />
+                  <ProductCardSkeleton />
                 </div>
               ) : (
                 <div className="flex flex-col gap-6 animate-in fade-in duration-500">
