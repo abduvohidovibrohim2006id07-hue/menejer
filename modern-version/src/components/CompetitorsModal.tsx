@@ -18,6 +18,7 @@ interface Competitor {
   scraped?: {
     title?: string;
     image?: string;
+    shop?: string;
     price?: number | null;
     fullPrice?: number | null;
     rating?: number | null;
@@ -428,6 +429,7 @@ export const CompetitorsModal = ({ isOpen, onClose, competitors = [], onUpdate, 
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
