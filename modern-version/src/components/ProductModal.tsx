@@ -35,6 +35,10 @@ interface ProductItem {
   warehouse_data?: Record<string, number | string>;
   price_retail?: string | number;
   local_images?: string[];
+  length_mm?: string | number;
+  width_mm?: string | number;
+  height_mm?: string | number;
+  weight_g?: string | number;
   marketId?: string;
   [key: string]: unknown; // Allow other fields safely
 }
@@ -67,6 +71,10 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     marketplaces: [],
     warehouse_data: {},
     price_retail: '',
+    length_mm: '',
+    width_mm: '',
+    height_mm: '',
+    weight_g: '',
   });
 
   const [loading, setLoading] = useState(false);
@@ -91,6 +99,10 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         marketplaces: product.marketplaces || [],
         warehouse_data: product.warehouse_data || {},
         price_retail: product.price_retail || '',
+        length_mm: product.length_mm || '',
+        width_mm: product.width_mm || '',
+        height_mm: product.height_mm || '',
+        weight_g: product.weight_g || '',
       });
     } else {
       // Automatic ID generation for NEW product
@@ -400,6 +412,53 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                    </div>
                  )}
                </div>
+            </div>
+
+            {/* PRODUCT DIMENSIONS & WEIGHT */}
+            <div className="col-span-1 md:col-span-3 bg-white p-6 rounded-[24px] border border-slate-200">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Mahsulot o&apos;lchamlari va vazni</label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black text-slate-400 ml-1">Uzunligi (mm)</label>
+                  <input 
+                    type="number"
+                    placeholder="0"
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold text-slate-900"
+                    value={formData.length_mm}
+                    onChange={(e) => setFormData({ ...formData, length_mm: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black text-slate-400 ml-1">Kengligi (mm)</label>
+                  <input 
+                    type="number"
+                    placeholder="0"
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold text-slate-900"
+                    value={formData.width_mm}
+                    onChange={(e) => setFormData({ ...formData, width_mm: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black text-slate-400 ml-1">Balandligi (mm)</label>
+                  <input 
+                    type="number"
+                    placeholder="0"
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold text-slate-900"
+                    value={formData.height_mm}
+                    onChange={(e) => setFormData({ ...formData, height_mm: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-[10px] uppercase font-black text-slate-400 ml-1">Vazni (gramm)</label>
+                  <input 
+                    type="number"
+                    placeholder="0"
+                    className="w-full p-4 bg-slate-50 border border-slate-100 rounded-2xl focus:bg-white focus:ring-2 focus:ring-indigo-500 transition-all outline-none text-sm font-bold text-slate-900"
+                    value={formData.weight_g}
+                    onChange={(e) => setFormData({ ...formData, weight_g: e.target.value })}
+                  />
+                </div>
+              </div>
             </div>
 
             {/* STATUS SELECTION */}
