@@ -70,9 +70,8 @@ export default function Home() {
     );
     if (observerTarget.current) observer.observe(observerTarget.current);
     
-    // Cleanup must conditionally verify the target or just disconnect
     return () => observer.disconnect();
-  }, [activeTab, filteredProducts.length]);
+  }, [activeTab, filteredProducts.length, visibleCount]);
 
   useEffect(() => {
     setMounted(true);
