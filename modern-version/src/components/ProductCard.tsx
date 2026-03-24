@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
 import { createPortal } from 'react-dom';
 import { MediaUpload } from './MediaUpload';
 import { PriceCalculatorModal } from './PriceCalculatorModal';
@@ -343,12 +344,41 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                 controls
               />
             ) : (
-              <img 
-                src={previewUrl} 
-                alt="" 
-                className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
-                key={previewUrl} // Force re-render for animation if needed
-              />
+              <>
+                <img 
+                  src={previewUrl} 
+                  alt="" 
+                  className="max-w-full max-h-full object-contain rounded-2xl shadow-2xl"
+                  key={previewUrl} 
+                  onLoad={(e) => handleImageLoad(previewUrl, e)}
+                />
+
+                {/* DIMENSION WARNING IN LIGHTBOX */}
+                {imageValidations[previewUrl] && !imageValidations[previewUrl].isValid && (
+                  <div className="absolute bottom-6 md:bottom-12 left-6 md:left-12 z-[120] bg-red-600/95 backdrop-blur-md rounded-2xl p-4 md:p-6 border border-white/20 shadow-2xl animate-in slide-in-from-bottom-4">
+                    <div className="flex items-center justify-between gap-6 mb-3">
+                      <div className="flex items-center gap-3">
+                        <span className="text-2xl">⚠️</span>
+                        <span className="text-sm font-black text-white uppercase tracking-widest">Noto&apos;g&apos;ri o&apos;lcham!</span>
+                      </div>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleFixImage(previewUrl);
+                        }}
+                        disabled={fixing === previewUrl}
+                        className="bg-white text-red-600 px-4 py-2 rounded-xl text-xs font-black hover:bg-slate-100 transition-all shadow-sm active:scale-90 flex items-center gap-2 disabled:opacity-50"
+                      >
+                        {fixing === previewUrl ? "⏳ Kuting..." : "🛠️ TO'G'IRLASH"}
+                      </button>
+                    </div>
+                    <p className="text-sm text-white/90 font-medium leading-relaxed bg-black/10 p-3 rounded-xl border border-white/10">
+                      Standard: <span className="font-black text-white">1080x1440</span><br/>
+                      Fayldagi: <span className="font-black text-red-200">{imageValidations[previewUrl].w} x {imageValidations[previewUrl].h}</span>
+                    </p>
+                  </div>
+                )}
+              </>
             )}
             
             {/* INDEX COUNTER */}
@@ -403,39 +433,13 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                       onMouseLeave={(e) => { e.currentTarget.pause(); }}
                     />
                   ) : (
-                    <img 
+                    <Image 
                       src={img} 
                       alt="" 
-                      loading="lazy"
-                      className="w-full h-full object-cover transition-transform group-hover/item:scale-110 duration-500"
-                      onLoad={(e) => handleImageLoad(img, e)}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 300px"
+                      className="object-cover transition-transform group-hover/item:scale-110 duration-500"
                     />
-                  )}
-
-                  {/* DIMENSION WARNING */}
-                  {imageValidations[img] && !imageValidations[img].isValid && !isVideo && (
-                    <div className="absolute bottom-2 left-2 right-2 z-[35] bg-red-600/90 backdrop-blur-md rounded-xl p-2.5 border border-white/20 shadow-xl animate-in slide-in-from-bottom-2">
-                      <div className="flex items-center justify-between gap-2 mb-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm">⚠️</span>
-                          <span className="text-[10px] font-black text-white uppercase tracking-wider">Noto&apos;g&apos;ri o&apos;lcham!</span>
-                        </div>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleFixImage(img);
-                          }}
-                          disabled={fixing === img}
-                          className="bg-white text-red-600 px-2 py-1 rounded-lg text-[9px] font-black hover:bg-slate-100 transition-all shadow-sm active:scale-90 flex items-center gap-1 disabled:opacity-50"
-                        >
-                          {fixing === img ? "⏳..." : "🛠️ TO'G'IRLASH"}
-                        </button>
-                      </div>
-                      <p className="text-[10px] text-white/90 font-medium leading-tight">
-                        Kutilayotgan: <span className="font-bold text-white">1080x1440</span><br/>
-                        Hozirgi: <span className="font-bold text-red-200">{imageValidations[img].w}x{imageValidations[img].h}</span>
-                      </p>
-                    </div>
                   )}
                   
                   {/* CONFIRM DELETE OVERLAY */}
