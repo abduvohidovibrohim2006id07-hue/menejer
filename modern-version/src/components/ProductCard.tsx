@@ -302,15 +302,6 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
 
   return (
     <div className={`bg-white rounded-[32px] p-6 border transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex flex-col md:flex-row gap-8 items-stretch group/card relative ${selected ? 'border-indigo-500 ring-4 ring-indigo-500/10 shadow-2xl bg-indigo-50/10' : 'border-slate-100 shadow-sm hover:shadow-xl'} ${isDeleting ? 'scale-0 rotate-[10deg] opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}>
-      {/* QUALITY SCORE BADGE */}
-      <div className="absolute -top-3 left-10 z-40">
-        <div className={`${scoreColor} text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-2 border-2 border-white`}>
-          <span>SIFAT: {score}%</span>
-          <div className="w-10 h-1 bg-white/30 rounded-full overflow-hidden">
-            <div className="h-full bg-white" style={{ width: `${score}%` }}></div>
-          </div>
-        </div>
-      </div>
       {/* DELETING INDICATOR LOG */}
       {isDeleting && (
         <div className="absolute top-4 left-4 z-[60] bg-red-600 text-white px-4 py-2 rounded-full font-black text-[10px] animate-pulse shadow-lg flex items-center gap-2">
@@ -576,7 +567,20 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
               <h2 className="text-2xl font-bold text-slate-900 group-hover/card:text-indigo-600 transition-colors">
                 {product.category} {product.brand} {product.model} {product.color}
               </h2>
-              <div className="flex flex-wrap gap-2 mt-3">
+
+              <div className="mt-4 flex items-center gap-3">
+                 <div className={`${scoreColor} text-white px-6 py-2 rounded-2xl text-lg font-black shadow-lg flex items-center gap-4 border-2 border-white/20`}>
+                    <span className="tracking-tighter">{score} <span className="text-xs opacity-80">%</span></span>
+                    <div className="w-24 h-2 bg-white/30 rounded-full overflow-hidden hidden sm:block">
+                       <div className="h-full bg-white shadow-[0_0_10px_white]" style={{ width: `${score}%` }}></div>
+                    </div>
+                 </div>
+                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-tight">
+                    Kartochka<br/>To&apos;liqligi
+                 </span>
+              </div>
+
+              <div className="flex flex-wrap gap-2 mt-5">
                 <span className="text-[10px] uppercase tracking-wider font-extrabold px-2 py-1 bg-slate-100 text-slate-500 rounded-lg">
                   📁 {product.category}
                 </span>
