@@ -4,6 +4,8 @@ import React from 'react';
 import { createPortal } from 'react-dom';
 import { MediaUpload } from './MediaUpload';
 import { PriceCalculatorModal } from './PriceCalculatorModal';
+import JSZip from 'jszip';
+import { saveAs } from 'file-saver';
 
 interface Product {
   id: string;
@@ -42,6 +44,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
   const [isDeleting, setIsDeleting] = React.useState(false);
   const [deletingImg, setDeletingImg] = React.useState<string | null>(null);
   const [showPriceCalc, setShowPriceCalc] = React.useState(false);
+  const [isDownloadingAll, setIsDownloadingAll] = React.useState(false);
 
   const processImage = (file: File): Promise<File> => {
     return new Promise((resolve) => {
@@ -163,6 +166,53 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
   };
 
   const [confirmDeleteProduct, setConfirmDeleteProduct] = React.useState(false);
+
+  const handleDownloadAllMedia = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!product.local_images || product.local_images.length === 0) {
+      alert("Yuklab olish uchun media fayllar yo'q!");
+      return;
+    }
+
+    setIsDownloadingAll(true);
+    try {
+      const zip = new JSZip();
+      // Create a valid folder name based on product brand and model
+      const _brand = product.brand ? product.brand.trim() : "";
+      const _model = product.model ? product.model.trim() : "";
+      const generatedName = `${_brand} ${_model}`.trim() || product.category || "Media";
+      const sfFolderName = generatedName.replace(/[^a-zA-Z0-9_-]/g, '_');
+      
+      const folder = zip.folder(sfFolderName);
+      if (!folder) throw new Error("Papka yaratishda xatolik");
+
+      const promises = product.local_images.map(async (url, idx) => {
+        try {
+          // Fetch the file through the proxy to avoid CORS
+          const proxyUrl = `/api/proxy?url=${encodeURIComponent(url)}`;
+          const response = await fetch(proxyUrl);
+          if (!response.ok) throw new Error();
+          
+          const blob = await response.blob();
+          const ext = url.includes('.mp4') ? 'mp4' : url.includes('.mov') ? 'mov' : 'jpg';
+          const filename = `${sfFolderName}_${idx + 1}.${ext}`;
+          
+          folder.file(filename, blob);
+        } catch (err) {
+          console.error(`Fayl yuklashda xatolik: ${url}`, err);
+        }
+      });
+
+      await Promise.all(promises);
+      const content = await zip.generateAsync({ type: 'blob' });
+      saveAs(content, `${sfFolderName}.zip`);
+
+    } catch (e: any) {
+      alert("Yuklashda xatolik: " + e.message);
+    } finally {
+      setIsDownloadingAll(false);
+    }
+  };
 
   // LIGHTBOX NAVIGATION
   const currentIndex = product.local_images?.indexOf(previewUrl || '') ?? -1;
@@ -534,8 +584,24 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-6 border-t border-slate-100">
-          <div className="col-span-1">
-            <MediaUpload productId={product.id} onSuccess={onRefresh} />
+          <div className="col-span-1 flex gap-2">
+            <div className="flex-[0.6]">
+              <MediaUpload productId={product.id} onSuccess={onRefresh} />
+            </div>
+            <button
+              onClick={handleDownloadAllMedia}
+              disabled={isDownloadingAll || !product.local_images || product.local_images.length === 0}
+              className={`flex-[0.4] py-3 flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed transition-all active:scale-95 ${isDownloadingAll ? 'bg-indigo-50 border-indigo-200 text-indigo-500' : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-indigo-400 hover:text-indigo-600'}`}
+            >
+               {isDownloadingAll ? (
+                  <div className="w-5 h-5 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin"></div>
+               ) : (
+                  <>
+                    <span className="text-xl">📥</span>
+                    <span className="text-[9px] font-black uppercase tracking-wider text-center px-1 leading-tight">BARCHASINI<br/>YUKLASH</span>
+                  </>
+               )}
+            </button>
           </div>
           <button 
             onClick={() => onEdit(product)}
