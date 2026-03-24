@@ -25,7 +25,6 @@ export default function Home() {
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('products');
   
-  useScrollPersistence(`home-scroll-${activeTab}`, activeTab === 'products');
   const [mounted, setMounted] = useState(false);
   const [allProducts, setAllProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
@@ -34,7 +33,6 @@ export default function Home() {
   const { data: dbProds, error: pErr, mutate: mutateProducts, isLoading: pLoad, isValidating } = useSWR('/api/products', fetcher);
   const { data: dbCats, isLoading: cLoad } = useSWR('/api/categories', fetcher);
   const { data: dbMrkts, isLoading: mLoad } = useSWR('/api/markets', fetcher);
-  
   const isLoadingData = pLoad || cLoad || mLoad;
 
   useEffect(() => {
@@ -59,6 +57,11 @@ export default function Home() {
   const [sortBy, setSortBy] = useState("newest"); // 'newest', 'oldest', 'name-asc', 'name-desc'
   const [visibleCount, setVisibleCount] = useState(12);
   const observerTarget = React.useRef<HTMLDivElement>(null);
+
+  const filterSignature = [selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets, sortBy].join('|');
+  const lastFilterSignature = React.useRef(filterSignature);
+
+  useScrollPersistence(`home-scroll-${activeTab}`, activeTab === 'products' && !isLoadingData);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -254,11 +257,16 @@ export default function Home() {
       }
 
       setFilteredProducts(result);
-      setVisibleCount(12); // Har doim toza boshlanish uchun 12 qiymatga tushiramiz
+      
+      // ONLY reset visible count if the actual filter parameters changed
+      if (lastFilterSignature.current !== filterSignature) {
+        setVisibleCount(12);
+        lastFilterSignature.current = filterSignature;
+      }
     }, 300); // 300ms qotishsiz filtrlash taymeri
 
     return () => clearTimeout(timer);
-  }, [allProducts, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets]);
+  }, [allProducts, filterSignature]);
 
   const handleUpdate = (id: string, updates: any) => {
     setAllProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
