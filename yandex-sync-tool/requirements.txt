@@ -1,0 +1,4 @@
+firebase-admin
+selenium
+webdriver-manager
+colorama

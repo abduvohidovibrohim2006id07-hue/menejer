@@ -24,10 +24,15 @@ interface Competitor {
     title?: string;
     image?: string;
     price?: number | null;
+    oldPrice?: number | null;
     fullPrice?: number | null;
     rating?: number | null;
+    reviews?: number | null;
     reviewsAmount?: number | null;
+    sold?: number | null;
     shop?: string;
+    brand?: string;
+    discount?: number | null;
   };
   history?: HistorySnapshot[];
 }
@@ -256,99 +261,167 @@ export const CompetitorsModal = ({
           <div className="max-w-6xl mx-auto">
             
             {view === 'dashboard' && (
-              <div className="space-y-8">
+              <div className="space-y-12">
                 <div className="flex justify-between items-end">
                    <div>
-                     <h3 className="text-3xl font-black text-slate-900 tracking-tight">Raqobatchilar</h3>
-                     <p className="text-slate-500 font-medium">Monitoring ro'yxati ({competitors.length})</p>
+                     <h3 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Raqobatchilar</h3>
+                     <p className="text-slate-500 font-medium ml-1">Monitoring ro'yxati ({competitors.length} ta havola)</p>
                    </div>
-                   <div className="bg-white px-6 py-4 rounded-2xl shadow-sm border border-slate-100 flex items-center gap-4">
-                      <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center text-green-600">
-                        <ArrowUpRight size={20} />
+                   <div className="bg-white px-8 py-5 rounded-[24px] shadow-xl border border-indigo-50 flex items-center gap-6">
+                      <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
+                        <TrendingUp size={24} />
                       </div>
                       <div>
-                        <p className="text-[9px] text-slate-400 font-black uppercase tracking-wider">O'rtacha Narx</p>
-                        <p className="text-xl font-black text-slate-900">{getAveragePrice().toLocaleString()} so'm</p>
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-1">O'rtacha Narx</p>
+                        <p className="text-2xl font-black text-slate-900">{getAveragePrice().toLocaleString()} <span className="text-xs font-bold text-slate-400 uppercase">so'm</span></p>
                       </div>
                    </div>
                 </div>
 
                 {competitors.length === 0 ? (
-                  <div className="py-20 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-200">
-                    <p className="text-xl font-bold text-slate-400 italic">Hali raqobatchilar qo'shilmagan</p>
-                    <button onClick={() => setView('add')} className="mt-4 text-indigo-600 font-black uppercase tracking-widest text-sm hover:underline">Yangi qo'shish &rarr;</button>
+                  <div className="py-24 text-center bg-white rounded-[48px] border-4 border-dashed border-slate-100">
+                    <div className="text-6xl mb-6 grayscale opacity-20">📊</div>
+                    <p className="text-2xl font-black text-slate-300 italic uppercase">Hali raqobatchilar qo&apos;shilmagan</p>
+                    <button onClick={() => setView('add')} className="mt-6 px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-xl active:scale-95">Yangi qo&apos;shish &rarr;</button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 gap-4">
-                    {competitors.map((comp) => (
-                      <div key={comp.id} className="group bg-white rounded-2xl p-5 shadow-sm border border-slate-200 flex items-center gap-6 transition-all hover:shadow-md hover:border-indigo-100">
-                        <div className="w-24 h-24 bg-slate-50 rounded-xl overflow-hidden border border-slate-100 p-2 shrink-0">
-                          <img 
-                            src={comp.metadata?.image || 'https://via.placeholder.com/150'} 
-                            alt="" 
-                            className="w-full h-full object-contain"
-                          />
-                        </div>
+                  <div className="space-y-16">
+                    {/* GROUPED BY BRAND/SOURCE */}
+                    {['yandex', 'uzum'].map((type) => {
+                      const list = competitors.filter(c => c.type === type);
+                      if (list.length === 0) return null;
 
-                        <div className="flex-1 min-w-0">
-                           <div className="flex items-center gap-2 mb-1 text-[10px] font-black uppercase tracking-widest">
-                              <span className={clsx(
-                                comp.type === 'uzum' ? "text-yellow-600" : "text-red-500"
-                              )}>
-                                {comp.type === 'uzum' ? 'Uzum Market' : 'Yandex Market'}
-                              </span>
-                              <span className="text-slate-300">•</span>
-                              <span className="text-slate-400 truncate">{comp.metadata?.shop || 'Bozor'}</span>
-                           </div>
-                           <h4 className="text-lg font-bold text-slate-900 truncate group-hover:text-indigo-600 transition-colors">
-                             {comp.metadata?.title || 'Yuklanmoqda...'}
-                           </h4>
-                           <div className="flex items-center gap-4 mt-2">
-                             <a href={comp.url} target="_blank" className="text-indigo-500 hover:underline text-xs font-bold flex items-center gap-1">
-                               Ko'rish <ExternalLink size={12} />
-                             </a>
-                             {comp.metadata?.rating && (
-                               <div className="text-orange-500 font-bold text-xs flex items-center gap-1">
-                                 <Star size={12} fill="currentColor" /> {comp.metadata.rating}
-                               </div>
-                             )}
-                           </div>
-                        </div>
+                      return (
+                        <div key={type} className="space-y-6">
+                          <div className={clsx(
+                            "flex items-center gap-4 px-6 py-4 rounded-3xl border shadow-sm",
+                            type === 'yandex' ? "bg-red-50 border-red-100 text-red-600" : "bg-indigo-50 border-indigo-100 text-indigo-600"
+                          )}>
+                            <span className="text-2xl">{type === 'yandex' ? '🔴' : '🟣'}</span>
+                            <h4 className="text-xl font-black uppercase tracking-widest">
+                              {type === 'yandex' ? 'Yandex Market' : 'Uzum Market'} Raqobat
+                            </h4>
+                            <span className="ml-auto px-4 py-1.5 bg-white rounded-xl text-xs font-black shadow-sm border border-inherit">
+                              {list.length} ta
+                            </span>
+                          </div>
 
-                        <div className="text-right shrink-0 min-w-[150px]">
-                           <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mb-1">Narx</p>
-                           <p className="text-2xl font-black text-slate-900 leading-none">
-                             {comp.metadata?.price ? Number(comp.metadata.price).toLocaleString() : '—'} 
-                             <span className="text-xs font-medium ml-1">so'm</span>
-                           </p>
-                           {comp.metadata?.price && currentProduct.price > 0 && (
-                             <p className={clsx(
-                               "text-[10px] font-black mt-1 uppercase",
-                               Number(comp.metadata.price) < currentProduct.price ? "text-red-500" : "text-green-500"
-                             )}>
-                               {Number(comp.metadata.price) < currentProduct.price ? "Sizdan arzon ⬇️" : "Sizdan qimmat ⬆️"}
-                             </p>
-                           )}
-                        </div>
+                          <div className="grid grid-cols-1 gap-6">
+                            {list.map((comp) => {
+                              const meta = comp.metadata || {};
+                              const price = Number(meta.price) || 0;
+                              const oldPrice = Number(meta.oldPrice || meta.fullPrice) || 0;
+                              const discount = meta.discount || (oldPrice > price ? Math.round((1 - price/oldPrice)*100) : 0);
+                              
+                              return (
+                                <div key={comp.id} className="group bg-white rounded-[32px] p-8 shadow-sm border border-slate-100 flex flex-col lg:flex-row items-center gap-10 transition-all hover:shadow-2xl hover:border-indigo-100 relative overflow-hidden">
+                                  {/* SOURCE LOGO OVERLAY */}
+                                  <div className={clsx(
+                                    "absolute top-0 right-0 px-6 py-2 rounded-bl-3xl font-black text-[9px] uppercase tracking-widest text-white shadow-lg",
+                                    type === 'yandex' ? "bg-red-600" : "bg-indigo-600"
+                                  )}>
+                                    {type}
+                                  </div>
 
-                        <div className="flex gap-2 shrink-0">
-                          <button 
-                            onClick={() => refreshCompetitor(comp.id)}
-                            className="p-3 bg-slate-100 hover:bg-indigo-600 hover:text-white text-slate-500 rounded-xl transition-all"
-                            title="Yangilash"
-                          >
-                            <RefreshCw size={18} />
-                          </button>
-                          <button 
-                            onClick={() => removeCompetitor(comp.id)}
-                            className="p-3 bg-slate-100 hover:bg-red-600 hover:text-white text-slate-500 rounded-xl transition-all"
-                            title="O'chirish"
-                          >
-                            <Trash2 size={18} />
-                          </button>
+                                  <div className="w-full lg:w-44 h-44 bg-slate-50 rounded-[28px] overflow-hidden border border-slate-100 p-4 shrink-0 flex items-center justify-center relative">
+                                    <img 
+                                      src={meta.image || 'https://via.placeholder.com/150'} 
+                                      alt="" 
+                                      className="max-w-full max-h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-500"
+                                    />
+                                    {discount > 0 && (
+                                      <div className="absolute top-2 left-2 bg-red-500 text-white text-[10px] font-black px-2 py-1 rounded-lg shadow-md animate-pulse">
+                                        -{discount}%
+                                      </div>
+                                    )}
+                                  </div>
+
+                                  <div className="flex-1 min-w-0">
+                                     <div className="flex items-center gap-3 mb-2">
+                                        <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-3 py-1 rounded-lg uppercase tracking-widest">{meta.brand || 'No Brand'}</span>
+                                        <span className="text-slate-300">•</span>
+                                        <div className="flex items-center gap-1 text-orange-500 font-bold text-sm">
+                                          <Star size={14} fill="currentColor" /> {meta.rating || '0.0'}
+                                          <span className="text-slate-400 font-medium ml-1">({meta.reviews || meta.reviewsAmount || 0} sharh)</span>
+                                        </div>
+                                     </div>
+                                     
+                                     <h4 className="text-2xl font-bold text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors mb-3">
+                                       {meta.title || 'Ma\'lumot yuklanmoqda...'}
+                                     </h4>
+
+                                     <div className="flex flex-wrap gap-4 items-center">
+                                       <a 
+                                         href={comp.url} 
+                                         target="_blank" 
+                                         className="px-5 py-2.5 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl text-indigo-600 text-[10px] font-black uppercase tracking-widest flex items-center gap-2 transition-all shadow-sm active:scale-95"
+                                       >
+                                         Saytda ko&apos;rish <ExternalLink size={14} />
+                                       </a>
+                                       {(Number(meta.sold || 0) > 0) && (
+                                         <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-3 py-1.5 rounded-xl uppercase tracking-widest">
+                                           🛒 {meta.sold} ta sotilgan
+                                         </span>
+                                       )}
+                                     </div>
+                                  </div>
+
+                                  <div className="flex flex-col lg:items-end shrink-0 min-w-[200px] gap-6 lg:gap-0">
+                                     <div className="lg:text-right">
+                                        <p className="text-[11px] text-slate-400 font-black uppercase tracking-[0.2em] mb-1">Hozirgi Narx</p>
+                                        <p className="text-4xl font-black text-slate-900 leading-none tracking-tighter">
+                                          {price > 0 ? price.toLocaleString() : '—'} 
+                                          <span className="text-base font-bold ml-1 text-slate-400 uppercase">so&apos;m</span>
+                                        </p>
+                                        
+                                        {oldPrice > price && (
+                                          <p className="mt-2 text-sm font-bold text-slate-300 line-through tracking-wider">
+                                            {oldPrice.toLocaleString()} so&apos;m
+                                          </p>
+                                        )}
+                                     </div>
+                                     
+                                     <div className="lg:mt-6 flex flex-col lg:items-end gap-3">
+                                       {price > 0 && currentProduct.price > 0 && (
+                                         <div className={clsx(
+                                           "px-6 py-3 rounded-2xl font-black flex items-center gap-3 shadow-sm border animate-in slide-in-from-right-4 duration-500",
+                                           price < currentProduct.price 
+                                            ? "bg-red-50 border-red-100 text-red-600 shadow-red-100" 
+                                            : "bg-emerald-50 border-emerald-100 text-emerald-600 shadow-emerald-100"
+                                         )}>
+                                           {price < currentProduct.price ? <ArrowDownRight size={20} /> : <ArrowUpRight size={20} />}
+                                           <div className="leading-none">
+                                              <p className="text-[9px] uppercase opacity-60 tracking-widest">{price < currentProduct.price ? "Ogohlantirish" : "Yaxshi holat"}</p>
+                                              <p className="text-sm">{price < currentProduct.price ? "ARZON ⬇️" : "QIMMAT ⬆️"}</p>
+                                           </div>
+                                         </div>
+                                       )}
+                                       
+                                       <div className="flex gap-2">
+                                         <button 
+                                           onClick={() => refreshCompetitor(comp.id)}
+                                           className="w-12 h-12 bg-slate-50 hover:bg-indigo-600 hover:text-white text-slate-400 rounded-2xl transition-all flex items-center justify-center shadow-sm border border-slate-100 active:scale-90"
+                                           title="Yangilash"
+                                         >
+                                           <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
+                                         </button>
+                                         <button 
+                                           onClick={() => removeCompetitor(comp.id)}
+                                           className="w-12 h-12 bg-slate-50 hover:bg-red-600 hover:text-white text-slate-400 rounded-2xl transition-all flex items-center justify-center shadow-sm border border-slate-100 active:scale-90"
+                                           title="O'chirish"
+                                         >
+                                           <Trash2 size={20} />
+                                         </button>
+                                       </div>
+                                     </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
