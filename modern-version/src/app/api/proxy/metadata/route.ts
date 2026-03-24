@@ -42,12 +42,17 @@ export async function GET(req: Request) {
                 if (p) {
                    const firstSku = p.skuList?.[0] || {};
                    const firstPhoto = p.photos?.[0]?.photo;
-                   const imageUrl = firstPhoto?.["720"]?.high || firstPhoto?.["800"]?.high || firstPhoto?.["540"]?.high || firstPhoto?.["240"]?.high;
+                   // Prioritize 'original.jpg' for 1080x1440px resolution as requested
+                   const imageUrl = firstPhoto?.["800"]?.high || firstPhoto?.["720"]?.high || firstPhoto?.["540"]?.high;
+                   
+                   // If the URL contains 'original.jpg', we are good. Uzum also allows constructing it:
+                   const finalImageUrl = imageUrl?.includes('original.jpg') ? imageUrl : 
+                                        (p.photos?.[0]?.photoKey ? `https://images.uzum.uz/${p.photos[0].photoKey}/original.jpg` : imageUrl);
                    
                    clearTimeout(timeoutId);
                    return NextResponse.json({
                      title: p.title,
-                     image: imageUrl,
+                     image: finalImageUrl,
                      price: firstSku.purchasePrice || firstSku.fullPrice || p.sellPrice || p.fullPrice,
                      shop: 'Uzum Market',
                      source: 'api'
