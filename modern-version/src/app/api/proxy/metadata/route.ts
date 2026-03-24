@@ -41,10 +41,13 @@ export async function GET(req: Request) {
                 const p = data.payload?.data || data.payload;
                 if (p) {
                    const firstSku = p.skuList?.[0] || {};
+                   const firstPhoto = p.photos?.[0]?.photo;
+                   const imageUrl = firstPhoto?.["720"]?.high || firstPhoto?.["800"]?.high || firstPhoto?.["540"]?.high || firstPhoto?.["240"]?.high;
+                   
                    clearTimeout(timeoutId);
                    return NextResponse.json({
                      title: p.title,
-                     image: (p.photos?.[0]?.url?.high || p.photos?.[0]?.url) || (firstSku.photos?.[0]?.url),
+                     image: imageUrl,
                      price: firstSku.purchasePrice || firstSku.fullPrice || p.sellPrice || p.fullPrice,
                      shop: 'Uzum Market',
                      source: 'api'
