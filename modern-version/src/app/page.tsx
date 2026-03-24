@@ -247,9 +247,19 @@ export default function Home() {
       
       // Sorting
       if (sortBy === 'newest') {
-        result.sort((a: any, b: any) => new Date(b.updated_at || 0).getTime() - new Date(a.updated_at || 0).getTime());
+        result.sort((a: any, b: any) => {
+          const timeA = new Date(a.created_at || a.updated_at || 0).getTime();
+          const timeB = new Date(b.created_at || b.updated_at || 0).getTime();
+          if (timeA !== timeB) return timeB - timeA;
+          return Number(b.id) - Number(a.id);
+        });
       } else if (sortBy === 'oldest') {
-        result.sort((a: any, b: any) => new Date(a.updated_at || 0).getTime() - new Date(b.updated_at || 0).getTime());
+        result.sort((a: any, b: any) => {
+          const timeA = new Date(a.created_at || a.updated_at || 0).getTime();
+          const timeB = new Date(b.created_at || b.updated_at || 0).getTime();
+          if (timeA !== timeB) return timeA - timeB;
+          return Number(a.id) - Number(b.id);
+        });
       } else if (sortBy === 'name-asc') {
         result.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
       } else if (sortBy === 'name-desc') {
