@@ -106,6 +106,19 @@ export const POST = withGateway(async (req) => {
             model = 'openai/gpt-oss-120b';
             prompt = `Напишите подробное профессиональное маркетинговое описание товара. Данные: ${JSON.stringify(context || {})}. Дополнительно: ${text}. ЯЗЫК: Русский. Длина: 2000-2500 символов. Верните ТОЛЬКО текст.`;
             break;
+          case 'guess_packaging_dimensions':
+            model = 'llama-3.3-70b-versatile';
+            responseFormat = { type: 'json_object' };
+            prompt = `Ushbu mahsulotning QADOG'I (packaging) taxminiy o'lchamlari va vaznini aniqlang. 
+              Ma'lumotlar: ${JSON.stringify(context || {})}. 
+              QOIDA: 
+              1. O'lchamlar MM (millimetr) da bo'lsin. 
+              2. Vazn GR (gramm) da bo'lsin. 
+              3. Bu aynan mahsulotning o'zi emas, balki qadog'i (karobkasi) o'lchami bo'lishi kerak.
+              JAVOB FAQAT JSON BO'LSIN:
+              { "length_mm": 0, "width_mm": 0, "height_mm": 0, "weight_g": 0 }
+              Faqat raqamlarni yozing.`;
+            break;
           default:
             prompt = text;
         }

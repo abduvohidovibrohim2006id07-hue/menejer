@@ -166,6 +166,10 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             color: data.result.color || prev.color,
             category: data.result.category || prev.category,
             marketId: data.result.marketId || prev.marketId,
+            length_mm: data.result.length_mm || prev.length_mm,
+            width_mm: data.result.width_mm || prev.width_mm,
+            height_mm: data.result.height_mm || prev.height_mm,
+            weight_g: data.result.weight_g || prev.weight_g,
           }));
         } else {
           setFormData((prev: any) => ({ ...prev, [targetField]: data.result }));
@@ -416,7 +420,17 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
 
             {/* PRODUCT DIMENSIONS & WEIGHT */}
             <div className="col-span-1 md:col-span-3 bg-white p-6 rounded-[24px] border border-slate-200">
-              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-4">Mahsulot o&apos;lchamlari va vazni</label>
+              <div className="flex justify-between items-center mb-4">
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest">Mahsulot o&apos;lchamlari va vazni (QADOG&apos;I)</label>
+                <button 
+                  type="button"
+                  onClick={() => handleAIAction('guess_packaging_dimensions', '', '')}
+                  disabled={loading}
+                  className="bg-indigo-50 hover:bg-indigo-100 text-indigo-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all flex items-center gap-2 border border-indigo-100 shadow-sm disabled:opacity-50"
+                >
+                  <span>✨</span> AI TAXMIN (QADOG&apos;I)
+                </button>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase font-black text-slate-400 ml-1">Uzunligi (mm)</label>
