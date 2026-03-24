@@ -4,12 +4,14 @@ import React, { useState, useEffect } from 'react';
 import { Navbar } from "@/components/Navbar";
 import { CategoryFilter } from "@/components/CategoryFilter";
 import { ProductCard } from "@/components/ProductCard";
-import { ProductModal } from "@/components/ProductModal";
-import { CategoryManager } from "@/components/CategoryManager";
-import { AiSettingsManager } from "@/components/AiSettingsManager";
-import { VideoDownloader } from "@/components/VideoDownloader";
-import { MarketManager } from "@/components/MarketManager";
-import { NotesManager } from "@/components/NotesManager";
+import dynamic from 'next/dynamic';
+
+const ProductModal = dynamic(() => import("@/components/ProductModal").then(mod => ({ default: mod.ProductModal })), { ssr: false });
+const CategoryManager = dynamic(() => import("@/components/CategoryManager").then(mod => ({ default: mod.CategoryManager })), { ssr: false });
+const AiSettingsManager = dynamic(() => import("@/components/AiSettingsManager").then(mod => ({ default: mod.AiSettingsManager })), { ssr: false });
+const VideoDownloader = dynamic(() => import("@/components/VideoDownloader").then(mod => ({ default: mod.VideoDownloader })), { ssr: false });
+const MarketManager = dynamic(() => import("@/components/MarketManager").then(mod => ({ default: mod.MarketManager })), { ssr: false });
+const NotesManager = dynamic(() => import("@/components/NotesManager").then(mod => ({ default: mod.NotesManager })), { ssr: false });
 import { useScrollPersistence } from "@/hooks/useScrollPersistence";
 import { apiClient } from "@/lib/api-client";
 
@@ -37,6 +39,23 @@ export default function Home() {
   const [statusFilter, setStatusFilter] = useState("all"); // 'all', 'active', 'quarantine', 'archive'
   const [selectedMarkets, setSelectedMarkets] = useState<string[]>([]);
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(12);
+  const observerTarget = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      entries => {
+        if (entries[0].isIntersecting) {
+          setVisibleCount(prev => prev + 12);
+        }
+      },
+      { rootMargin: "400px" } // Triggers before hitting the actual bottom
+    );
+    if (observerTarget.current) observer.observe(observerTarget.current);
+    
+    // Cleanup must conditionally verify the target or just disconnect
+    return () => observer.disconnect();
+  }, [activeTab, filteredProducts.length]);
 
   useEffect(() => {
     setMounted(true);
@@ -171,63 +190,67 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    let result = allProducts;
-    
-    if (selectedCategory !== "Barchasi") {
-      result = result.filter((p: any) => p.category === selectedCategory);
-    }
+    // Kechiktirilgan (Debounce) Filtr algoritmi
+    const timer = setTimeout(() => {
+      let result = allProducts;
+      
+      if (selectedCategory !== "Barchasi") {
+        result = result.filter((p: any) => p.category === selectedCategory);
+      }
 
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase().trim();
-      result = result.filter((p: any) => {
-        const searchPool = [
-          p.name || '',
-          p.name_ru || '',
-          p.brand || '',
-          p.model || '',
-          p.color || '',
-          p.id?.toString() || ''
-        ].map(val => val.toLowerCase());
+      if (searchQuery) {
+        const q = searchQuery.toLowerCase().trim();
+        result = result.filter((p: any) => {
+          const searchPool = [
+            p.name || '',
+            p.name_ru || '',
+            p.brand || '',
+            p.model || '',
+            p.color || '',
+            p.id?.toString() || ''
+          ].map(val => val.toLowerCase());
 
-        return searchPool.some(val => val.includes(q));
-      });
-    }
+          return searchPool.some(val => val.includes(q));
+        });
+      }
 
-    if (brandFilter) {
-      const bf = brandFilter.toLowerCase();
-      result = result.filter((p: any) => p.brand?.toLowerCase().includes(bf));
-    }
+      if (brandFilter) {
+        const bf = brandFilter.toLowerCase();
+        result = result.filter((p: any) => p.brand?.toLowerCase().includes(bf));
+      }
 
-    if (colorFilter) {
-      const cf = colorFilter.toLowerCase();
-      result = result.filter((p: any) => p.color?.toLowerCase().includes(cf));
-    }
+      if (colorFilter) {
+        const cf = colorFilter.toLowerCase();
+        result = result.filter((p: any) => p.color?.toLowerCase().includes(cf));
+      }
 
-    if (minPrice) {
-      result = result.filter((p: any) => Number(p.price) >= Number(minPrice));
-    }
+      if (minPrice) {
+        result = result.filter((p: any) => Number(p.price) >= Number(minPrice));
+      }
 
-    if (maxPrice) {
-      result = result.filter((p: any) => Number(p.price) <= Number(maxPrice));
-    }
+      if (maxPrice) {
+        result = result.filter((p: any) => Number(p.price) <= Number(maxPrice));
+      }
 
-    if (statusFilter !== "all") {
-      result = result.filter((p: any) => (p.status || 'active') === statusFilter);
-    }
+      if (statusFilter !== "all") {
+        result = result.filter((p: any) => (p.status || 'active') === statusFilter);
+      }
 
-    if (selectedMarkets.length > 0) {
-      result = result.filter((p: any) => {
-        const prodMarkets = p.marketplaces || [];
-        // Show product if it has NO markets (available for all) OR its marketplace is selected
-        if (prodMarkets.length === 0) return true;
-        return prodMarkets.some((m: string) => selectedMarkets.includes(m));
-      });
-    } else {
-      // If no markets selected at all, show only products with no markets?
-      result = result.filter((p: any) => (p.marketplaces || []).length === 0);
-    }
-    
-    setFilteredProducts(result);
+      if (selectedMarkets.length > 0) {
+        result = result.filter((p: any) => {
+          const prodMarkets = p.marketplaces || [];
+          if (prodMarkets.length === 0) return true;
+          return prodMarkets.some((m: string) => selectedMarkets.includes(m));
+        });
+      } else {
+        result = result.filter((p: any) => (p.marketplaces || []).length === 0);
+      }
+      
+      setFilteredProducts(result);
+      setVisibleCount(12); // Har doim toza boshlanish uchun 12 qiymatga tushiramiz
+    }, 300); // 300ms qotishsiz filtrlash taymeri
+
+    return () => clearTimeout(timer);
   }, [allProducts, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets]);
 
   const handleUpdate = (id: string, updates: any) => {
@@ -471,7 +494,7 @@ export default function Home() {
                 </div>
               ) : (
                 <div className="flex flex-col gap-6 animate-in fade-in duration-500">
-                  {filteredProducts.map((product: any) => (
+                  {filteredProducts.slice(0, visibleCount).map((product: any) => (
                     <ProductCard 
                       key={product.id} 
                       product={product} 
@@ -488,6 +511,12 @@ export default function Home() {
                       onRefresh={() => fetchData(true)}
                     />
                   ))}
+                  
+                  {visibleCount < filteredProducts.length && (
+                    <div ref={observerTarget} className="w-full py-10 flex justify-center scroll-mt-20">
+                      <div className="w-10 h-10 border-4 border-slate-200 border-t-indigo-600 rounded-full animate-spin"></div>
+                    </div>
+                  )}
                   
                   {filteredProducts.length === 0 && (
                     <div className="col-span-full py-32 text-center bg-white rounded-[40px] border-2 border-dashed border-slate-200">
