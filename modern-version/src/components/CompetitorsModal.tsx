@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 
 interface Competitor {
   shopName: string;
@@ -25,6 +26,11 @@ export const CompetitorsModal = ({ isOpen, onClose, competitors = [], onUpdate, 
   const [newUrl, setNewUrl] = useState('');
   const [isScraping, setIsScraping] = useState(false);
   const [scrapedPreview, setScrapedPreview] = useState<any>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!newUrl || !newUrl.startsWith('http')) {
@@ -51,7 +57,7 @@ export const CompetitorsModal = ({ isOpen, onClose, competitors = [], onUpdate, 
     return () => clearTimeout(timer);
   }, [newUrl]);
 
-  if (!isOpen) return null;
+
 
   const handleAdd = () => {
     if (!newShop.trim() || !newUrl.trim()) return;
@@ -76,8 +82,10 @@ export const CompetitorsModal = ({ isOpen, onClose, competitors = [], onUpdate, 
     onUpdate(next);
   };
 
-  return (
-    <div className="fixed inset-0 z-[130] bg-slate-50 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-500 overflow-hidden">
+  if (!isOpen || !mounted) return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] bg-slate-50 flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-500 overflow-hidden">
       {/* FULL SCREEN HEADER */}
       <div className="px-10 py-8 bg-white border-b border-slate-200 flex justify-between items-center z-10 shadow-sm">
         <div className="flex items-center gap-6">
@@ -237,6 +245,7 @@ export const CompetitorsModal = ({ isOpen, onClose, competitors = [], onUpdate, 
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
