@@ -11,17 +11,25 @@ import { saveAs } from 'file-saver';
 interface Product {
   id: string;
   name: string;
+  name_ru?: string;
   price: string;
   category: string;
   brand?: string;
   model?: string;
   color?: string;
   description_short?: string;
+  description_short_ru?: string;
+  description_full?: string;
+  description_full_ru?: string;
   local_images?: string[];
   sku?: string;
   status?: 'active' | 'quarantine' | 'archive';
   marketplaces?: string[];
   price_retail?: string;
+  length_mm?: string | number;
+  width_mm?: string | number;
+  height_mm?: string | number;
+  weight_g?: string | number;
 }
 
 interface ProductCardProps {
@@ -252,8 +260,57 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [previewUrl, currentIndex]);
 
+  const getProductScore = () => {
+    let score = 0;
+    const media = product.local_images || [];
+    const isVideo = (url: string) => url.toLowerCase().includes('.mp4') || url.toLowerCase().includes('.mov');
+    const videos = media.filter(url => isVideo(url));
+    const images = media.filter(url => !isVideo(url));
+
+    // 1. Basic Info (30 pts)
+    if (product.name) score += 5;
+    if (product.brand) score += 5;
+    if (product.model) score += 5;
+    if (product.category) score += 5;
+    if (product.color) score += 5;
+    if (product.price) score += 5;
+
+    // 2. Descriptions (20 pts)
+    if (product.description_short && product.description_short.length > 10) score += 5;
+    if (product.description_short_ru && product.description_short_ru.length > 10) score += 5;
+    if (product.description_full && product.description_full.length > 50) score += 5;
+    if (product.description_full_ru && product.description_full_ru.length > 50) score += 5;
+
+    // 3. Media (30 pts)
+    // 3+ images give 15 pts, at least 1 image gives 5 pts
+    if (images.length >= 3) score += 15;
+    else if (images.length > 0) score += 5;
+    // 1+ video gives 15 pts
+    if (videos.length >= 1) score += 15;
+
+    // 4. Logistics (20 pts)
+    if (Number(product.length_mm) > 0) score += 5;
+    if (Number(product.width_mm) > 0) score += 5;
+    if (Number(product.height_mm) > 0) score += 5;
+    if (Number(product.weight_g) > 0) score += 5;
+
+    return Math.min(100, score);
+  };
+
+  const score = getProductScore();
+  const scoreColor = score >= 90 ? 'bg-emerald-500' : score >= 70 ? 'bg-indigo-500' : score >= 50 ? 'bg-amber-500' : 'bg-red-500';
+
   return (
-    <div className={`bg-white rounded-3xl p-6 border transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex flex-col md:flex-row gap-8 items-stretch group/card relative ${selected ? 'border-indigo-500 ring-2 ring-indigo-500/20 shadow-lg bg-indigo-50/10' : 'border-slate-200 shadow-sm hover:shadow-xl'} ${isDeleting ? 'scale-0 rotate-[10deg] opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}>
+    <div className={`bg-white rounded-[32px] p-6 border transition-all duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] flex flex-col md:flex-row gap-8 items-stretch group/card relative ${selected ? 'border-indigo-500 ring-4 ring-indigo-500/10 shadow-2xl bg-indigo-50/10' : 'border-slate-100 shadow-sm hover:shadow-xl'} ${isDeleting ? 'scale-0 rotate-[10deg] opacity-0 pointer-events-none' : 'scale-100 opacity-100'}`}>
+      {/* QUALITY SCORE BADGE */}
+      <div className="absolute -top-3 left-10 z-40">
+        <div className={`${scoreColor} text-white px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest shadow-lg flex items-center gap-2 border-2 border-white`}>
+          <span>SIFAT: {score}%</span>
+          <div className="w-10 h-1 bg-white/30 rounded-full overflow-hidden">
+            <div className="h-full bg-white" style={{ width: `${score}%` }}></div>
+          </div>
+        </div>
+      </div>
       {/* DELETING INDICATOR LOG */}
       {isDeleting && (
         <div className="absolute top-4 left-4 z-[60] bg-red-600 text-white px-4 py-2 rounded-full font-black text-[10px] animate-pulse shadow-lg flex items-center gap-2">
