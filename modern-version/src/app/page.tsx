@@ -278,8 +278,18 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [allProducts, filterSignature]);
 
-  const handleUpdate = (id: string, updates: any) => {
+  const handleUpdate = async (id: string, updates: any) => {
+    // Optimistic UI update
     setAllProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    
+    try {
+      // Persist to database
+      await apiClient.post('/api/products', { id, ...updates });
+    } catch (e: any) {
+      toast.error("Ma'lumotni saqlashda xatolik: " + e.message);
+      // Revert if failed
+      await fetchData(true);
+    }
   };
 
   const handleDelete = async (id: string) => {
