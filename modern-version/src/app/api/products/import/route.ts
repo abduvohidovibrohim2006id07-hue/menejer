@@ -75,6 +75,10 @@ export const POST = withGateway(async (req) => {
       description_full: row['To\'liq Tavsif'] || '',
       description_short_ru: row['Qisqa Tavsif RU'] || '',
       description_full_ru: row['To\'liq Tavsif RU'] || '',
+      length_mm: row['Uzunligi (mm)']?.toString() || '0',
+      width_mm: row['Kengligi (mm)']?.toString() || '0',
+      height_mm: row['Balandligi (mm)']?.toString() || '0',
+      weight_g: row['Vazni (gr)']?.toString() || '0',
       local_images: local_images,
       updated_at: new Date().toISOString(),
     };

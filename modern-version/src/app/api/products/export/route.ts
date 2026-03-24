@@ -45,6 +45,10 @@ export const GET = withGateway(async (req) => {
       'To\'liq Tavsif': data.description_full || '',
       'Qisqa Tavsif RU': data.description_short_ru || '',
       'To\'liq Tavsif RU': data.description_full_ru || '',
+      'Uzunligi (mm)': data.length_mm || '0',
+      'Kengligi (mm)': data.width_mm || '0',
+      'Balandligi (mm)': data.height_mm || '0',
+      'Vazni (gr)': data.weight_g || '0',
       'Updated At': data.updated_at || '',
     };
   });
