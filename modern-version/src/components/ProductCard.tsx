@@ -736,6 +736,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
             isOpen={showPriceCalc} 
             onClose={() => setShowPriceCalc(false)} 
             initialPrice={product.price}
+            initialCost={product.price_retail}
             productName={`${product.category} ${product.brand || ''} ${product.model || ''}`}
           />
         </div>

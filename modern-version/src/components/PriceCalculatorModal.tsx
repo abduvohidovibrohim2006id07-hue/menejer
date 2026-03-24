@@ -6,12 +6,13 @@ interface PriceCalculatorModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialPrice?: string;
+  initialCost?: string;
   productName?: string;
 }
 
-export const PriceCalculatorModal = ({ isOpen, onClose, initialPrice = '0', productName = '' }: PriceCalculatorModalProps) => {
+export const PriceCalculatorModal = ({ isOpen, onClose, initialPrice = '0', initialCost = '0', productName = '' }: PriceCalculatorModalProps) => {
   const [sellingPrice, setSellingPrice] = useState<number>(Number(initialPrice) || 0);
-  const [productCost, setProductCost] = useState<number>(0);
+  const [productCost, setProductCost] = useState<number>(Number(initialCost) || 0);
   const [commissionPercent, setCommissionPercent] = useState<number>(17);
   const [logisticsFee, setLogisticsFee] = useState<number>(8000);
   
