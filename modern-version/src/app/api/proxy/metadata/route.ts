@@ -39,10 +39,17 @@ export async function GET(req: Request) {
                   if (found) targetSku = found;
                }
                
-               const firstPhoto = p.photos?.[0]?.photo;
-               const imageUrl = firstPhoto?.["720"]?.high || firstPhoto?.["800"]?.high || firstPhoto?.["540"]?.high;
+               const chars = targetSku.characteristics || [];
+               let photoIdx = 0;
+               if (chars.length > 0 && chars[0].valueIndex !== undefined) {
+                  photoIdx = chars[0].valueIndex;
+               }
+
+               const targetPhoto = p.photos?.[photoIdx]?.photo || p.photos?.[0]?.photo;
+               const imageUrl = targetPhoto?.["720"]?.high || targetPhoto?.["800"]?.high || targetPhoto?.["540"]?.high;
+               const photoKey = p.photos?.[photoIdx]?.photoKey || p.photos?.[0]?.photoKey;
                const finalImageUrl = imageUrl?.includes('original.jpg') ? imageUrl : 
-                                    (p.photos?.[0]?.photoKey ? `https://images.uzum.uz/${p.photos[0].photoKey}/original.jpg` : imageUrl);
+                                    (photoKey ? `https://images.uzum.uz/${photoKey}/original.jpg` : imageUrl);
                clearTimeout(timeoutId);
                return NextResponse.json({
                  title: p.title, image: finalImageUrl,
