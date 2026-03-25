@@ -1,5 +1,4 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
 import * as XLSX from 'xlsx';
 import { withGateway } from '@/lib/api-gateway';
 import { getProducts } from '@/lib/data-service';

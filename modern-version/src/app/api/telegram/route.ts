@@ -1,16 +1,14 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import { supabase } from '@/lib/supabase';
 import { s3Client, BUCKET_NAME } from '@/lib/s3';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 
-// Vercel Serverless Function uchun maksimal vaqtni uzaytirish (Pro ta'rif bo'lsa 60 sek, bepulda odatda 10-15 sek)
 export const maxDuration = 60; 
 
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN || '8745137868:AAGJIc2uR0ts9TMSy9wv2YYSZTADsbs0Edc';
 const ALLOWED_USER_ID = 5572037414;
 const GROQ_API_KEY = process.env.GROQ_API_KEY;
 
-// Telegram API ga so'rov yuborish uchun yordamchi funksiya
 async function sendMessage(chatId: number, text: string) {
     await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -30,13 +28,11 @@ export async function POST(req: Request) {
     try {
         const update = await req.json();
 
-        // Agar bu xabar bo'lmasa, uni o'tkazib yuboramiz
         if (!update.message) return NextResponse.json({ ok: true });
 
         const msg = update.message;
         const chatId = msg.chat.id;
 
-        // Xavfsizlik: Faqat siz ishlatishingiz uchun
         if (msg.from.id !== ALLOWED_USER_ID) {
             return NextResponse.json({ ok: true });
         }
@@ -51,23 +47,20 @@ export async function POST(req: Request) {
         const photos = msg.photo ? [msg.photo[msg.photo.length - 1].file_id] : [];
         const mediaGroupId = msg.media_group_id || null;
         
-        // Oddiy 'salom' kabi yozuvlarga javob qaytarish
         if (photos.length === 0 && text.trim().length <= 15) {
             await sendMessage(chatId, "Iltimos rasm va batafsilroq mahsulot ma'lumotlarini (narx, brend, nomi) yuboring.");
             return NextResponse.json({ ok: true });
         }
 
-        // 1. PRODUCT ID NIKLASH: Media group kelsa id bir xil bo'ladi, aks holda yangi
-        const productId = mediaGroupId || db.collection('products').doc().id;
+        // 1. PRODUCT ID: Use media_group_id or create new UUID
+        const productId = mediaGroupId || crypto.randomUUID();
 
-        // 2. RASM YUKLASH (Har bir so'rov kirib kelgan o'zining rasmini yuklaydi)
+        // 2. IMAGE UPLOAD
         if (photos.length > 0) {
             const url = await getFileUrl(photos[0]);
             if (url) {
                 const response = await fetch(url);
                 const fileBuffer = Buffer.from(await response.arrayBuffer());
-                
-                // Random ism beramiz, sababi parallel kelganda ustiga yozmasligi uchun
                 const fileKey = `images/${productId}/image_${Date.now()}_${Math.floor(Math.random()*1000)}.jpg`;
                 
                 await s3Client.send(new PutObjectCommand({
@@ -79,9 +72,7 @@ export async function POST(req: Request) {
             }
         }
 
-        // 3. AI TAHLIL VA BAZAGA YOZISH: 
-        // Telegram Media Group da rasm 10 ta kelsa 10 ta zapros yuboradi. Ammo matn faqatgina 1 tasida (yoki birinchisida) bo'ladi.
-        // Biz faqat Matnli qism kelganida yoki Yakka (media_group siz) kelganidagina AI ni ishlatamiz! Bo'sh xabarlar (qo'shimcha rasmlar) ohista yopiladi.
+        // 3. AI ANALYSIS & DB INSERT
         if (text.trim().length > 0 || !mediaGroupId) {
             await sendMessage(chatId, "⏳ AI mahsulotni ro'yxatga olmoqda...");
 
@@ -116,23 +107,28 @@ QOIDALAR:
                     name = parsed.name || text.substring(0, 30);
                     brand = (parsed.brand || "").toUpperCase();
                     model = (parsed.model || "").toUpperCase();
-                    // Toza raqam olamiz (faqat \d)
                     price = parseInt((parsed.price || "0").toString().replace(/\D/g, '')) || 0;
                     old_price = parseInt((parsed.old_price || "0").toString().replace(/\D/g, '')) || 0;
                 } catch(e) { name = text.substring(0, 30); }
             }
 
-            // Bazaga Saqlaymiz yoki Qo'shib qoyamiz (merge: true)
-            await db.collection('products').doc(productId).set({
-               name: name, name_ru: name,
-               brand: brand, model: model,
-               price: price, old_price: old_price,
-               description_uz: text, description_ru: text,
-               status: 'quarantine',
-               updated_at: new Date().toISOString(),
-               created_by_bot: true,
-               media_group_id: mediaGroupId
-            }, { merge: true });
+            // Save to Supabase (upsert handles merge: true equivalent)
+            const { error } = await supabase
+              .from('products')
+              .upsert({
+                 id: productId,
+                 name: name, name_ru: name,
+                 brand: brand, model: model,
+                 price: price, old_price: old_price,
+                 description_uz: text, description_ru: text,
+                 status: 'quarantine',
+                 updated_at: new Date().toISOString(),
+                 created_at: new Date().toISOString(), // Only set on insert if not existing
+                 created_by_bot: true,
+                 media_group_id: mediaGroupId
+              }, { onConflict: 'id' });
+
+            if (error) throw error;
 
             await sendMessage(chatId, `✅ Vercel orqali saqlandi!\n\n🏷 Nomi: ${name}\n💰 Narx: ${price.toLocaleString()} so'm\nID: ${productId}`);
         }

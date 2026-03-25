@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getProducts } from '@/lib/data-service';
-import { db } from '@/lib/firebase-admin';
+import { supabase } from '@/lib/supabase';
 import { withGateway } from '@/lib/api-gateway';
 import { getCache, setCache, invalidateCache, TTL } from '@/lib/cache';
 
@@ -31,32 +31,33 @@ export const POST = withGateway(async (req) => {
   const model = (rest.model || '').toString().trim().toLowerCase().replace(/\s+/g, '');
   const color = (rest.color || '').toString().trim().toLowerCase().replace(/\s+/g, '');
 
-  // Dublikat tekshirish: cache dan, agar yo'q bo'lsa Firestore dan
+  // Duplicate check using Supabase
   if (brand && model && color) {
-    let products = getCache(CACHE_KEY, TTL.PRODUCTS);
-    if (!products) {
-      const snapshot = await db.collection('products').get();
-      products = snapshot.docs.map((doc: any) => ({ id: doc.id, ...doc.data() }));
-    }
+    const { data: duplicate } = await supabase
+      .from('products')
+      .select('id')
+      .eq('brand', rest.brand)
+      .eq('model', rest.model)
+      .eq('color', rest.color)
+      .neq('id', id.toString())
+      .limit(1)
+      .single();
 
-    const isDuplicate = products.some((p: any) => {
-      if (p.id === id.toString()) return false;
-      const dBrand = (p.brand || '').toString().trim().toLowerCase().replace(/\s+/g, '');
-      const dModel = (p.model || '').toString().trim().toLowerCase().replace(/\s+/g, '');
-      const dColor = (p.color || '').toString().trim().toLowerCase().replace(/\s+/g, '');
-      return dBrand === brand && dModel === model && dColor === color;
-    });
-
-    if (isDuplicate) status = 'quarantine';
+    if (duplicate) status = 'quarantine';
   }
 
-  await db.collection('products').doc(id.toString()).set({
-    ...rest,
-    status,
-    updated_at: new Date().toISOString(),
-  }, { merge: true });
+  const { error } = await supabase
+    .from('products')
+    .upsert({
+      id: id.toString(),
+      ...rest,
+      status,
+      updated_at: new Date().toISOString(),
+    });
 
-  invalidateCache(CACHE_KEY); // Cache ni tozala
+  if (error) throw { message: error.message, status: 500 };
+
+  invalidateCache(CACHE_KEY);
   return { success: true, status };
 });
 
@@ -65,7 +66,13 @@ export const DELETE = withGateway(async (req) => {
   const { id } = await req.json();
   if (!id) throw { message: 'ID majburiy', status: 400 };
 
-  await db.collection('products').doc(id.toString()).delete();
-  invalidateCache(CACHE_KEY); // Cache ni tozala
+  const { error } = await supabase
+    .from('products')
+    .delete()
+    .eq('id', id.toString());
+
+  if (error) throw { message: error.message, status: 500 };
+
+  invalidateCache(CACHE_KEY);
   return { success: true };
 });

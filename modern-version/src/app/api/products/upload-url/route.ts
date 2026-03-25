@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { s3Client, BUCKET_NAME, PUBLIC_ENDPOINT } from '@/lib/s3';
 import { PutObjectCommand } from "@aws-sdk/client-s3";
-import { db } from '@/lib/firebase-admin';
+import { supabase } from '@/lib/supabase';
 
 export async function POST(req: Request) {
   try {
@@ -50,16 +50,21 @@ export async function POST(req: Request) {
 
     const mediaUrl = `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${key}`;
 
-    // 3. Update Firestore
-    const docRef = db.collection('products').doc(id.toString());
-    const doc = await docRef.get();
+    // 3. Update Supabase
+    const { data: product, error: fetchError } = await supabase
+      .from('products')
+      .select('local_images')
+      .eq('id', id.toString())
+      .single();
     
-    if (doc.exists) {
-      const data = doc.data() || {};
-      const images = data.local_images || [];
+    if (!fetchError && product) {
+      const images = product.local_images || [];
       if (!images.includes(mediaUrl)) {
         images.push(mediaUrl);
-        await docRef.update({ local_images: images });
+        await supabase
+          .from('products')
+          .update({ local_images: images })
+          .eq('id', id.toString());
       }
     }
 

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import { supabase } from '@/lib/supabase';
 import { withGateway } from '@/lib/api-gateway';
 import { UzumMarketAPI } from '@/lib/markets/uzum-api';
 import axios from 'axios';
@@ -12,19 +12,27 @@ export const POST = withGateway(async (req) => {
   }
 
   try {
-    // 1. Get Product Data
-    const productDoc = await db.collection('products').doc(productId.toString()).get();
-    if (!productDoc.exists) {
+    // 1. Get Product Data from Supabase
+    const { data: productData, error: productError } = await supabase
+      .from('products')
+      .select('*')
+      .eq('id', productId.toString())
+      .single();
+
+    if (productError || !productData) {
       throw { message: 'Mahsulot topilmadi', status: 404 };
     }
-    const productData = productDoc.data() as any;
 
-    // 2. Get Uzum Market Settings
-    const marketDoc = await db.collection('markets').doc('uzum').get();
-    if (!marketDoc.exists) {
+    // 2. Get Uzum Market Settings from Supabase
+    const { data: marketData, error: marketError } = await supabase
+      .from('markets')
+      .select('*')
+      .eq('id', 'uzum')
+      .single();
+
+    if (marketError || !marketData) {
       throw { message: 'Uzum market sozlamalari topilmadi', status: 404 };
     }
-    const marketData = marketDoc.data() as any;
 
     // 3. Find Cabinet and Token
     let bearerToken = '';

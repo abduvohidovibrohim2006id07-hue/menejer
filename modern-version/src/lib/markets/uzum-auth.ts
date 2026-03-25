@@ -1,5 +1,5 @@
 import { chromium } from 'playwright-chromium';
-import { db } from '@/lib/firebase-admin';
+import { supabase } from '@/lib/supabase';
 
 const LOGIN_URL = 'https://seller.uzum.uz/seller/signin';
 const TARGET_URL = 'https://seller.uzum.uz/fbs-orders';
@@ -89,11 +89,15 @@ export async function refreshUzumToken(email: string, password: string, cabinetI
     if (bearerToken) {
       console.log('[Uzum Auth] Yangi Bearer Token ushlandi! ✅');
       
-      // 5. FireBaseda tokenni yangilash
-      const marketDoc = await db.collection('markets').doc('uzum').get();
-      if (marketDoc.exists) {
-        const data = marketDoc.data();
-        const accounts = data?.accounts || [];
+      // 5. Supabase'da tokenni yangilash
+      const { data: marketData, error: marketError } = await supabase
+        .from('markets')
+        .select('*')
+        .eq('id', 'uzum')
+        .single();
+
+      if (!marketError && marketData) {
+        const accounts = marketData.accounts || [];
         
         // Tokenni to'g'ri akkaunt/kabinetga yozish
         let updated = false;
@@ -109,8 +113,11 @@ export async function refreshUzumToken(email: string, password: string, cabinetI
         });
 
         if (updated) {
-          await db.collection('markets').doc('uzum').update({ accounts });
-          console.log('[Uzum Auth] Firebase ma\'lumotlari yangilandi.');
+          await supabase
+            .from('markets')
+            .update({ accounts })
+            .eq('id', 'uzum');
+          console.log('[Uzum Auth] Supabase ma\'lumotlari yangilandi.');
         }
       }
       return bearerToken;

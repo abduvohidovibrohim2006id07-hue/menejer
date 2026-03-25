@@ -1,5 +1,5 @@
 import { withGateway } from '@/lib/api-gateway';
-import { db } from '@/lib/firebase-admin';
+import { supabase } from '@/lib/supabase';
 import * as XLSX from 'xlsx';
 
 export const POST = withGateway(async (req) => {
@@ -16,18 +16,14 @@ export const POST = withGateway(async (req) => {
 
   if (!data || data.length === 0) throw { message: 'Excel bo\'sh yoki noto\'g\'ri format', status: 400 };
 
-  // Mapping columns to Firestore fields
-  const batch = db.batch();
-  let count = 0;
-
-  // Dublikatlarni tekshirish uchun barcha mahsulotlarni bir marta olib kelamiz
-  const productsSnapshot = await db.collection('products').get();
-  const allExistingProducts = productsSnapshot.docs.map(doc => ({
-    id: doc.id,
-    ...doc.data() as any
-  }));
+  // Fetch existing products for duplicate check
+  const { data: allExistingProducts } = await supabase
+    .from('products')
+    .select('id, brand, model, color');
 
   const normalize = (val: any) => (val || '').toString().trim().toLowerCase().replace(/\s+/g, '');
+
+  const productsToUpsert: any[] = [];
 
   for (const row of data) {
     const id = row['ID']?.toString();
@@ -37,21 +33,20 @@ export const POST = withGateway(async (req) => {
     const model = normalize(row['Model']);
     const color = normalize(row['Rang']);
 
-    // Media havolalarini qayta ishlash
+    // Media links processing
     const rasmText = row['Rasm havolalari'] || '';
     const videoText = row['Video havolalari'] || '';
     
     const imagesArray = rasmText.split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
     const videosArray = videoText.split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
     
-    // Barchasini birlashtirish
     const local_images = [...imagesArray, ...videosArray];
 
     let rowStatus = row['Status'] || 'active';
 
-    // Dublikatni tekshirish
+    // Duplicate check
     if (brand && model && color) {
-      const isDuplicate = allExistingProducts.some(p => {
+      const isDuplicate = (allExistingProducts || []).some((p: any) => {
         if (p.id === id) return false;
         return normalize(p.brand) === brand && normalize(p.model) === model && normalize(p.color) === color;
       });
@@ -61,7 +56,8 @@ export const POST = withGateway(async (req) => {
       }
     }
 
-    const productData: any = {
+    productsToUpsert.push({
+      id: id,
       name: row['Nomi'] || '',
       name_ru: row['Nomi RU'] || '',
       model: row['Model'] || '',
@@ -81,19 +77,16 @@ export const POST = withGateway(async (req) => {
       weight_g: row['Vazni (gr)']?.toString() || '0',
       local_images: local_images,
       updated_at: new Date().toISOString(),
-    };
-
-    const docRef = db.collection('products').doc(id);
-    batch.set(docRef, productData, { merge: true });
-    count++;
-
-    // Firestore batch limit is 500
-    if (count % 500 === 0) {
-      await batch.commit();
-    }
+    });
   }
 
-  await batch.commit();
+  if (productsToUpsert.length > 0) {
+    const { error } = await supabase
+      .from('products')
+      .upsert(productsToUpsert, { onConflict: 'id' });
+    
+    if (error) throw { message: error.message, status: 500 };
+  }
 
-  return { success: true, count };
+  return { success: true, count: productsToUpsert.length };
 });

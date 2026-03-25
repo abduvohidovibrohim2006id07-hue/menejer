@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase-admin';
+import { supabase } from '@/lib/supabase';
 import { withGateway } from '@/lib/api-gateway';
 
 export const POST = withGateway(async (req) => {
@@ -8,9 +8,13 @@ export const POST = withGateway(async (req) => {
 
   if (!apiKey) throw { message: 'Groq API key topilmadi', status: 500 };
 
-  const settingsDoc = await db.collection('settings').doc('ai_config').get();
-  const settings = settingsDoc.exists ? settingsDoc.data() : {};
-  const config = settings?.[action] || {};
+  const { data: settings } = await supabase
+    .from('settings')
+    .select('value')
+    .eq('id', 'ai_config')
+    .single();
+
+  const config = (settings?.value as any)?.[action] || {};
 
   let model = config.model || 'openai/gpt-oss-120b';
   let messages: any[] = [];
