@@ -34,6 +34,7 @@ interface Competitor {
     shop?: string;
     brand?: string;
     discount?: number | null;
+    seller?: { title?: string; rating?: number | null };
   };
   history?: HistorySnapshot[];
 }
@@ -336,13 +337,21 @@ export const CompetitorsModal = ({
                                   </div>
 
                                   <div className="flex-1 min-w-0">
-                                     <div className="flex items-center gap-3 mb-2">
+                                     <div className="flex items-center flex-wrap gap-3 mb-2">
                                         <span className="text-[10px] font-black text-indigo-500 bg-indigo-50 px-3 py-1 rounded-lg uppercase tracking-widest">{meta.brand || 'No Brand'}</span>
                                         <span className="text-slate-300">•</span>
                                         <div className="flex items-center gap-1 text-orange-500 font-bold text-sm">
                                           <Star size={14} fill="currentColor" /> {meta.rating || '0.0'}
                                           <span className="text-slate-400 font-medium ml-1">({meta.reviews || meta.reviewsAmount || 0} sharh)</span>
                                         </div>
+                                        {meta.seller?.title && (
+                                          <>
+                                            <span className="text-slate-300">•</span>
+                                            <span className="flex items-center gap-1 text-[10px] font-black text-emerald-600 bg-emerald-50 px-3 py-1 rounded-lg">
+                                              🏪 {meta.seller.title}
+                                            </span>
+                                          </>
+                                        )}
                                      </div>
                                      
                                      <h4 className="text-2xl font-bold text-slate-800 leading-tight group-hover:text-indigo-600 transition-colors mb-3">
