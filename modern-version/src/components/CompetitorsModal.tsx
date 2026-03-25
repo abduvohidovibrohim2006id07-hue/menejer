@@ -489,9 +489,10 @@ export const CompetitorsModal = ({
                   <div className="h-[400px]">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={competitors.map(c => ({
-                        name: (c.metadata?.shop || c.type).slice(0, 12),
+                        name: (c.metadata?.shop || (c.type === 'yandex' ? 'Yandex Market' : 'Uzum Market')),
+                        seller: c.metadata?.seller?.title || '',
                         price: Number(c.metadata?.price) || 0
-                      }))}>
+                      }))} margin={{ bottom: 40 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                         <XAxis 
                           dataKey="name" 
@@ -499,6 +500,18 @@ export const CompetitorsModal = ({
                           tickLine={false}
                           fontSize={10}
                           fontWeight="bold"
+                          interval={0}
+                          tick={(props: any) => {
+                            const { x, y, payload, index } = props;
+                            const comp = competitors[index];
+                            const shopName = comp?.metadata?.seller?.title || '';
+                            return (
+                              <g transform={`translate(${x},${y})`}>
+                                <text x={0} y={0} dy={14} textAnchor="middle" fill="#64748b" fontSize={10} fontWeight="bold">{payload.value}</text>
+                                {shopName && <text x={0} y={0} dy={28} textAnchor="middle" fill="#6366f1" fontSize={9} fontWeight="900">{shopName.slice(0, 18)}</text>}
+                              </g>
+                            );
+                          }}
                         />
                         <YAxis hide />
                         <Tooltip formatter={(v: any) => `${Number(v).toLocaleString()} so'm`} />
