@@ -40,7 +40,9 @@ export async function GET(req: Request) {
                  title: p.title, image: finalImageUrl,
                  price: firstSku.purchasePrice || firstSku.fullPrice,
                  fullPrice: firstSku.fullPrice, rating: p.rating,
-                 reviewsAmount: p.reviewsAmount, ordersAmount: p.ordersAmount,
+                 reviewsAmount: p.reviewsAmount,
+                 ordersAmount: p.ordersAmount,
+                 sold: p.ordersAmount, // CompetitorsModal meta.sold uchun
                  deliveryDate: firstSku.stock?.deliveryTitle?.match(/\d+-\w+/)?.[0] || firstSku.stock?.deliveryTitle,
                  seller: { title: p.seller?.title, rating: p.seller?.rating },
                  shop: 'Uzum Market'

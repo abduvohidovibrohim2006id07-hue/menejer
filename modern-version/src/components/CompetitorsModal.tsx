@@ -30,6 +30,7 @@ interface Competitor {
     reviews?: number | null;
     reviewsAmount?: number | null;
     sold?: number | null;
+    ordersAmount?: number | null;
     shop?: string;
     brand?: string;
     discount?: number | null;
@@ -122,9 +123,7 @@ export const CompetitorsModal = ({
 
   const refreshAll = async () => {
     setLoading(true);
-    for (const comp of competitors) {
-      await refreshCompetitor(comp.id);
-    }
+    await Promise.all(competitors.map(comp => refreshCompetitor(comp.id)));
     setLoading(false);
   };
 
@@ -142,7 +141,7 @@ export const CompetitorsModal = ({
         url: newUrl,
         type: newUrl.includes('yandex') ? 'yandex' : 'uzum',
         metadata: data,
-        history: [{ date: new Date().toISOString(), price: data.price }]
+        history: data.price ? [{ date: new Date().toISOString(), price: data.price }] : []
       };
 
       const newList = [...competitors, newComp];
@@ -358,9 +357,9 @@ export const CompetitorsModal = ({
                                        >
                                          Saytda ko&apos;rish <ExternalLink size={14} />
                                        </a>
-                                       {(Number(meta.sold || 0) > 0) && (
+                                       {(Number(meta.sold || meta.ordersAmount || 0) > 0) && (
                                          <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-3 py-1.5 rounded-xl uppercase tracking-widest">
-                                           🛒 {meta.sold} ta sotilgan
+                                           🛒 {(meta.sold ?? meta.ordersAmount ?? 0).toLocaleString()} ta zakaz
                                          </span>
                                        )}
                                      </div>
@@ -480,18 +479,21 @@ export const CompetitorsModal = ({
                   </h3>
                   <div className="h-[400px]">
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={competitors}>
+                      <BarChart data={competitors.map(c => ({
+                        name: (c.metadata?.shop || c.type).slice(0, 12),
+                        price: Number(c.metadata?.price) || 0
+                      }))}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                         <XAxis 
-                          dataKey="metadata.shop" 
+                          dataKey="name" 
                           axisLine={false}
                           tickLine={false}
                           fontSize={10}
                           fontWeight="bold"
                         />
                         <YAxis hide />
-                        <Tooltip />
-                        <Bar dataKey="metadata.price" radius={[10, 10, 0, 0]}>
+                        <Tooltip formatter={(v: any) => `${Number(v).toLocaleString()} so'm`} />
+                        <Bar dataKey="price" radius={[10, 10, 0, 0]}>
                            {competitors.map((entry, index) => (
                               <Cell key={`cell-${index}`} fill={Number(entry.metadata?.price) < currentProduct.price ? '#ef4444' : '#6366f1'} />
                            ))}

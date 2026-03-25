@@ -759,6 +759,11 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
             competitors={product.competitors || []}
             onUpdate={(next) => onUpdate(product.id, { competitors: next })}
             productName={`${product.category} ${product.brand || ''} ${product.model || ''}`}
+            currentProduct={{
+              price: Number(product.price) || 0,
+              image: product.local_images?.[0] || '',
+              title: `${product.category} ${product.brand || ''} ${product.model || ''}`.trim()
+            }}
           />
         </div>
       </div>
