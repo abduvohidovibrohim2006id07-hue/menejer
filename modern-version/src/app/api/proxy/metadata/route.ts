@@ -17,6 +17,9 @@ export async function GET(req: Request) {
       const idMatch = url.match(/-(\d+)(?:\?|$)/) || url.match(/\/product\/(\d+)/);
       if (idMatch) {
          const productId = idMatch[1];
+         const skuMatch = url.match(/skuid=(\d+)/i);
+         const targetSkuId = skuMatch ? skuMatch[1] : null;
+
          const apiRes = await fetch(`https://api.uzum.uz/api/v2/product/${productId}`, {
             signal: controller.signal,
             headers: {
@@ -30,7 +33,12 @@ export async function GET(req: Request) {
             const data = await apiRes.json();
             const p = data.payload?.data || data.payload;
             if (p) {
-               const firstSku = p.skuList?.[0] || {};
+               let targetSku = p.skuList?.[0] || {};
+               if (targetSkuId && p.skuList) {
+                  const found = p.skuList.find((s: any) => String(s.id) === targetSkuId);
+                  if (found) targetSku = found;
+               }
+               
                const firstPhoto = p.photos?.[0]?.photo;
                const imageUrl = firstPhoto?.["720"]?.high || firstPhoto?.["800"]?.high || firstPhoto?.["540"]?.high;
                const finalImageUrl = imageUrl?.includes('original.jpg') ? imageUrl : 
@@ -38,12 +46,12 @@ export async function GET(req: Request) {
                clearTimeout(timeoutId);
                return NextResponse.json({
                  title: p.title, image: finalImageUrl,
-                 price: firstSku.purchasePrice || firstSku.fullPrice,
-                 fullPrice: firstSku.fullPrice, rating: p.rating,
+                 price: targetSku.purchasePrice || targetSku.fullPrice,
+                 fullPrice: targetSku.fullPrice, rating: p.rating,
                  reviewsAmount: p.reviewsAmount,
                  ordersAmount: p.ordersAmount,
                  sold: p.ordersAmount, // CompetitorsModal meta.sold uchun
-                 deliveryDate: firstSku.stock?.deliveryTitle?.match(/\d+-\w+/)?.[0] || firstSku.stock?.deliveryTitle,
+                 deliveryDate: targetSku.stock?.deliveryTitle?.match(/\d+-\w+/)?.[0] || targetSku.stock?.deliveryTitle,
                  seller: { title: p.seller?.title, rating: p.seller?.rating },
                  shop: 'Uzum Market'
                });
