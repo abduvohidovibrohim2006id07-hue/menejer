@@ -58,6 +58,29 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
   const [showCompetitors, setShowCompetitors] = React.useState(false);
   const [isDownloadingAll, setIsDownloadingAll] = React.useState(false);
 
+  // Sahifa yangilanganda URL dan o'qib ochish
+  React.useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('competitors') === product.id) {
+      setShowCompetitors(true);
+    }
+  }, [product.id]);
+
+  const openCompetitorsModal = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setShowCompetitors(true);
+    const url = new URL(window.location.href);
+    url.searchParams.set('competitors', product.id);
+    window.history.replaceState({}, '', url);
+  };
+
+  const closeCompetitorsModal = () => {
+    setShowCompetitors(false);
+    const url = new URL(window.location.href);
+    url.searchParams.delete('competitors');
+    window.history.replaceState({}, '', url);
+  };
+
   const processImage = (file: File): Promise<File> => {
     return new Promise((resolve) => {
       if (!file.type.startsWith('image/')) return resolve(file);
@@ -711,8 +734,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
                   </button>
                   <button 
                     onClick={(e) => {
-                      e.stopPropagation();
-                      setShowCompetitors(true);
+                      openCompetitorsModal(e);
                       setShowMoreMenu(false);
                     }}
                     className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors border-b border-slate-50"
@@ -755,7 +777,7 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
           />
           <CompetitorsModal 
             isOpen={showCompetitors}
-            onClose={() => setShowCompetitors(false)}
+            onClose={closeCompetitorsModal}
             competitors={product.competitors || []}
             onUpdate={(next) => onUpdate(product.id, { competitors: next })}
             productName={`${product.category} ${product.brand || ''} ${product.model || ''}`}

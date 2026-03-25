@@ -170,6 +170,23 @@ export const CompetitorsModal = ({
     return Math.round(prices.reduce((a, b) => a + b, 0) / prices.length);
   };
 
+  const getCheapestPrice = () => {
+    if (competitors.length === 0) return 0;
+    const validPrices = competitors.map(c => Number(c.metadata?.price)).filter(p => !isNaN(p) && p > 0);
+    return validPrices.length > 0 ? Math.min(...validPrices) : 0;
+  };
+  
+  const getTotalOrders = () => {
+    return competitors.reduce((acc, c) => acc + Number(c.metadata?.sold || c.metadata?.ordersAmount || 0), 0);
+  };
+  
+  const getAverageRating = () => {
+    const valid = competitors.filter(c => Number(c.metadata?.rating) > 0);
+    if (valid.length === 0) return 0;
+    const sum = valid.reduce((acc, c) => acc + Number(c.metadata?.rating), 0);
+    return (sum / valid.length).toFixed(1);
+  };
+
   if (!isOpen || !mounted) return null;
 
   return createPortal(
@@ -525,22 +542,34 @@ export const CompetitorsModal = ({
                   </div>
                 </div>
                 
-                <div className="space-y-6">
-                   <div className="bg-indigo-600 p-8 rounded-[40px] text-white shadow-xl">
-                      <h4 className="text-lg font-bold mb-4 opacity-80 uppercase tracking-tighter">O'rtacha Narx</h4>
-                      <div className="flex items-end gap-2">
-                        <span className="text-5xl font-black">{getAveragePrice().toLocaleString()}</span>
-                        <span className="text-xl font-bold mb-1 opacity-60">so'm</span>
-                      </div>
+                <div className="space-y-6 flex flex-col">
+                   <div className="grid grid-cols-2 gap-4">
+                     <div className="bg-indigo-600 p-6 rounded-[32px] text-white shadow-xl flex flex-col justify-between">
+                        <h4 className="text-[10px] font-black opacity-80 uppercase tracking-[0.2em] mb-2">O'rtacha Narx</h4>
+                        <span className="text-2xl lg:text-3xl font-black">{getAveragePrice().toLocaleString()}<span className="text-sm font-medium ml-1">so'm</span></span>
+                     </div>
+                     <div className="bg-emerald-500 p-6 rounded-[32px] text-white shadow-xl flex flex-col justify-between">
+                        <h4 className="text-[10px] font-black opacity-80 uppercase tracking-[0.2em] mb-2">Eng Arzon</h4>
+                        <span className="text-2xl lg:text-3xl font-black">{getCheapestPrice().toLocaleString()}<span className="text-sm font-medium ml-1">so'm</span></span>
+                     </div>
+                     <div className="bg-amber-500 p-6 rounded-[32px] text-white shadow-xl flex flex-col justify-between">
+                        <h4 className="text-[10px] font-black opacity-80 uppercase tracking-[0.2em] mb-2">Sotuvlar (Jami)</h4>
+                        <span className="text-2xl xl:text-3xl font-black shrink-0">{getTotalOrders().toLocaleString()}<span className="text-sm font-medium ml-1">ta</span></span>
+                     </div>
+                     <div className="bg-sky-500 p-6 rounded-[32px] text-white shadow-xl flex flex-col justify-between">
+                        <h4 className="text-[10px] font-black opacity-80 uppercase tracking-[0.2em] mb-2">O'rtacha Baho</h4>
+                        <span className="text-2xl xl:text-3xl font-black shrink-0">{getAverageRating()}<span className="text-sm font-medium ml-1">⭐</span></span>
+                     </div>
                    </div>
-                   <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-200">
-                      <h4 className="text-lg font-black mb-4 flex items-center gap-2">
-                        <AlertCircle className="text-amber-500" /> AI Tavsiya
+                   
+                   <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-200 shrink-0">
+                      <h4 className="text-base font-black mb-3 flex items-center gap-2">
+                        <AlertCircle size={18} className="text-amber-500" /> AI Mutaxassis Fikri
                       </h4>
-                      <p className="text-slate-600 font-medium leading-relaxed">
-                        Mahsulotingiz narxi bozordagi o'rtacha narxdan 
-                        <span className="text-indigo-600 font-black px-1.5">{Math.round((currentProduct.price / getAveragePrice()) * 100) - 100}%</span> 
-                        farq qilmoqda. Savdolarni oshirish uchun narxni o'zgartirishni ko'rib chiqing.
+                      <p className="text-slate-600 font-medium leading-relaxed text-sm">
+                        Sizning mahsulotingiz narxi bozordagi o'rtacha narxdan 
+                        <span className="text-indigo-600 font-black px-1.5">{Math.round((currentProduct.price / (getAveragePrice() || 1)) * 100) - 100}%</span> 
+                        farq qilmoqda. Raqobatchilar umumiy hisobda <strong>{getTotalOrders().toLocaleString()}</strong> ta buyurtma qabul qilishgan. Konversiyani oshirish uchun narxni ko'rib chiqing.
                       </p>
                    </div>
                 </div>
