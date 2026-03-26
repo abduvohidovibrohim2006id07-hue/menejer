@@ -2,14 +2,18 @@ import { useCallback, useState } from 'react';
 import { apiClient } from '@/lib/api-client';
 import toast from 'react-hot-toast';
 
-export const useProductActions = (allProducts: any[], mutateProducts: any) => {
+export const useProductActions = (allProducts: any[], mutateProducts: any, mutateCats?: any, mutateMrkts?: any) => {
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = useCallback(async (silent = false) => {
     if (silent) setRefreshing(true);
-    await mutateProducts();
+    await Promise.all([
+      mutateProducts(),
+      mutateCats?.(),
+      mutateMrkts?.()
+    ]);
     setRefreshing(false);
-  }, [mutateProducts]);
+  }, [mutateProducts, mutateCats, mutateMrkts]);
 
   const handleUpdate = useCallback(async (id: string, updates: any) => {
     // Optimistic UI update immediately via mutate

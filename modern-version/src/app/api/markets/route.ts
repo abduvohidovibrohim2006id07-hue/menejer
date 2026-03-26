@@ -9,9 +9,6 @@ const CACHE_KEY = 'markets';
 
 // FETCH MARKETS
 export const GET = withGateway(async () => {
-  const cached = getCache(CACHE_KEY, TTL.MARKETS);
-  if (cached) return cached;
-
   const { data: markets, error } = await supabase
     .from('markets')
     .select('*')
@@ -19,7 +16,6 @@ export const GET = withGateway(async () => {
 
   if (error) throw { message: error.message, status: 500 };
 
-  setCache(CACHE_KEY, markets);
   return markets;
 });
 
@@ -40,7 +36,6 @@ export const POST = withGateway(async (req) => {
 
   if (error) throw { message: error.message, status: 500 };
 
-  invalidateCache(CACHE_KEY);
   return { success: true };
 });
 
@@ -56,6 +51,5 @@ export const DELETE = withGateway(async (req) => {
 
   if (error) throw { message: error.message, status: 500 };
 
-  invalidateCache(CACHE_KEY);
   return { success: true };
 });

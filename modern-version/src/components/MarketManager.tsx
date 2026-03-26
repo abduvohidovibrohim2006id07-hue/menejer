@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { apiClient } from '@/lib/api-client';
+import toast from 'react-hot-toast';
 
 interface Warehouse {
   id: string;
@@ -67,9 +68,10 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
       setFormData(defaultForm);
       setIsEditing(false);
       setIsModalOpen(false);
-      onRefresh();
+      await onRefresh();
+      toast.success("Do'kon muvaffaqiyatli saqlandi!");
     } catch (e: any) {
-      alert("Xatolik: " + e.message);
+      toast.error("Xatolik: " + e.message);
     } finally {
       setLoading(false);
     }
@@ -447,7 +449,10 @@ export const MarketManager = ({ markets, onRefresh }: MarketManagerProps) => {
             // Stats calculation
             const accCount = m.accounts?.length || 0;
             const cabCount = m.accounts?.reduce((acc, curr) => acc + (curr.cabinets?.length || 0), 0) || 0;
-            const whCount = m.accounts?.reduce((acc, curr) => acc + curr.cabinets?.reduce((cabAcc, cab) => cabAcc + (cab.warehouses?.length || 0), 0), 0) || 0;
+            const whCount = m.accounts?.reduce((acc, curr) => {
+              const cabWhs = curr.cabinets?.reduce((cabAcc, cab) => cabAcc + (cab.warehouses?.length || 0), 0) || 0;
+              return acc + cabWhs;
+            }, 0) || 0;
             
             return (
               <div key={m.id} className="p-6 bg-white border border-slate-100 rounded-[28px] hover:border-indigo-200 hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group flex flex-col justify-between relative overflow-hidden">

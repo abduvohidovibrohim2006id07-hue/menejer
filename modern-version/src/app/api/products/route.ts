@@ -11,11 +11,7 @@ const CACHE_KEY = 'products';
 
 // FETCH PRODUCTS
 export const GET = withGateway(async () => {
-  const cached = getCache(CACHE_KEY, TTL.PRODUCTS);
-  if (cached) return cached;
-
   const data = await getProducts();
-  setCache(CACHE_KEY, data);
   return data;
 });
 
@@ -61,7 +57,6 @@ export const POST = withGateway(async (req) => {
 
   if (error) throw { message: error.message, status: 500 };
 
-  invalidateCache(CACHE_KEY);
   return { success: true, status };
 });
 
@@ -77,6 +72,5 @@ export const DELETE = withGateway(async (req) => {
 
   if (error) throw { message: error.message, status: 500 };
 
-  invalidateCache(CACHE_KEY);
   return { success: true };
 });

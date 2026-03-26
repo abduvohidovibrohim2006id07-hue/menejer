@@ -45,8 +45,8 @@ export default function Home() {
 
   // Data Fetching
   const { data: dbProds, mutate: mutateProducts, isLoading: pLoad } = useSWR('/api/products', fetcher);
-  const { data: dbCats, isLoading: cLoad } = useSWR('/api/categories', fetcher);
-  const { data: dbMrkts, isLoading: mLoad } = useSWR('/api/markets', fetcher);
+  const { data: dbCats, mutate: mutateCats, isLoading: cLoad } = useSWR('/api/categories', fetcher);
+  const { data: dbMrkts, mutate: mutateMrkts, isLoading: mLoad } = useSWR('/api/markets', fetcher);
   
   const allProducts = Array.isArray(dbProds) ? dbProds : [];
   const categories = Array.isArray(dbCats) ? dbCats : [];
@@ -55,7 +55,7 @@ export default function Home() {
 
   // Custom Logic Hooks
   const { filteredProducts, visibleCount, setVisibleCount } = useProductsFiltering(allProducts);
-  const { refreshing, handleUpdate, handleDelete, handleDuplicate, handleBulkDelete, fetchData } = useProductActions(allProducts, mutateProducts);
+  const { refreshing, handleUpdate, handleDelete, handleDuplicate, handleBulkDelete, fetchData } = useProductActions(allProducts, mutateProducts, mutateCats, mutateMrkts);
 
   const observerTarget = React.useRef<HTMLDivElement>(null);
 
@@ -64,27 +64,18 @@ export default function Home() {
   useEffect(() => {
     setMounted(true);
     
-    // Supabase Realtime Subscription
+    // Supabase Realtime Subscription for ALL tables
     const channel = supabase
       .channel('schema-db-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products',
-        },
-        () => {
-          // Background revalidation
-          mutateProducts();
-        }
-      )
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'products' }, () => mutateProducts())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, () => mutateCats())
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'markets' }, () => mutateMrkts())
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [mutateProducts]);
+  }, [mutateProducts, mutateCats, mutateMrkts]);
 
   useEffect(() => {
     const observer = new IntersectionObserver(

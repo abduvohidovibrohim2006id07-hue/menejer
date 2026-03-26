@@ -7,9 +7,6 @@ export const dynamic = 'force-dynamic';
 const CACHE_KEY = 'categories';
 
 export const GET = withGateway(async () => {
-  const cached = getCache(CACHE_KEY, TTL.CATEGORIES);
-  if (cached) return cached;
-
   const { data: categories, error } = await supabase
     .from('categories')
     .select('id, name')
@@ -18,7 +15,6 @@ export const GET = withGateway(async () => {
   if (error) throw { message: error.message, status: 500 };
 
   const data = (categories || []).filter((c: any) => c.name);
-  setCache(CACHE_KEY, data);
   return data;
 });
 
@@ -34,7 +30,6 @@ export const POST = withGateway(async (req) => {
 
   if (error) throw { message: error.message, status: 500 };
 
-  invalidateCache(CACHE_KEY);
   return { success: true, id: data.id };
 });
 
@@ -49,7 +44,6 @@ export const PUT = withGateway(async (req) => {
 
   if (error) throw { message: error.message, status: 500 };
 
-  invalidateCache(CACHE_KEY);
   return { success: true };
 });
 
@@ -64,6 +58,5 @@ export const DELETE = withGateway(async (req) => {
 
   if (error) throw { message: error.message, status: 500 };
 
-  invalidateCache(CACHE_KEY);
   return { success: true };
 });
