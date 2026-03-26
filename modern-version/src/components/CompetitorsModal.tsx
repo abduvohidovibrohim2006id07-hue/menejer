@@ -20,6 +20,8 @@ interface Competitor {
   id: string;
   url: string;
   type: 'uzum' | 'yandex';
+  isOwn?: boolean;
+  warehouseLabel?: string;
   metadata?: {
     title?: string;
     image?: string;
@@ -39,10 +41,18 @@ interface Competitor {
   history?: HistorySnapshot[];
 }
 
+interface MarketProp {
+  id: string;
+  name: string;
+  color?: string;
+  icon?: any;
+  accounts?: { cabinets?: { id: string; name: string; warehouses?: { id: string; name: string }[] }[] }[];
+}
+
 interface CompetitorsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  competitors: any[]; // Flexibility for legacy data
+  competitors: any[];
   onUpdate: (competitors: any[]) => void;
   productName: string;
   currentProduct?: {
@@ -50,6 +60,9 @@ interface CompetitorsModalProps {
     image: string;
     title: string;
   };
+  marketplaces?: string[];
+  markets?: MarketProp[];
+  warehouseData?: Record<string, any>;
 }
 
 export const CompetitorsModal = ({ 
@@ -58,7 +71,10 @@ export const CompetitorsModal = ({
   competitors: initialCompetitors = [], 
   onUpdate, 
   productName,
-  currentProduct = { price: 0, image: '', title: productName }
+  currentProduct = { price: 0, image: '', title: productName },
+  marketplaces = [],
+  markets = [],
+  warehouseData = {}
 }: CompetitorsModalProps) => {
   const [mounted, setMounted] = useState(false);
   const [view, setView] = useState<'dashboard' | 'stats' | 'history' | 'add'>('dashboard');
@@ -69,13 +85,39 @@ export const CompetitorsModal = ({
   const [newUrl, setNewUrl] = useState('');
   const [isAdding, setIsAdding] = useState(false);
 
+  // Tanlangan bozorlar uchun ombor slotlarini hisoblash
+  const ownSlots = React.useMemo(() => {
+    const slots: { marketId: string; marketName: string; marketColor: string; warehouseId: string; warehouseName: string; cabinetName: string; key: string }[] = [];
+    marketplaces.forEach(mpId => {
+      const market = markets.find(m => m.id === mpId);
+      if (!market?.accounts) return;
+      market.accounts.forEach(acc => {
+        acc.cabinets?.forEach(cab => {
+          cab.warehouses?.forEach(wh => {
+            slots.push({
+              marketId: mpId,
+              marketName: market.name,
+              marketColor: market.color || '#6366f1',
+              warehouseId: wh.id,
+              warehouseName: wh.name,
+              cabinetName: cab.name,
+              key: `own_${mpId}_${wh.id}`
+            });
+          });
+        });
+      });
+    });
+    return slots;
+  }, [marketplaces, markets]);
+
   useEffect(() => {
     setMounted(true);
-    // Transform legacy competitors if needed
     const normalized = initialCompetitors.map((c, idx) => ({
       id: c.id || `c-${idx}-${Date.now()}`,
-      url: c.url,
-      type: c.url.includes('yandex') ? 'yandex' : 'uzum',
+      url: c.url || '',
+      type: (c.url || '').includes('yandex') ? 'yandex' : 'uzum',
+      isOwn: c.isOwn || false,
+      warehouseLabel: c.warehouseLabel || '',
       metadata: c.scraped || c.metadata || {},
       history: c.history || []
     })) as Competitor[];
@@ -282,30 +324,141 @@ export const CompetitorsModal = ({
                 <div className="flex justify-between items-end">
                    <div>
                      <h3 className="text-4xl font-black text-slate-900 tracking-tighter uppercase italic">Raqobatchilar</h3>
-                     <p className="text-slate-500 font-medium ml-1">Monitoring ro'yxati ({competitors.length} ta havola)</p>
+                     <p className="text-slate-500 font-medium ml-1">Monitoring ro&apos;yxati ({competitors.filter(c => !c.isOwn).length} ta raqobatchi{competitors.filter(c => c.isOwn).length > 0 ? `, ${competitors.filter(c => c.isOwn).length} ta o'z e'loningiz` : ''})</p>
                    </div>
                    <div className="bg-white px-8 py-5 rounded-[24px] shadow-xl border border-indigo-50 flex items-center gap-6">
                       <div className="w-12 h-12 bg-indigo-600 rounded-2xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
                         <TrendingUp size={24} />
                       </div>
                       <div>
-                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-1">O'rtacha Narx</p>
-                        <p className="text-2xl font-black text-slate-900">{getAveragePrice().toLocaleString()} <span className="text-xs font-bold text-slate-400 uppercase">so'm</span></p>
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.2em] mb-1">O&apos;rtacha Narx</p>
+                        <p className="text-2xl font-black text-slate-900">{getAveragePrice().toLocaleString()} <span className="text-xs font-bold text-slate-400 uppercase">so&apos;m</span></p>
                       </div>
                    </div>
                 </div>
 
-                {competitors.length === 0 ? (
+                {/* === O'Z MAHSULOTLARIM BO'LIMI === */}
+                {ownSlots.length > 0 && (
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-4 px-6 py-4 rounded-3xl border shadow-sm bg-emerald-50 border-emerald-100 text-emerald-700">
+                      <span className="text-2xl">🏷️</span>
+                      <h4 className="text-xl font-black uppercase tracking-widest">O&apos;z Mahsulotlarim</h4>
+                      <span className="ml-auto px-4 py-1.5 bg-white rounded-xl text-xs font-black shadow-sm border border-emerald-200">
+                        {ownSlots.length} ta ombor
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                      {ownSlots.map(slot => {
+                        const existing = competitors.find(c => c.isOwn && c.id === slot.key);
+                        const meta = existing?.metadata || {};
+                        const price = Number(meta.price) || 0;
+
+                        return (
+                          <div key={slot.key} className="bg-white rounded-[24px] p-6 shadow-sm border border-emerald-100 hover:shadow-lg transition-all">
+                            <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                              {/* Ombor nomi */}
+                              <div className="flex items-center gap-3 min-w-[250px]">
+                                <div className="w-10 h-10 rounded-xl flex items-center justify-center text-white text-xs font-black shadow-md" style={{ backgroundColor: slot.marketColor }}>
+                                  {slot.marketName.charAt(0)}
+                                </div>
+                                <div>
+                                  <p className="text-[9px] font-black uppercase tracking-widest" style={{ color: slot.marketColor }}>{slot.marketName}</p>
+                                  <p className="text-sm font-bold text-slate-800">{slot.warehouseName} <span className="text-slate-400 text-[10px]">({slot.cabinetName})</span></p>
+                                </div>
+                              </div>
+
+                              {/* URL kiritish yoki mavjud ma'lumot */}
+                              {existing?.url ? (
+                                <div className="flex-1 flex flex-col lg:flex-row lg:items-center gap-3">
+                                  <div className="flex-1 min-w-0">
+                                    <p className="text-sm font-bold text-slate-700 truncate">{meta.title || existing.url}</p>
+                                    <div className="flex items-center gap-3 mt-1">
+                                      {price > 0 && <span className="text-lg font-black text-emerald-600">{price.toLocaleString()} so&apos;m</span>}
+                                      {Number(meta.sold || meta.ordersAmount || 0) > 0 && (
+                                        <span className="text-[10px] font-black text-slate-400 bg-slate-100 px-2 py-1 rounded-lg">🛒 {Number(meta.sold ?? meta.ordersAmount ?? 0).toLocaleString()} ta</span>
+                                      )}
+                                      {meta.seller?.title && (
+                                        <span className="text-[10px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg">🏪 {meta.seller.title}</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex gap-2 shrink-0">
+                                    <a href={existing.url} target="_blank" rel="noreferrer" className="w-10 h-10 bg-slate-50 hover:bg-indigo-600 hover:text-white text-slate-400 rounded-xl transition-all flex items-center justify-center border border-slate-100" title="Saytda ko'rish">
+                                      <ExternalLink size={16} />
+                                    </a>
+                                    <button onClick={() => refreshCompetitor(existing.id)} className="w-10 h-10 bg-slate-50 hover:bg-indigo-600 hover:text-white text-slate-400 rounded-xl transition-all flex items-center justify-center border border-slate-100" title="Yangilash">
+                                      <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
+                                    </button>
+                                    <button onClick={() => {
+                                      const newList = competitors.filter(c => c.id !== slot.key);
+                                      saveChanges(newList);
+                                    }} className="w-10 h-10 bg-slate-50 hover:bg-red-600 hover:text-white text-slate-400 rounded-xl transition-all flex items-center justify-center border border-slate-100" title="O'chirish">
+                                      <Trash2 size={16} />
+                                    </button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <div className="flex-1 flex gap-3">
+                                  <div className="relative flex-1">
+                                    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300">
+                                      <Globe size={16} />
+                                    </div>
+                                    <input
+                                      type="text"
+                                      placeholder={`${slot.marketName} dagi mahsulot havolasini kiriting...`}
+                                      className="w-full pl-10 pr-3 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:ring-4 focus:ring-emerald-500/10 transition-all outline-none text-sm font-medium"
+                                      onKeyDown={async (e) => {
+                                        if (e.key === 'Enter') {
+                                          const url = (e.target as HTMLInputElement).value.trim();
+                                          if (!url) return;
+                                          setLoading(true);
+                                          try {
+                                            const res = await fetch(`/api/proxy/metadata?url=${encodeURIComponent(url)}`);
+                                            const data = await res.json();
+                                            const newEntry: Competitor = {
+                                              id: slot.key,
+                                              url,
+                                              type: url.includes('yandex') ? 'yandex' : 'uzum',
+                                              isOwn: true,
+                                              warehouseLabel: `${slot.marketName} — ${slot.warehouseName}`,
+                                              metadata: data.error ? {} : data,
+                                              history: data.price ? [{ date: new Date().toISOString(), price: data.price }] : []
+                                            };
+                                            saveChanges([...competitors, newEntry]);
+                                            toast.success(`${slot.warehouseName} uchun havola qo'shildi!`);
+                                          } catch {
+                                            toast.error('Xatolik yuz berdi');
+                                          } finally {
+                                            setLoading(false);
+                                          }
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                  <span className="text-[9px] text-slate-400 font-bold self-center whitespace-nowrap">Enter ⏎</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {/* === RAQOBATCHILAR === */}
+                {competitors.filter(c => !c.isOwn).length === 0 && ownSlots.length === 0 ? (
                   <div className="py-24 text-center bg-white rounded-[48px] border-4 border-dashed border-slate-100">
                     <div className="text-6xl mb-6 grayscale opacity-20">📊</div>
                     <p className="text-2xl font-black text-slate-300 italic uppercase">Hali raqobatchilar qo&apos;shilmagan</p>
                     <button onClick={() => setView('add')} className="mt-6 px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-indigo-700 transition-all shadow-xl active:scale-95">Yangi qo&apos;shish &rarr;</button>
                   </div>
-                ) : (
+                ) : competitors.filter(c => !c.isOwn).length > 0 ? (
                   <div className="space-y-16">
                     {/* GROUPED BY BRAND/SOURCE */}
                     {['yandex', 'uzum'].map((type) => {
-                      const list = competitors.filter(c => c.type === type);
+                      const list = competitors.filter(c => c.type === type && !c.isOwn);
                       if (list.length === 0) return null;
 
                       return (
@@ -448,7 +601,7 @@ export const CompetitorsModal = ({
                       );
                     })}
                   </div>
-                )}
+                ) : null}
               </div>
             )}
 

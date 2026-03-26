@@ -786,6 +786,9 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
               image: product.local_images?.[0] || '',
               title: `${product.category} ${product.brand || ''} ${product.model || ''}`.trim()
             }}
+            marketplaces={product.marketplaces || []}
+            markets={markets}
+            warehouseData={(product as any).warehouse_data || {}}
           />
         </div>
       </div>
