@@ -46,7 +46,7 @@ interface ProductCardProps {
   onSelectToggle: (id: string) => void;
 }
 
-export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate, onRefresh, onDuplicate, selected, onSelectToggle }: ProductCardProps) => {
+export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete, onUpdate, onRefresh, onDuplicate, selected, onSelectToggle }: ProductCardProps) => {
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [showMoreMenu, setShowMoreMenu] = React.useState(false);
   const [confirmDeleteImg, setConfirmDeleteImg] = React.useState<string | null>(null);
@@ -768,29 +768,33 @@ export const ProductCard = ({ product, markets = [], onEdit, onDelete, onUpdate,
               )}
             </div>
           </div>
-          <PriceCalculatorModal 
-            isOpen={showPriceCalc} 
-            onClose={() => setShowPriceCalc(false)} 
-            initialPrice={product.price}
-            initialCost={product.price_retail}
-            productName={`${product.category} ${product.brand || ''} ${product.model || ''}`}
-          />
-          <CompetitorsModal 
-            isOpen={showCompetitors}
-            onClose={closeCompetitorsModal}
-            competitors={product.competitors || []}
-            onUpdate={(next) => onUpdate(product.id, { competitors: next })}
-            productName={`${product.category} ${product.brand || ''} ${product.model || ''}`}
-            currentProduct={{
-              price: Number(product.price) || 0,
-              image: product.local_images?.[0] || '',
-              title: `${product.category} ${product.brand || ''} ${product.model || ''}`.trim()
-            }}
-            marketplaces={product.marketplaces || []}
-            markets={markets}
-            warehouseData={(product as any).warehouse_data || {}}
-          />
+          {showPriceCalc && (
+            <PriceCalculatorModal 
+              isOpen={showPriceCalc} 
+              onClose={() => setShowPriceCalc(false)} 
+              initialPrice={product.price}
+              initialCost={product.price_retail}
+              productName={`${product.category} ${product.brand || ''} ${product.model || ''}`}
+            />
+          )}
+          {showCompetitors && (
+            <CompetitorsModal 
+              isOpen={showCompetitors}
+              onClose={closeCompetitorsModal}
+              competitors={product.competitors || []}
+              onUpdate={(next) => onUpdate(product.id, { competitors: next })}
+              productName={`${product.category} ${product.brand || ''} ${product.model || ''}`}
+              currentProduct={{
+                price: Number(product.price) || 0,
+                image: product.local_images?.[0] || '',
+                title: `${product.category} ${product.brand || ''} ${product.model || ''}`.trim()
+              }}
+              marketplaces={product.marketplaces || []}
+              markets={markets}
+              warehouseData={(product as any).warehouse_data || {}}
+            />
+          )}
         </div>
       </div>
     );
-};
+});

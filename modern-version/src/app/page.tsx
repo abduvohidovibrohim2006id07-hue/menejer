@@ -118,14 +118,14 @@ export default function Home() {
     if (savedPanelOpen === 'true') setIsFilterPanelOpen(true);
   }, []);
 
-  const toggleSelection = (id: string) => {
+  const toggleSelection = React.useCallback((id: string) => {
     setSelectedIds(prev => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
       return next;
     });
-  };
+  }, []);
 
   const clearSelection = () => setSelectedIds(new Set());
 
@@ -159,13 +159,22 @@ export default function Home() {
     window.location.href = `/api/products/export?ids=${ids}`;
   };
 
-  const fetchData = async (silent = false) => {
+  const fetchData = React.useCallback(async (silent = false) => {
     if (silent) setRefreshing(true);
     await Promise.all([
       mutateProducts(),
     ]);
     setRefreshing(false);
-  };
+  }, [mutateProducts]);
+
+  const handleEditProduct = React.useCallback((p: any) => {
+    setEditingProduct(p);
+    setIsModalOpen(true);
+  }, []);
+
+  const handleRefreshData = React.useCallback(() => {
+    fetchData(true);
+  }, [fetchData]);
 
   useEffect(() => {
     sessionStorage.setItem('activeTab', activeTab);
@@ -278,27 +287,21 @@ export default function Home() {
     return () => clearTimeout(timer);
   }, [allProducts, filterSignature]);
 
-  const handleUpdate = async (id: string, updates: any) => {
-    // Optimistic UI update
+  const handleUpdate = React.useCallback(async (id: string, updates: any) => {
     setAllProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
-    
     try {
-      // Persist to database
       await apiClient.post('/api/products', { id, ...updates });
     } catch (e: any) {
       toast.error("Ma'lumotni saqlashda xatolik: " + e.message);
-      // Revert if failed
       await fetchData(true);
     }
-  };
+  }, [fetchData]);
 
-  const handleDelete = async (id: string) => {
-    // Optimistically update the UI FIRST
+  const handleDelete = React.useCallback(async (id: string) => {
     const originalProducts = [...allProducts];
     setAllProducts(prev => prev.filter(p => p.id !== id));
 
     try {
-      // Perform deletion in background
       apiClient.delete('/api/products', id).then(() => {
         toast.success("Mahsulot o'chirildi!");
       }).catch(e => {
@@ -309,16 +312,15 @@ export default function Home() {
     } catch (e: any) {
       console.error(e);
     }
-  };
+  }, [allProducts]);
 
-  const handleDuplicate = async (product: any) => {
+  const handleDuplicate = React.useCallback(async (product: any) => {
     setRefreshing(true);
     try {
-      // Generate next numeric ID
       let nextId = "10001";
       const ids = allProducts
         .map(p => parseInt(String(p.id)) || 0)
-        .filter(id => !isNaN(id) && id < 1000000); // Ignore long Uzum IDs
+        .filter(id => !isNaN(id) && id < 1000000); 
       if (ids.length > 0) {
         nextId = (Math.max(...ids) + 1).toString();
       }
@@ -337,7 +339,7 @@ export default function Home() {
     } finally {
       setRefreshing(false);
     }
-  };
+  }, [allProducts, fetchData]);
 
   if (!mounted) return null;
 
@@ -554,14 +556,11 @@ export default function Home() {
                       markets={markets}
                       selected={selectedIds.has(product.id)}
                       onSelectToggle={toggleSelection}
-                      onEdit={(p: any) => {
-                        setEditingProduct(p);
-                        setIsModalOpen(true);
-                      }}
+                      onEdit={handleEditProduct}
                       onDuplicate={handleDuplicate}
                       onDelete={handleDelete}
                       onUpdate={handleUpdate}
-                      onRefresh={() => fetchData(true)}
+                      onRefresh={handleRefreshData}
                     />
                   ))}
                   
