@@ -44,6 +44,9 @@ interface ProductItem {
   [key: string]: unknown; // Allow other fields safely
 }
 
+import toast from "react-hot-toast";
+import { productValidation } from "@/lib/validations";
+
 interface ProductModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -231,14 +234,23 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
 
   const handleSubmit = async (e: React.FormEvent) => {
     if (e) e.preventDefault();
+    
+    // Frontend Validation
+    const validated = productValidation(formData);
+    if (!validated.success) {
+      toast.error(validated.error.issues.map(i => i.message).join('\n'));
+      return;
+    }
+
     setLoading(true);
     try {
       await apiClient.post('/api/products', formData);
       onSuccess();
       onClose();
+      toast.success("Mahsulot muvaffaqiyatli saqlandi!");
     } catch (error: any) {
       console.error("Save failed", error);
-      alert("Xatolik: " + error.message);
+      toast.error("Saqlashda xatolik: " + error.message);
     } finally {
       setLoading(false);
     }

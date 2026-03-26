@@ -3,6 +3,7 @@ import { getProducts } from '@/lib/data-service';
 import { supabase } from '@/lib/supabase';
 import { withGateway } from '@/lib/api-gateway';
 import { getCache, setCache, invalidateCache, TTL } from '@/lib/cache';
+import { productValidation } from '@/lib/validations';
 
 export const dynamic = 'force-dynamic';
 
@@ -21,10 +22,13 @@ export const GET = withGateway(async () => {
 // CREATE/UPDATE PRODUCT
 export const POST = withGateway(async (req) => {
   const data = await req.json();
-  const { id, ...rest } = data;
+  
+  const validated = productValidation(data);
+  if (!validated.success) {
+    throw { message: validated.error.issues.map((e: any) => e.message).join(', '), status: 400 };
+  }
 
-  if (!id) throw { message: 'ID majburiy', status: 400 };
-
+  const { id, ...rest } = validated.data;
   let status = rest.status || 'active';
 
   const brand = (rest.brand || '').toString().trim().toLowerCase().replace(/\s+/g, '');

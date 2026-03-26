@@ -1,18 +1,18 @@
 "use client";
 
 import React from 'react';
-import { apiClient } from '@/lib/api-client';
+import { useAppStore } from '@/store/useAppStore';
+import toast from 'react-hot-toast';
 
 interface NavbarProps {
   onAddProduct: () => void;
-  onTabChange: (tab: string) => void;
   onRefreshProducts: () => void;
-  activeTab: string;
 }
 
-export const Navbar = ({ onAddProduct, onTabChange, onRefreshProducts, activeTab }: NavbarProps) => {
+export const Navbar = ({ onAddProduct, onRefreshProducts }: NavbarProps) => {
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [importing, setImporting] = React.useState(false);
+  const { activeTab, setActiveTab } = useAppStore();
 
   const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -29,18 +29,27 @@ export const Navbar = ({ onAddProduct, onTabChange, onRefreshProducts, activeTab
       });
       const data = await response.json();
       if (response.ok) {
-        alert(`${data.count} ta mahsulot muvaffaqiyatli import qilindi!`);
+        toast.success(`${data.count} ta mahsulot muvaffaqiyatli import qilindi!`);
         onRefreshProducts();
       } else {
-        alert("Xatolik: " + data.error);
+        toast.error("Xatolik: " + data.error);
       }
     } catch (e: any) {
-      alert("Xatolik: " + e.message);
+      toast.error("Xatolik: " + e.message);
     } finally {
       setImporting(false);
       if (fileInputRef.current) fileInputRef.current.value = '';
     }
   };
+
+  const tabs = [
+    { id: 'products', label: '📦 Mahsulotlar' },
+    { id: 'video', label: '🎥 Video' },
+    { id: 'categories', label: '📁 Kategoriyalar' },
+    { id: 'ai', label: '🤖 AI Panel' },
+    { id: 'markets', label: '🏢 Do\'konlar' },
+    { id: 'notes', label: '📒 Eslatmalar' }
+  ];
 
   return (
     <nav className="sticky top-0 z-50 flex flex-col md:flex-row items-center justify-between px-4 md:px-10 py-4 bg-white/90 backdrop-blur-xl border-b border-slate-200 shadow-sm gap-4">
@@ -51,60 +60,26 @@ export const Navbar = ({ onAddProduct, onTabChange, onRefreshProducts, activeTab
           </h1>
         </div>
         
-        {/* Desktop Tabs (Hidden on mobile, we show scrollable version below) */}
+        {/* Desktop Tabs */}
         <div className="hidden lg:flex gap-1 p-1 bg-slate-100/50 rounded-2xl">
-          <button 
-            onClick={() => onTabChange('products')}
-            className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'products' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
-          >
-            📦 Mahsulotlar
-          </button>
-          <button 
-            onClick={() => onTabChange('video')}
-            className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'video' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
-          >
-            🎥 Video
-          </button>
-          <button 
-            onClick={() => onTabChange('categories')}
-            className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'categories' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
-          >
-            📁 Kategoriyalar
-          </button>
-          <button 
-            onClick={() => onTabChange('ai')}
-            className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'ai' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
-          >
-            🤖 AI Panel
-          </button>
-          <button 
-            onClick={() => onTabChange('markets')}
-            className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'markets' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
-          >
-            🏢 Do&apos;konlar
-          </button>
-          <button 
-            onClick={() => onTabChange('notes')}
-            className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === 'notes' ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
-          >
-            📒 Eslatmalar
-          </button>
+          {tabs.map(tab => (
+            <button 
+              key={tab.id}
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-5 py-2 text-sm font-bold rounded-xl transition-all ${activeTab === tab.id ? 'bg-white text-indigo-600 shadow-sm border border-slate-200/50' : 'text-slate-500 hover:text-indigo-600'}`}
+            >
+              {tab.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Mobile Tabs (Scrollable) */}
+      {/* Mobile Tabs */}
       <div className="lg:hidden flex overflow-x-auto w-full gap-2 p-1 bg-slate-100/50 rounded-2xl no-scrollbar overflow-y-hidden">
-        {[
-          { id: 'products', label: '📦 Mahsulotlar' },
-          { id: 'video', label: '🎥 Video' },
-          { id: 'categories', label: '📁 Kategoriyalar' },
-          { id: 'ai', label: '🤖 AI Panel' },
-          { id: 'markets', label: '🏢 Do\'konlar' },
-          { id: 'notes', label: '📒 Eslatmalar' }
-        ].map(tab => (
+        {tabs.map(tab => (
           <button 
             key={tab.id}
-            onClick={() => onTabChange(tab.id)}
+            onClick={() => setActiveTab(tab.id)}
             className={`px-4 py-2 text-xs font-bold rounded-xl transition-all whitespace-nowrap ${activeTab === tab.id ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-500'}`}
           >
             {tab.label}
