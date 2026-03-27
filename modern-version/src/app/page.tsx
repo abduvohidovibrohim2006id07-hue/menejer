@@ -33,6 +33,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [showExportOptions, setShowExportOptions] = useState(false);
 
   // Zustand Store
   const {
@@ -360,10 +361,44 @@ export default function Home() {
                </div>
              </div>
              <div className="flex gap-2">
-                <button onClick={handleBulkExport} className="px-4 md:px-6 py-3 md:py-4 bg-emerald-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-2xl hover:bg-emerald-700 transition-all flex items-center gap-2">
-                  <span>📥</span> <span className="hidden sm:inline">Export</span>
-                </button>
-                <button onClick={() => handleBulkDelete(selectedIds, clearSelection)} className="px-4 md:px-6 py-3 md:py-4 bg-red-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-2xl hover:bg-red-700 transition-all flex items-center gap-2">
+                <div className="relative">
+                  <button 
+                    onClick={() => setShowExportOptions(!showExportOptions)} 
+                    className="h-full px-4 md:px-6 py-3 md:py-4 bg-emerald-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-2xl hover:bg-emerald-700 transition-all flex items-center gap-2"
+                  >
+                    <span>📥</span> <span className="hidden sm:inline">Export</span>
+                  </button>
+                  
+                  {showExportOptions && (
+                    <div className="absolute bottom-full mb-4 right-0 bg-slate-800 border border-white/10 rounded-2xl p-2 shadow-2xl flex flex-col gap-1 min-w-[200px] animate-in slide-in-from-bottom-2 duration-300">
+                      <button 
+                        onClick={() => {
+                          const ids = Array.from(selectedIds).join(',');
+                          window.location.href = `/api/products/export?ids=${ids}`;
+                          setShowExportOptions(false);
+                        }}
+                        className="px-4 py-3 text-white text-[10px] md:text-xs font-black uppercase text-left hover:bg-white/10 rounded-xl transition-all flex items-center gap-2"
+                      >
+                        <span>📄</span> Standart Export
+                      </button>
+                      <button 
+                        onClick={() => {
+                          const ids = Array.from(selectedIds).join(',');
+                          window.location.href = `/api/products/export/uzum?ids=${ids}`;
+                          setShowExportOptions(false);
+                        }}
+                        className="px-4 py-3 text-purple-400 text-[10px] md:text-xs font-black uppercase text-left hover:bg-white/10 rounded-xl transition-all flex items-center gap-2"
+                      >
+                        <span>🍇</span> Uzum Export
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                <button onClick={() => {
+                   setShowExportOptions(false);
+                   handleBulkDelete(selectedIds, clearSelection);
+                }} className="px-4 md:px-6 py-3 md:py-4 bg-red-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-2xl hover:bg-red-700 transition-all flex items-center gap-2">
                   <span>🗑️</span> <span className="hidden sm:inline">O&apos;chirish</span>
                 </button>
              </div>

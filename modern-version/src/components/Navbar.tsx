@@ -111,13 +111,6 @@ export const Navbar = ({ onAddProduct, onRefreshProducts }: NavbarProps) => {
           >
             📥
           </a>
-          <a 
-            href="/api/products/export/uzum" 
-            className="p-3 md:p-3.5 bg-purple-50 text-purple-600 rounded-2xl hover:bg-purple-600 hover:text-white transition-all shadow-sm border border-purple-100 flex items-center gap-2"
-            title="Uzum Market Eksport"
-          >
-            🍇 <span className="hidden xl:inline font-bold">Uzum</span>
-          </a>
         </div>
         <button 
           onClick={onAddProduct}
