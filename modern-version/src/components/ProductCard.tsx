@@ -182,16 +182,23 @@ export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete
       // Smooth delay for animation to finish (matching duration-500)
       await new Promise(r => setTimeout(r, 500));
       
-      // OPTIMISTIC UI: Remove image from local state first
-      const newImages = (product.local_images || []).filter(img => !img.includes(filename));
-      onUpdate(product.id, { local_images: newImages });
+      // OPTIMISTIC UI: Remove image from local state first if possible, but 
+      // since it's derived from S3 in getProducts, local state update is tricky.
+      // We'll just rely on the background delete + refresh.
 
-      // Perform deletion in background
+      // Perform deletion
       fetch('/api/products/delete-image', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: product.id, filename })
-      }).catch(e => console.error("Background delete image error:", e));
+      }).then(() => {
+        onRefresh();
+      }).catch(e => {
+        console.error("Delete image error:", e);
+        alert("Rasmni o'chirishda xatolik");
+      }).finally(() => {
+        setDeletingImg(null);
+      });
 
     } catch (e: any) {
       console.error(e);
