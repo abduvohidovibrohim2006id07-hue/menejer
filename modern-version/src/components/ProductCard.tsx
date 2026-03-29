@@ -685,7 +685,7 @@ export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-6 border-t border-slate-100">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-6 border-t border-slate-100">
           <div className="col-span-1 flex gap-2">
             <div className="flex-[0.6]">
               <MediaUpload productId={product.id} onSuccess={onRefresh} />
@@ -705,76 +705,79 @@ export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete
                )}
             </button>
           </div>
-          <button 
-            onClick={() => onEdit(product)}
-            className="col-span-1 py-4 px-4 bg-indigo-50 text-indigo-600 font-black rounded-2xl hover:bg-indigo-600 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2"
-          >
-            ✏️ Tahrirlash
-          </button>
-          
-          <div className="col-span-1 relative more-menu-container">
-            <button 
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowMoreMenu(!showMoreMenu);
-              }}
-              className="w-full py-4 px-4 bg-slate-50 text-slate-500 font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2 border border-slate-100"
-            >
-              <span>⚙️</span> Batafsil
-            </button>
 
-            {showMoreMenu && (
-              <div 
-                onClick={(e) => e.stopPropagation()}
-                className="absolute bottom-full mb-3 right-0 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 overflow-hidden"
+          <div className="col-span-1 flex flex-col gap-3">
+            <button 
+              onClick={() => onEdit(product)}
+              className="w-full py-4 px-4 bg-indigo-50 text-indigo-600 font-black rounded-2xl hover:bg-indigo-600 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2"
+            >
+              ✏️ Tahrirlash
+            </button>
+            
+            <div className="relative more-menu-container">
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowMoreMenu(!showMoreMenu);
+                }}
+                className="w-full py-4 px-4 bg-slate-50 text-slate-500 font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2 border border-slate-100"
               >
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setShowPriceCalc(true);
-                      setShowMoreMenu(false);
-                    }}
-                    className="w-full text-left px-5 py-4 hover:bg-emerald-50 flex items-center gap-3 transition-colors border-b border-slate-50"
-                  >
-                    <span className="text-lg">🧮</span>
-                    <span className="font-bold text-slate-600">Narx hisoblash</span>
-                  </button>
-                  <button 
-                    onClick={(e) => {
-                      openCompetitorsModal(e);
-                      setShowMoreMenu(false);
-                    }}
-                    className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors border-b border-slate-50"
-                  >
-                    <span className="text-lg">📊</span>
-                    <span className="font-bold text-slate-600">Raqobat {product.competitors?.length ? `(${product.competitors.length})` : ''}</span>
-                  </button>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (onDuplicate) onDuplicate(product);
-                      setShowMoreMenu(false);
-                    }}
-                    className="w-full text-left px-5 py-4 hover:bg-indigo-50 flex items-center gap-3 transition-colors border-b border-slate-50"
-                  >
-                    <span className="text-lg">📋</span>
-                    <span className="font-bold text-slate-600">Nusxalash</span>
-                  </button>
-                  <button 
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setConfirmDeleteProduct(true);
-                      setShowMoreMenu(false);
-                    }}
-                    className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors text-red-600"
-                  >
-                    <span className="text-lg">🗑️</span>
-                    <span className="font-bold">O&apos;chirish</span>
-                  </button>
-                </div>
-              )}
+                <span>⚙️</span> Batafsil
+              </button>
+
+              {showMoreMenu && (
+                <div 
+                  onClick={(e) => e.stopPropagation()}
+                  className="absolute bottom-full mb-3 right-0 w-48 bg-white border border-slate-100 rounded-2xl shadow-2xl z-50 animate-in fade-in slide-in-from-bottom-2 duration-200 overflow-hidden"
+                >
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowPriceCalc(true);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full text-left px-5 py-4 hover:bg-emerald-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                    >
+                      <span className="text-lg">🧮</span>
+                      <span className="font-bold text-slate-600">Narx hisoblash</span>
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        openCompetitorsModal(e);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                    >
+                      <span className="text-lg">📊</span>
+                      <span className="font-bold text-slate-600">Raqobat {product.competitors?.length ? `(${product.competitors.length})` : ''}</span>
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onDuplicate) onDuplicate(product);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full text-left px-5 py-4 hover:bg-indigo-50 flex items-center gap-3 transition-colors border-b border-slate-50"
+                    >
+                      <span className="text-lg">📋</span>
+                      <span className="font-bold text-slate-600">Nusxalash</span>
+                    </button>
+                    <button 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setConfirmDeleteProduct(true);
+                        setShowMoreMenu(false);
+                      }}
+                      className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors text-red-600"
+                    >
+                      <span className="text-lg">🗑️</span>
+                      <span className="font-bold">O&apos;chirish</span>
+                    </button>
+                  </div>
+                )}
             </div>
           </div>
+        </div>
           {showPriceCalc && (
             <PriceCalculatorModal 
               isOpen={showPriceCalc} 
