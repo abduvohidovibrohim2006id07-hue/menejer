@@ -391,6 +391,16 @@ export default function Home() {
                       >
                         <span>🍇</span> Uzum Export
                       </button>
+                      <button 
+                        onClick={() => {
+                          const ids = Array.from(selectedIds).join(',');
+                          window.location.href = `/api/products/export/yandex?ids=${ids}`;
+                          setShowExportOptions(false);
+                        }}
+                        className="px-4 py-3 text-red-400 text-[10px] md:text-xs font-black uppercase text-left hover:bg-white/10 rounded-xl transition-all flex items-center gap-2"
+                      >
+                        <span>🔴</span> Yandex Export
+                      </button>
                     </div>
                   )}
                 </div>
