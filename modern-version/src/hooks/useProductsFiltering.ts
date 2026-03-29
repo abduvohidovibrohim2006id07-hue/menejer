@@ -35,6 +35,7 @@ export const useProductsFiltering = (allProducts: any[]) => {
             p.brand || '',
             p.model || '',
             p.color || '',
+            p.barcode || '',
             p.id?.toString() || ''
           ].map(val => val.toLowerCase());
 

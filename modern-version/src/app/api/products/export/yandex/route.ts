@@ -22,6 +22,8 @@ export const GET = withGateway(async (req) => {
   headers[5]  = 'Rasmga havola *';             // F
   headers[6]  = 'Mahsulot tavsifi *';          // G
   headers[7]  = 'Bozordagi kategoriya *';      // H
+  headers[8]  = 'Brend *';                     // I
+  headers[9]  = 'Shtrixkod *';                // J
   headers[11] = 'Video havolasi';              // L
   headers[15] = "O'zbek tilidagi nomi lotin *"; // P
   headers[16] = "Lotin tilida o'zbek tilidagi tavsif *"; // Q
@@ -57,6 +59,8 @@ export const GET = withGateway(async (req) => {
     row[5]  = images;
     row[6]  = data.description_full_ru || '';
     row[7]  = data.category || '';
+    row[8]  = data.brand || '';
+    row[9]  = data.barcode || '';
     row[11] = videos;
     row[15] = data.name || '';
     row[16] = data.description_full || '';
@@ -78,6 +82,8 @@ export const GET = withGateway(async (req) => {
   colWidths[5] = { wch: 50 };  // F
   colWidths[6] = { wch: 50 };  // G
   colWidths[7] = { wch: 25 };  // H
+  colWidths[8] = { wch: 15 };  // I
+  colWidths[9] = { wch: 20 };  // J
   colWidths[11] = { wch: 30 }; // L
   colWidths[15] = { wch: 40 }; // P
   colWidths[16] = { wch: 50 }; // Q

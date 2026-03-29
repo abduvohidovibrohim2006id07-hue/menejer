@@ -41,6 +41,7 @@ interface ProductItem {
   weight_g?: string | number;
   competitors?: { shopName: string; url: string }[];
   marketId?: string;
+  barcode?: string;
   [key: string]: unknown; // Allow other fields safely
 }
 
@@ -79,6 +80,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     width_mm: '',
     height_mm: '',
     weight_g: '',
+    barcode: '',
     competitors: [],
   });
 
@@ -108,6 +110,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         width_mm: product.width_mm || '',
         height_mm: product.height_mm || '',
         weight_g: product.weight_g || '',
+        barcode: product.barcode || '',
         competitors: product.competitors || [],
       });
     } else {
@@ -137,6 +140,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         description_full_ru: '',
         status: 'active',
         marketplaces: [],
+        barcode: '',
         warehouse_data: {},
         price_retail: '',
       });
@@ -176,6 +180,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             width_mm: data.result.width_mm || prev.width_mm,
             height_mm: data.result.height_mm || prev.height_mm,
             weight_g: data.result.weight_g || prev.weight_g,
+            barcode: data.result.barcode || prev.barcode,
           }));
         } else {
           setFormData((prev: any) => ({ ...prev, [targetField]: data.result }));
@@ -254,6 +259,28 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateBarcode = () => {
+    // Generate a unique 13-digit EAN-like barcode
+    let barcode = "";
+    // Using 200 as a prefix for internal use items (standard EAN practice)
+    const generate = () => "200" + Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+    
+    barcode = generate();
+    
+    let isUnique = false;
+    let attempts = 0;
+    while (!isUnique && attempts < 10) {
+      if (!allProducts.some(p => p.barcode === barcode)) {
+        isUnique = true;
+      } else {
+        barcode = generate();
+      }
+      attempts++;
+    }
+    
+    setFormData(prev => ({ ...prev, barcode }));
   };
 
   if (!isOpen) return null;
@@ -381,6 +408,27 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                 value={formData.price_retail}
                 onChange={(e) => setFormData({...formData, price_retail: e.target.value})}
               />
+            </div>
+
+            <div className="col-span-1">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Shtrixkod (Barcode)*</label>
+              <div className="relative group">
+                <input 
+                  type="text"
+                  placeholder="Shtrixkod..."
+                  className="w-full p-4 pr-12 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                  value={formData.barcode}
+                  onChange={(e) => setFormData({...formData, barcode: e.target.value})}
+                />
+                <button 
+                  type="button"
+                  onClick={generateBarcode}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                  title="Generatsiya"
+                >
+                  ✨
+                </button>
+              </div>
             </div>
 
             <div className="col-span-1 lg:col-span-2 relative">

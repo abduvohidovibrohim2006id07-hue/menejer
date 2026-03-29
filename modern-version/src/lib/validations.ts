@@ -22,6 +22,7 @@ export const productSchema = z.object({
   width_mm: z.string().or(z.number()).optional(),
   height_mm: z.string().or(z.number()).optional(),
   weight_g: z.string().or(z.number()).optional(),
+  barcode: z.string().optional(),
   competitors: z.array(z.any()).optional().default([]),
   warehouse_data: z.record(z.string(), z.any()).optional().default({}),
 });
