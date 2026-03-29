@@ -164,6 +164,31 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
     }
   };
 
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+    
+    const files = Array.from(e.dataTransfer.files || []);
+    if (files.length > 0) {
+      await uploadFiles(files);
+    }
+  };
+
   if (uploading) {
     return (
       <div className="h-full min-h-[80px] border-2 border-dashed border-indigo-200 rounded-3xl flex flex-col items-center justify-center bg-indigo-50/50 p-4">
@@ -190,7 +215,12 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
         </button>
       </div>
 
-      <div className="flex-1 min-h-[60px] relative border-2 border-dashed border-slate-200 rounded-2xl hover:border-indigo-300 transition-all bg-slate-50/50 group overflow-hidden">
+      <div 
+        className={`flex-1 min-h-[60px] relative border-2 border-dashed rounded-2xl transition-all group overflow-hidden ${isDragging ? 'border-indigo-500 bg-indigo-50/50 scale-[1.02]' : 'border-slate-200 bg-slate-50/50 hover:border-indigo-300'}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
         {mode === 'file' ? (
           <>
             <input 
@@ -201,8 +231,12 @@ export const MediaUpload = ({ productId, onSuccess }: MediaUploadProps) => {
               accept="image/*,video/*"
             />
             <div className="absolute inset-0 flex flex-col items-center justify-center p-2 text-center pointer-events-none">
-              <span className="text-xl mb-0.5 group-hover:scale-110 transition-transform">📁</span>
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Media yuklash</span>
+              <span className={`text-xl mb-0.5 transition-transform ${isDragging ? 'scale-125' : 'group-hover:scale-110'}`}>
+                {isDragging ? '📥' : '📁'}
+              </span>
+              <span className={`text-[10px] font-black uppercase tracking-tighter ${isDragging ? 'text-indigo-600' : 'text-slate-500'}`}>
+                {isDragging ? 'Tashlang...' : 'Media yuklash'}
+              </span>
             </div>
           </>
         ) : (
