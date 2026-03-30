@@ -42,6 +42,8 @@ interface ProductItem {
   competitors?: { shopName: string; url: string }[];
   marketId?: string;
   barcode?: string;
+  sku_uzum?: string;
+  sku_yandex?: string;
   [key: string]: unknown; // Allow other fields safely
 }
 
@@ -81,6 +83,8 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     height_mm: '',
     weight_g: '',
     barcode: '',
+    sku_uzum: '',
+    sku_yandex: '',
     competitors: [],
   });
 
@@ -111,6 +115,8 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         height_mm: product.height_mm || '',
         weight_g: product.weight_g || '',
         barcode: product.barcode || '',
+        sku_uzum: product.sku_uzum || '',
+        sku_yandex: product.sku_yandex || '',
         competitors: product.competitors || [],
       });
     } else {
@@ -141,6 +147,8 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         status: 'active',
         marketplaces: [],
         barcode: '',
+        sku_uzum: '',
+        sku_yandex: '',
         warehouse_data: {},
         price_retail: '',
       });
@@ -181,6 +189,8 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             height_mm: data.result.height_mm || prev.height_mm,
             weight_g: data.result.weight_g || prev.weight_g,
             barcode: data.result.barcode || prev.barcode,
+            sku_uzum: data.result.sku_uzum || prev.sku_uzum,
+            sku_yandex: data.result.sku_yandex || prev.sku_yandex,
           }));
         } else {
           setFormData((prev: any) => ({ ...prev, [targetField]: data.result }));
@@ -286,6 +296,28 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     const barcode = `20${datePart}${idPart}`;
     setFormData(prev => ({ ...prev, barcode }));
     toast.success("Yangi raqamli shtrixkod generatsiya qilindi!");
+  };
+
+  const generateSKU = () => {
+    const brand = (formData.brand || "").toString().trim().toUpperCase();
+    const model = (formData.model || "").toString().trim().toUpperCase();
+    const color = (formData.color || "").toString().trim().toUpperCase();
+    
+    // Check if fields are empty
+    if (!brand || !model) {
+      toast.error("SKU uchun Brend va Model kiritilishi shart!");
+      return;
+    }
+    
+    // Format 1: Yandex (BRAND-MODEL-COLOR)
+    let yandexSku = `${brand}-${model}`;
+    if (color) yandexSku += `-${color}`;
+    
+    // Format 2: Uzum (BRANDMODELCOLOR)
+    const uzumSku = (brand + model + color).replace(/[^A-Z0-9]/g, '');
+    
+    setFormData(prev => ({ ...prev, sku_yandex: yandexSku, sku_uzum: uzumSku }));
+    toast.success("Yangi SKU kodlar yaratildi!");
   };
 
   if (!isOpen) return null;
@@ -432,6 +464,48 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                   title="Generatsiya"
                 >
                   ✨
+                </button>
+              </div>
+            </div>
+
+            <div className="col-span-1">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Uzum SKU (Belgisiz)*</label>
+              <div className="relative group">
+                <input 
+                  type="text"
+                  placeholder="VGRV483QORA"
+                  className="w-full p-4 pr-12 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                  value={formData.sku_uzum}
+                  onChange={(e) => setFormData({...formData, sku_uzum: e.target.value})}
+                />
+                <button 
+                  type="button"
+                  onClick={generateSKU}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                  title="SKU Generatsiya"
+                >
+                  🚀
+                </button>
+              </div>
+            </div>
+
+            <div className="col-span-1">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Yandex SKU (- bilan)*</label>
+              <div className="relative group">
+                <input 
+                  type="text"
+                  placeholder="VGR-V483-QORA"
+                  className="w-full p-4 pr-12 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                  value={formData.sku_yandex}
+                  onChange={(e) => setFormData({...formData, sku_yandex: e.target.value})}
+                />
+                <button 
+                  type="button"
+                  onClick={generateSKU}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
+                  title="SKU Generatsiya"
+                >
+                  🚀
                 </button>
               </div>
             </div>

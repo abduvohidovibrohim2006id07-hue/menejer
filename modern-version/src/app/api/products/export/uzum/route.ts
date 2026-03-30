@@ -19,6 +19,7 @@ export const GET = withGateway(async (req) => {
   // 1. Headerlarni (ustun nomlarini) tayyorlaymiz
   const headers: any[] = [];
   headers[0]  = 'Название товара RU*';
+  headers[1]  = 'Артикул*';
   headers[2]  = 'Название товара UZ*';
   headers[6]  = 'Бренд*';
   headers[7]  = 'Модель';
@@ -45,6 +46,7 @@ export const GET = withGateway(async (req) => {
 
     const row: any[] = [];
     row[0]  = data.name_ru || '';
+    row[1]  = data.sku_uzum || '';
     row[2]  = data.name || '';
     row[6]  = data.brand || '';
     row[7]  = data.model || '';
@@ -68,7 +70,7 @@ export const GET = withGateway(async (req) => {
   // Ustunlar kengligini o'rnatish
   worksheet['!cols'] = [
     { wch: 40 }, // A
-    { wch: 10 }, // B
+    { wch: 20 }, // B
     { wch: 40 }, // C
     { wch: 10 }, // D
     { wch: 10 }, // E

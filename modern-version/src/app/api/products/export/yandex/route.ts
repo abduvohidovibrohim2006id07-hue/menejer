@@ -18,6 +18,7 @@ export const GET = withGateway(async (req) => {
 
   // 1. Headerlarni tayyorlaymiz
   const headers: any[] = [];
+  headers[0]  = 'Ваш SKU *';                 // A
   headers[4]  = 'Mahsulot nomi *';              // E
   headers[5]  = 'Rasmga havola *';             // F
   headers[6]  = 'Mahsulot tavsifi *';          // G
@@ -55,6 +56,7 @@ export const GET = withGateway(async (req) => {
     const dimensionsCm = `${lengthCm}/${widthCm}/${heightCm}`;
 
     const row: any[] = [];
+    row[0]  = data.sku_yandex || '';
     row[4]  = data.name_ru || '';
     row[5]  = images;
     row[6]  = data.description_full_ru || '';
@@ -78,6 +80,7 @@ export const GET = withGateway(async (req) => {
 
   // Ustunlar kengligini o'rnatish
   const colWidths = [];
+  colWidths[0] = { wch: 20 };  // A
   colWidths[4] = { wch: 40 };  // E
   colWidths[5] = { wch: 50 };  // F
   colWidths[6] = { wch: 50 };  // G
