@@ -12,13 +12,20 @@ export const GET = withGateway(async (req) => {
   if (idsParam) {
     const idList = idsParam.split(',').filter(id => id.trim() !== '');
     if (idList.length > 0) {
-      allProducts = allProducts.filter((p: any) => idList.includes(p.id));
+      const regularIds = idList.filter(id => !id.startsWith('group-'));
+      const groupSkus = idList.filter(id => id.startsWith('group-')).map(id => id.replace('group-', ''));
+
+      allProducts = allProducts.filter((p: any) => {
+        const isRegularMatch = regularIds.includes(p.id.toString());
+        const isGroupMatch = p.group_sku && groupSkus.includes(p.group_sku);
+        return isRegularMatch || isGroupMatch;
+      });
     }
   }
 
   // 1. Headerlarni tayyorlaymiz
   const headers: any[] = [];
-  headers[0]  = 'Ваш SKU *';                 // A
+  headers[3]  = 'Sizning SKU *';               // D
   headers[4]  = 'Mahsulot nomi *';              // E
   headers[5]  = 'Rasmga havola *';             // F
   headers[6]  = 'Mahsulot tavsifi *';          // G
@@ -56,7 +63,7 @@ export const GET = withGateway(async (req) => {
     const dimensionsCm = `${lengthCm}/${widthCm}/${heightCm}`;
 
     const row: any[] = [];
-    row[0]  = data.sku_yandex || '';
+    row[3]  = data.sku_yandex || '';
     row[4]  = data.name_ru || '';
     row[5]  = images;
     row[6]  = data.description_full_ru || '';
