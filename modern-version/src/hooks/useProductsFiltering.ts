@@ -7,13 +7,14 @@ export const useProductsFiltering = (allProducts: any[]) => {
   
   const {
     selectedCategory, searchQuery, brandFilter, colorFilter,
-    minPrice, maxPrice, statusFilter, selectedMarkets, sortBy
+    minPrice, maxPrice, statusFilter, selectedMarkets, sortBy,
+    groupFilter
   } = useAppStore();
 
   const filterSignature = useMemo(() => [
     selectedCategory, searchQuery, brandFilter, colorFilter,
-    minPrice, maxPrice, statusFilter, selectedMarkets, sortBy
-  ].join('|'), [selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets, sortBy]);
+    minPrice, maxPrice, statusFilter, selectedMarkets, sortBy, groupFilter
+  ].join('|'), [selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets, sortBy, groupFilter]);
 
   const lastFilterSignature = useRef(filterSignature);
 
@@ -38,6 +39,7 @@ export const useProductsFiltering = (allProducts: any[]) => {
             p.barcode || '',
             p.sku_uzum || '',
             p.sku_yandex || '',
+            p.group_sku || '',
             p.id?.toString() || ''
           ].map(val => val.toLowerCase());
 
@@ -77,20 +79,62 @@ export const useProductsFiltering = (allProducts: any[]) => {
         result = result.filter((p: any) => (p.marketplaces || []).length === 0);
       }
       
-      // Sorting
+      // 4. Grouping Logic (Final Step)
+      if (groupFilter) {
+        // We are inside a specific group view
+        result = result.filter((p: any) => p.group_sku === groupFilter);
+      } else {
+        // Group items that have a group_sku
+        const groupedMap = new Map<string, any[]>();
+        const finalResults: any[] = [];
+        
+        result.forEach((p: any) => {
+          if (p.group_sku) {
+            if (!groupedMap.has(p.group_sku)) groupedMap.set(p.group_sku, []);
+            groupedMap.get(p.group_sku)!.push(p);
+          } else {
+            finalResults.push(p);
+          }
+        });
+        
+        // Convert groups to virtual group cards
+        groupedMap.forEach((members, groupSku) => {
+          // Create a Virtual Group Product
+          const first = members[0];
+          const virtualGroup = {
+            id: `group-${groupSku}`,
+            group_sku: groupSku,
+            isGroup: true,
+            name: `${first.brand || 'No Brand'} ${first.model || ''}`,
+            price: first.price,
+            category: first.category,
+            status: first.status,
+            members: members,
+            created_at: first.created_at,
+            updated_at: first.updated_at,
+            // 2x2 grid images: first 4 images from all members
+            gridImages: members.flatMap(m => m.local_images || []).slice(0, 4)
+          };
+          finalResults.push(virtualGroup);
+        });
+        
+        result = finalResults;
+      }
+
+      // 5. Sorting (apply to final results)
       if (sortBy === 'newest') {
         result.sort((a: any, b: any) => {
           const timeA = new Date(a.created_at || a.updated_at || 0).getTime();
           const timeB = new Date(b.created_at || b.updated_at || 0).getTime();
           if (timeA !== timeB) return timeB - timeA;
-          return Number(b.id) - Number(a.id);
+          return 0;
         });
       } else if (sortBy === 'oldest') {
         result.sort((a: any, b: any) => {
           const timeA = new Date(a.created_at || a.updated_at || 0).getTime();
           const timeB = new Date(b.created_at || b.updated_at || 0).getTime();
           if (timeA !== timeB) return timeA - timeB;
-          return Number(a.id) - Number(b.id);
+          return 0;
         });
       } else if (sortBy === 'name-asc') {
         result.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
@@ -108,7 +152,7 @@ export const useProductsFiltering = (allProducts: any[]) => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [allProducts, filterSignature, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets, sortBy]);
+  }, [allProducts, filterSignature, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets, sortBy, groupFilter]);
 
   return { filteredProducts, visibleCount, setVisibleCount };
 };

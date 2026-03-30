@@ -15,6 +15,7 @@ const AiSettingsManager = dynamic(() => import("@/components/AiSettingsManager")
 const VideoDownloader = dynamic(() => import("@/components/VideoDownloader").then(mod => ({ default: mod.VideoDownloader })), { ssr: false });
 const MarketManager = dynamic(() => import("@/components/MarketManager").then(mod => ({ default: mod.MarketManager })), { ssr: false });
 const NotesManager = dynamic(() => import("@/components/NotesManager").then(mod => ({ default: mod.NotesManager })), { ssr: false });
+const GroupModal = dynamic(() => import("@/components/GroupModal").then(mod => ({ default: mod.GroupModal })), { ssr: false });
 
 // Hooks & Store
 import { useScrollPersistence } from "@/hooks/useScrollPersistence";
@@ -32,6 +33,7 @@ const fetcher = (url: string) => apiClient.get(url);
 export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [showExportOptions, setShowExportOptions] = useState(false);
 
@@ -41,6 +43,7 @@ export default function Home() {
     selectedIds, toggleSelection, clearSelection, selectAll,
     selectedCategory, setFilter,
     searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets, sortBy,
+    groupFilter,
     isFilterPanelOpen
   } = useAppStore();
 
@@ -124,7 +127,14 @@ export default function Home() {
               <div>
                 <h2 className="text-4xl font-black text-slate-900 tracking-tight">Galereya</h2>
                 <p className="text-slate-500 mt-2 font-medium">
-                  Hozirda <span className="text-indigo-600 font-bold">{filteredProducts.length}</span> ta mahsulot ko&apos;rsatilmoqda
+                  {groupFilter ? (
+                    <span className="flex items-center gap-2">
+                      Guruh: <span className="text-indigo-600 font-bold">{groupFilter}</span>
+                      <button onClick={() => setFilter('groupFilter', null)} className="text-xs bg-slate-200 hover:bg-slate-300 px-2 py-0.5 rounded-lg text-slate-700 font-black transition-all">✕ Chiqish</button>
+                    </span>
+                  ) : (
+                    <>Hozirda <span className="text-indigo-600 font-bold">{filteredProducts.length}</span> ta mahsulot ko&apos;rsatilmoqda</>
+                  )}
                 </p>
               </div>
               
@@ -350,6 +360,13 @@ export default function Home() {
         markets={markets}
       />
 
+      <GroupModal 
+        isOpen={isGroupModalOpen}
+        onClose={() => setIsGroupModalOpen(false)}
+        selectedIds={selectedIds}
+        onSuccess={() => { fetchData(true); clearSelection(); }}
+      />
+
       {selectedIds.size > 0 && (
         <div className="fixed bottom-6 md:bottom-10 left-1/2 -translate-x-1/2 z-[60] w-full max-w-2xl px-4 md:px-6 animate-in slide-in-from-bottom-10 duration-500">
           <div className="bg-slate-900 border border-white/10 shadow-2xl rounded-3xl md:rounded-[32px] p-3 md:p-4 flex items-center justify-between backdrop-blur-xl">
@@ -404,6 +421,13 @@ export default function Home() {
                     </div>
                   )}
                 </div>
+
+                <button onClick={() => {
+                   setShowExportOptions(false);
+                   setIsGroupModalOpen(true);
+                }} className="px-4 md:px-6 py-3 md:py-4 bg-indigo-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-800 transition-all flex items-center gap-2">
+                  <span>📦</span> <span className="hidden sm:inline">Guruhlash</span>
+                </button>
 
                 <button onClick={() => {
                    setShowExportOptions(false);

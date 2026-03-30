@@ -23,6 +23,7 @@ interface AppState {
   selectedMarkets: string[];
   sortBy: string;
   isFilterPanelOpen: boolean;
+  groupFilter: string | null;
 
   setFilter: (key: keyof Omit<AppState, 'setFilter' | 'setActiveTab' | 'selectedIds' | 'toggleSelection' | 'clearSelection' | 'selectAll'>, value: any) => void;
 }
@@ -60,6 +61,7 @@ export const useAppStore = create<AppState>()(
       selectedMarkets: [],
       sortBy: 'newest',
       isFilterPanelOpen: false,
+      groupFilter: null,
 
       setFilter: (key, value) => set({ [key]: value }),
     }),

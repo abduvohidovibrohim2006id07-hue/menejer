@@ -25,6 +25,7 @@ export const productSchema = z.object({
   barcode: z.string().optional(),
   sku_uzum: z.string().optional(),
   sku_yandex: z.string().optional(),
+  group_sku: z.string().optional(),
   competitors: z.array(z.any()).optional().default([]),
   warehouse_data: z.record(z.string(), z.any()).optional().default({}),
 });

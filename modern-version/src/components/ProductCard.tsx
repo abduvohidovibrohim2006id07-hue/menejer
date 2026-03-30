@@ -8,6 +8,7 @@ import { PriceCalculatorModal } from './PriceCalculatorModal';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { CompetitorsModal } from './CompetitorsModal';
+import { useAppStore } from '@/store/useAppStore';
 
 interface Product {
   id: string;
@@ -32,6 +33,10 @@ interface Product {
   height_mm?: string | number;
   weight_g?: string | number;
   competitors?: { shopName: string; url: string }[];
+  isGroup?: boolean;
+  group_sku?: string;
+  members?: any[];
+  gridImages?: string[];
 }
 
 interface ProductCardProps {
@@ -47,6 +52,7 @@ interface ProductCardProps {
 }
 
 export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete, onUpdate, onRefresh, onDuplicate, selected, onSelectToggle }: ProductCardProps) => {
+  const { setFilter } = useAppStore();
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [showMoreMenu, setShowMoreMenu] = React.useState(false);
   const [confirmDeleteImg, setConfirmDeleteImg] = React.useState<string | null>(null);
@@ -473,123 +479,149 @@ export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete
 
       {/* Left: Gallery Section */}
       <div className="relative group w-full md:w-[350px] shrink-0">
-        <button 
-          onClick={() => scrollGallery(-1)}
-          className="absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white shadow-xl rounded-full flex items-center justify-center text-slate-800 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-90"
-        >
-          &#10094;
-        </button>
-        
-        <div 
-          id={`gallery-${product.id}`}
-          className="flex gap-4 overflow-x-auto scrollbar-hide snap-x p-1"
-        >
-          {product.local_images && product.local_images.length > 0 ? (
-            product.local_images.map((img, idx) => {
-              const filename = img.split('/').pop()?.split('?')[0] || '';
-              const isVideo = img.toLowerCase().includes('.mp4') || img.toLowerCase().includes('.mov');
-              const isDeletingThis = deletingImg === filename;
-              return (
-                <div 
-                  key={idx} 
-                  className={`flex-none w-full aspect-[3/4] md:w-[300px] md:h-[400px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 snap-start relative group/item shadow-sm cursor-zoom-in transition-all duration-500 ease-in-out ${isDeletingThis ? 'scale-50 opacity-0 rotate-12 blur-lg pointer-events-none' : 'scale-100 opacity-100'}`}
-                  onClick={() => !confirmDeleteImg && !isDeletingThis && setPreviewUrl(img)}
-                >
-                  {isDeletingThis && (
-                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
-                      <div className="bg-red-600 text-white px-3 py-1 rounded-full font-black text-[9px] animate-bounce shadow-xl uppercase tracking-tighter">
-                        O&apos;chirilmoqda...
-                      </div>
-                    </div>
-                  )}
-                  {isVideo ? (
-                    <video 
-                      src={img} 
-                      className="w-full h-full object-cover"
-                      loop 
-                      muted 
-                      playsInline
-                      preload="metadata"
-                      onMouseEnter={(e) => { e.currentTarget.play().catch(() => {}); }}
-                      onMouseLeave={(e) => { e.currentTarget.pause(); }}
-                    />
-                  ) : (
-                    <Image 
-                      src={img} 
-                      alt="" 
-                      fill
-                      sizes="(max-width: 768px) 100vw, 300px"
-                      className="object-cover transition-transform group-hover/item:scale-110 duration-500"
-                    />
-                  )}
-                  
-                  {/* CONFIRM DELETE OVERLAY */}
-                  {confirmDeleteImg === filename && (
-                    <div className="absolute inset-0 z-40 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
-                      <p className="text-white font-black text-sm uppercase tracking-widest mb-4">Rostdan ham o&apos;chirilsinmi?</p>
-                      <div className="flex gap-3 w-full">
-                        <button 
-                          onClick={() => handleDeleteImg(filename)}
-                          className="flex-1 py-3 bg-red-600 text-white font-black rounded-xl hover:bg-red-700 active:scale-95 transition-all text-xs"
-                        >
-                          HA, O&apos;CHIR
-                        </button>
-                        <button 
-                          onClick={() => setConfirmDeleteImg(null)}
-                          className="flex-1 py-3 bg-white/20 text-white font-black rounded-xl hover:bg-white/30 active:scale-95 transition-all text-xs border border-white/10"
-                        >
-                          YO&apos;Q
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="absolute top-3 left-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <a 
-                      href={`https://www.google.com/search?q=${encodeURIComponent(product.category + ' ' + (product.brand || '') + ' ' + (product.model || ''))}&tbm=isch`} 
-                      target="_blank" 
-                      className="w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-lg flex items-center justify-center text-xs hover:bg-white transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      🔍
-                    </a>
-                    <a 
-                      href={`https://lens.google.com/uploadbyurl?url=${encodeURIComponent(img)}`} 
-                      target="_blank" 
-                      className="w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-lg flex items-center justify-center text-xs hover:bg-white transition-colors"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      📷
-                    </a>
-                  </div>
-                  <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/item:opacity-100 transition-opacity flex justify-end p-2 pointer-events-none">
-                    <button 
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setConfirmDeleteImg(filename);
-                      }}
-                      className="w-8 h-8 bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg pointer-events-auto hover:bg-red-700 active:scale-90 transition-all"
-                    >
-                      🗑️
-                    </button>
-                  </div>
+        {product.isGroup ? (
+          <div className="w-full aspect-[3/4] md:w-[300px] md:h-[400px] grid grid-cols-2 grid-rows-2 gap-1 bg-slate-100 rounded-3xl overflow-hidden border border-slate-200">
+            {product.gridImages && product.gridImages.length > 0 ? (
+              product.gridImages.map((img, idx) => (
+                <div key={idx} className="relative w-full h-full bg-white">
+                  <Image src={img} alt="" fill className="object-cover" sizes="150px" />
                 </div>
-              );
-            })
-          ) : (
-            <div className="w-full h-[350px] py-10 flex items-center justify-center text-slate-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 font-medium">
-              Rasm yoki video yuklanmagan
+              ))
+            ) : (
+              <div className="col-span-2 row-span-2 flex items-center justify-center text-slate-300 font-bold italic">Rasm Yo'q</div>
+            )}
+            {/* If less than 4, fill with empty but stylized slots */}
+            {product.gridImages && product.gridImages.length < 4 && Array.from({ length: 4 - product.gridImages.length }).map((_, i) => (
+              <div key={`empty-${i}`} className="bg-slate-50 flex items-center justify-center">
+                 <span className="text-[10px] text-slate-200 font-black">BO'SH</span>
+              </div>
+            ))}
+            
+            <div className="absolute inset-0 bg-indigo-600/10 pointer-events-none"></div>
+            <div className="absolute top-3 left-3 bg-indigo-600 text-white px-3 py-1 rounded-full font-black text-[10px] shadow-lg">
+               {product.members?.length} TA MAHSULOT
             </div>
-          )}
-        </div>
-
-        <button 
-          onClick={() => scrollGallery(1)}
-          className="absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white shadow-xl rounded-full flex items-center justify-center text-slate-800 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-90"
-        >
-          &#10095;
-        </button>
-
+          </div>
+        ) : (
+          <>
+            <button 
+              onClick={() => scrollGallery(-1)}
+              className="absolute -left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white shadow-xl rounded-full flex items-center justify-center text-slate-800 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-90"
+            >
+              &#10094;
+            </button>
+            
+            <div 
+              id={`gallery-${product.id}`}
+              className="flex gap-4 overflow-x-auto scrollbar-hide snap-x p-1"
+            >
+              {product.local_images && product.local_images.length > 0 ? (
+                product.local_images.map((img, idx) => {
+                  const filename = img.split('/').pop()?.split('?')[0] || '';
+                  const isVideo = img.toLowerCase().includes('.mp4') || img.toLowerCase().includes('.mov');
+                  const isDeletingThis = deletingImg === filename;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`flex-none w-full aspect-[3/4] md:w-[300px] md:h-[400px] bg-slate-50 rounded-2xl overflow-hidden border border-slate-200 snap-start relative group/item shadow-sm cursor-zoom-in transition-all duration-500 ease-in-out ${isDeletingThis ? 'scale-50 opacity-0 rotate-12 blur-lg pointer-events-none' : 'scale-100 opacity-100'}`}
+                      onClick={() => !confirmDeleteImg && !isDeletingThis && setPreviewUrl(img)}
+                    >
+                      {isDeletingThis && (
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/10 backdrop-blur-sm">
+                          <div className="bg-red-600 text-white px-3 py-1 rounded-full font-black text-[9px] animate-bounce shadow-xl uppercase tracking-tighter">
+                            O&apos;chirilmoqda...
+                          </div>
+                        </div>
+                      )}
+                      {isVideo ? (
+                        <video 
+                          src={img} 
+                          className="w-full h-full object-cover"
+                          loop 
+                          muted 
+                          playsInline
+                          preload="metadata"
+                          onMouseEnter={(e) => { e.currentTarget.play().catch(() => {}); }}
+                          onMouseLeave={(e) => { e.currentTarget.pause(); }}
+                        />
+                      ) : (
+                        <Image 
+                          src={img} 
+                          alt="" 
+                          fill
+                          sizes="(max-width: 768px) 100vw, 300px"
+                          className="object-cover transition-transform group-hover/item:scale-110 duration-500"
+                        />
+                      )}
+                      
+                      {/* CONFIRM DELETE OVERLAY */}
+                      {confirmDeleteImg === filename && (
+                        <div className="absolute inset-0 z-40 bg-slate-900/90 backdrop-blur-md flex flex-col items-center justify-center p-4 text-center animate-in fade-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                          <p className="text-white font-black text-sm uppercase tracking-widest mb-4">Rostdan ham o&apos;chirilsinmi?</p>
+                          <div className="flex gap-3 w-full">
+                            <button 
+                              onClick={() => handleDeleteImg(filename)}
+                              className="flex-1 py-3 bg-red-600 text-white font-black rounded-xl hover:bg-red-700 active:scale-95 transition-all text-xs"
+                            >
+                              HA, O&apos;CHIR
+                            </button>
+                            <button 
+                              onClick={() => setConfirmDeleteImg(null)}
+                              className="flex-1 py-3 bg-white/20 text-white font-black rounded-xl hover:bg-white/30 active:scale-95 transition-all text-xs border border-white/10"
+                            >
+                              YO&apos;Q
+                            </button>
+                          </div>
+                        </div>
+                      )}
+    
+                      <div className="absolute top-3 left-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                        <a 
+                          href={`https://www.google.com/search?q=${encodeURIComponent(product.category + ' ' + (product.brand || '') + ' ' + (product.model || ''))}&tbm=isch`} 
+                          target="_blank" 
+                          className="w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-lg flex items-center justify-center text-xs hover:bg-white transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          🔍
+                        </a>
+                        <a 
+                          href={`https://lens.google.com/uploadbyurl?url=${encodeURIComponent(img)}`} 
+                          target="_blank" 
+                          className="w-8 h-8 bg-white/90 backdrop-blur shadow-md rounded-lg flex items-center justify-center text-xs hover:bg-white transition-colors"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          📷
+                        </a>
+                      </div>
+                      <div className="absolute inset-0 bg-black/20 opacity-0 group-hover/item:opacity-100 transition-opacity flex justify-end p-2 pointer-events-none">
+                        <button 
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setConfirmDeleteImg(filename);
+                          }}
+                          className="w-8 h-8 bg-red-600 text-white rounded-lg flex items-center justify-center shadow-lg pointer-events-auto hover:bg-red-700 active:scale-90 transition-all"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="w-full h-[350px] py-10 flex items-center justify-center text-slate-400 bg-slate-50 rounded-2xl border-2 border-dashed border-slate-200 font-medium">
+                  Rasm yoki video yuklanmagan
+                </div>
+              )}
+            </div>
+    
+            <button 
+              onClick={() => scrollGallery(1)}
+              className="absolute -right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 bg-white shadow-xl rounded-full flex items-center justify-center text-slate-800 opacity-0 group-hover:opacity-100 transition-all hover:scale-110 active:scale-90"
+            >
+              &#10095;
+            </button>
+          </>
+        )}
       </div>
 
       {/* Right: Content Section */}
@@ -686,44 +718,56 @@ export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-6 border-t border-slate-100">
-          <div className="col-span-1 flex gap-2">
-            <div className="flex-[0.6]">
-              <MediaUpload productId={product.id} onSuccess={onRefresh} />
+          {product.isGroup ? (
+            <div className="col-span-2">
+               <button
+                  onClick={() => setFilter('groupFilter', product.group_sku)}
+                  className="w-full py-5 bg-indigo-600 text-white font-black rounded-3xl hover:bg-slate-900 transition-all active:scale-95 flex items-center justify-center gap-3 shadow-xl"
+               >
+                  <span className="text-xl">👀</span>
+                  <span>GURUHNI KO&apos;RISH</span>
+               </button>
             </div>
-            <button
-              onClick={handleDownloadAllMedia}
-              disabled={isDownloadingAll || !product.local_images || product.local_images.length === 0}
-              className={`flex-[0.4] py-3 flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed transition-all active:scale-95 ${isDownloadingAll ? 'bg-indigo-50 border-indigo-200 text-indigo-500' : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-indigo-400 hover:text-indigo-600'}`}
-            >
-               {isDownloadingAll ? (
-                  <div className="w-5 h-5 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin"></div>
-               ) : (
-                  <>
-                    <span className="text-xl">📥</span>
-                    <span className="text-[9px] font-black uppercase tracking-wider text-center px-1 leading-tight">BARCHASINI<br/>YUKLASH</span>
-                  </>
-               )}
-            </button>
-          </div>
+          ) : (
+            <>
+              <div className="col-span-1 flex gap-2">
+                <div className="flex-[0.6]">
+                  <MediaUpload productId={product.id} onSuccess={onRefresh} />
+                </div>
+                <button
+                  onClick={handleDownloadAllMedia}
+                  disabled={isDownloadingAll || !product.local_images || product.local_images.length === 0}
+                  className={`flex-[0.4] py-3 flex flex-col items-center justify-center gap-1 rounded-2xl border-2 border-dashed transition-all active:scale-95 ${isDownloadingAll ? 'bg-indigo-50 border-indigo-200 text-indigo-500' : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-indigo-400 hover:text-indigo-600'}`}
+                >
+                   {isDownloadingAll ? (
+                      <div className="w-5 h-5 border-2 border-indigo-300 border-t-indigo-600 rounded-full animate-spin"></div>
+                   ) : (
+                      <>
+                        <span className="text-xl">📥</span>
+                        <span className="text-[9px] font-black uppercase tracking-wider text-center px-1 leading-tight">BARCHASINI<br/>YUKLASH</span>
+                      </>
+                   )}
+                </button>
+              </div>
 
-          <div className="col-span-1 flex flex-col gap-3">
-            <button 
-              onClick={() => onEdit(product)}
-              className="w-full py-4 px-4 bg-indigo-50 text-indigo-600 font-black rounded-2xl hover:bg-indigo-600 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2"
-            >
-              ✏️ Tahrirlash
-            </button>
-            
-            <div className="relative more-menu-container">
-              <button 
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowMoreMenu(!showMoreMenu);
-                }}
-                className="w-full py-4 px-4 bg-slate-50 text-slate-500 font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2 border border-slate-100"
-              >
-                <span>⚙️</span> Batafsil
-              </button>
+              <div className="col-span-1 flex flex-col gap-3">
+                <button 
+                  onClick={() => onEdit(product)}
+                  className="w-full py-4 px-4 bg-indigo-50 text-indigo-600 font-black rounded-2xl hover:bg-indigo-600 hover:text-white transition-all active:scale-95 flex items-center justify-center gap-2"
+                >
+                  ✏️ Tahrirlash
+                </button>
+                
+                <div className="relative more-menu-container">
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowMoreMenu(!showMoreMenu);
+                    }}
+                    className="w-full py-4 px-4 bg-slate-50 text-slate-500 font-black rounded-2xl hover:bg-slate-200 transition-all active:scale-95 flex items-center justify-center gap-2 border border-slate-100"
+                  >
+                    <span>⚙️</span> Batafsil
+                  </button>
 
               {showMoreMenu && (
                 <div 
@@ -775,8 +819,10 @@ export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete
                     </button>
                   </div>
                 )}
-            </div>
-          </div>
+                </div>
+              </div>
+            </>
+          )}
         </div>
           {showPriceCalc && (
             <PriceCalculatorModal 
