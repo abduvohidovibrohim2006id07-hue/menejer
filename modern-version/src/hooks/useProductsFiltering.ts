@@ -101,19 +101,26 @@ export const useProductsFiltering = (allProducts: any[]) => {
         groupedMap.forEach((members, groupSku) => {
           // Create a Virtual Group Product
           const first = members[0];
+          
+          // Logic for 2x2 grid: Take first image of up to 4 different products
+          const gridImages = members
+            .map(m => m.local_images && m.local_images.length > 0 ? m.local_images[0] : null)
+            .filter(Boolean)
+            .slice(0, 4);
+
           const virtualGroup = {
             id: `group-${groupSku}`,
             group_sku: groupSku,
             isGroup: true,
-            name: `${first.brand || 'No Brand'} ${first.model || ''}`,
-            price: first.price,
+            name: `${first.category || 'Mahsulotlar'} Guruhi`,
+            brand: first.brand,
+            model: first.model, // Optional, maybe just show category
             category: first.category,
             status: first.status,
             members: members,
             created_at: first.created_at,
             updated_at: first.updated_at,
-            // 2x2 grid images: first 4 images from all members
-            gridImages: members.flatMap(m => m.local_images || []).slice(0, 4)
+            gridImages: gridImages
           };
           finalResults.push(virtualGroup);
         });

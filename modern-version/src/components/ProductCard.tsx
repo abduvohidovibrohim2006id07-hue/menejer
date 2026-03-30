@@ -299,41 +299,43 @@ export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [previewUrl, currentIndex]);
 
-  const getProductScore = () => {
-    let score = 0;
-    const media = product.local_images || [];
+  const calculateScore = (p: any) => {
+    let s = 0;
+    const media = p.local_images || [];
     const isVideo = (url: string) => url.toLowerCase().includes('.mp4') || url.toLowerCase().includes('.mov');
-    const videos = media.filter(url => isVideo(url));
-    const images = media.filter(url => !isVideo(url));
+    const videos = media.filter((url: string) => isVideo(url));
+    const images = media.filter((url: string) => !isVideo(url));
 
-    // 1. Basic Info (30 pts)
-    if (product.name) score += 5;
-    if (product.brand) score += 5;
-    if (product.model) score += 5;
-    if (product.category) score += 5;
-    if (product.color) score += 5;
-    if (product.price) score += 5;
+    if (p.name) s += 5;
+    if (p.brand) s += 5;
+    if (p.model) s += 5;
+    if (p.category) s += 5;
+    if (p.color) s += 5;
+    if (p.price) s += 5;
 
-    // 2. Descriptions (20 pts)
-    if (product.description_short && product.description_short.length > 10) score += 5;
-    if (product.description_short_ru && product.description_short_ru.length > 10) score += 5;
-    if (product.description_full && product.description_full.length > 50) score += 5;
-    if (product.description_full_ru && product.description_full_ru.length > 50) score += 5;
+    if (p.description_short && p.description_short.length > 10) s += 5;
+    if (p.description_short_ru && p.description_short_ru.length > 10) s += 5;
+    if (p.description_full && p.description_full.length > 50) s += 5;
+    if (p.description_full_ru && p.description_full_ru.length > 50) s += 5;
 
-    // 3. Media (30 pts)
-    // 3+ images give 15 pts, at least 1 image gives 5 pts
-    if (images.length >= 3) score += 15;
-    else if (images.length > 0) score += 5;
-    // 1+ video gives 15 pts
-    if (videos.length >= 1) score += 15;
+    if (images.length >= 3) s += 15;
+    else if (images.length > 0) s += 5;
+    if (videos.length >= 1) s += 15;
 
-    // 4. Logistics (20 pts)
-    if (Number(product.length_mm) > 0) score += 5;
-    if (Number(product.width_mm) > 0) score += 5;
-    if (Number(product.height_mm) > 0) score += 5;
-    if (Number(product.weight_g) > 0) score += 5;
+    if (Number(p.length_mm) > 0) s += 5;
+    if (Number(p.width_mm) > 0) s += 5;
+    if (Number(p.height_mm) > 0) s += 5;
+    if (Number(p.weight_g) > 0) s += 5;
 
-    return Math.min(100, score);
+    return Math.min(100, s);
+  };
+
+  const getProductScore = () => {
+    if (product.isGroup && product.members) {
+      const total = product.members.reduce((acc, m) => acc + calculateScore(m), 0);
+      return Math.round(total / product.members.length);
+    }
+    return calculateScore(product);
   };
 
   const score = getProductScore();
@@ -671,13 +673,17 @@ export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete
               </div>
             </div>
             <div className="shrink-0 flex flex-col items-end gap-1">
-              <span className="bg-emerald-50 text-emerald-600 text-2xl font-black px-6 py-3 rounded-2xl block shadow-sm border border-emerald-100/50">
-                {Number(product.price).toLocaleString()} so&apos;m
-              </span>
-              {product.price_retail && (
-                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">
-                   Chakana: <span className="text-slate-600">{Number(product.price_retail).toLocaleString()} so&apos;m</span>
-                </span>
+              {!product.isGroup && (
+                <>
+                  <span className="bg-emerald-50 text-emerald-600 text-2xl font-black px-6 py-3 rounded-2xl block shadow-sm border border-emerald-100/50">
+                    {Number(product.price).toLocaleString()} so&apos;m
+                  </span>
+                  {product.price_retail && (
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">
+                       Chakana: <span className="text-slate-600">{Number(product.price_retail).toLocaleString()} so&apos;m</span>
+                    </span>
+                  )}
+                </>
               )}
             </div>
           </div>
