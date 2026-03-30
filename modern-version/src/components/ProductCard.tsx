@@ -9,6 +9,8 @@ import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
 import { CompetitorsModal } from './CompetitorsModal';
 import { useAppStore } from '@/store/useAppStore';
+import toast from 'react-hot-toast';
+import { apiClient } from '@/lib/api-client';
 
 interface Product {
   id: string;
@@ -818,11 +820,31 @@ export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete
                         setConfirmDeleteProduct(true);
                         setShowMoreMenu(false);
                       }}
-                      className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors text-red-600"
+                      className="w-full text-left px-5 py-4 hover:bg-red-50 flex items-center gap-3 transition-colors text-red-600 border-b border-slate-50"
                     >
                       <span className="text-lg">🗑️</span>
                       <span className="font-bold">O&apos;chirish</span>
                     </button>
+                    {(product as any).group_sku && !product.isGroup && (
+                      <button 
+                        onClick={async (e) => {
+                          e.stopPropagation();
+                          const loadId = toast.loading("Guruhdan chiqarilmoqda...");
+                          try {
+                            await apiClient.post('/api/products', { id: product.id, group_sku: null });
+                            toast.success("Mahsulot guruhdan chiqarildi!", { id: loadId });
+                            onRefresh();
+                          } catch (err: any) {
+                            toast.error(err.message, { id: loadId });
+                          }
+                          setShowMoreMenu(false);
+                        }}
+                        className="w-full text-left px-5 py-4 hover:bg-amber-50 flex items-center gap-3 transition-colors text-amber-600 font-bold"
+                      >
+                         <span className="text-lg">🔓</span>
+                         <span>Guruhdan chiqarish</span>
+                      </button>
+                    )}
                   </div>
                 )}
                 </div>

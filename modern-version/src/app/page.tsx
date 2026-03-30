@@ -422,11 +422,30 @@ export default function Home() {
                   )}
                 </div>
 
+                {groupFilter && (
+                  <button onClick={async () => {
+                     const ids = Array.from(selectedIds);
+                     const loadingToast = toast.loading("Guruhdan chiqarilmoqda...");
+                     try {
+                        for (const id of ids) {
+                           await apiClient.post('/api/products', { id, group_sku: null });
+                        }
+                        toast.success("Tanlangan mahsulotlar guruhdan chiqarildi!", { id: loadingToast });
+                        fetchData(true);
+                        clearSelection();
+                     } catch (err: any) {
+                        toast.error(err.message, { id: loadingToast });
+                     }
+                  }} className="px-4 md:px-6 py-3 md:py-4 bg-amber-500 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-2xl hover:bg-amber-600 transition-all flex items-center gap-2">
+                    <span>🔓</span> <span className="hidden sm:inline">Guruhdan chiqarish</span>
+                  </button>
+                )}
+
                 <button onClick={() => {
                    setShowExportOptions(false);
                    setIsGroupModalOpen(true);
                 }} className="px-4 md:px-6 py-3 md:py-4 bg-indigo-600 text-white font-black text-[10px] md:text-xs uppercase tracking-widest rounded-2xl hover:bg-slate-800 transition-all flex items-center gap-2">
-                  <span>📦</span> <span className="hidden sm:inline">Guruhlash</span>
+                  <span>📦</span> <span className="hidden sm:inline">{groupFilter ? "Gruh kodini o'zgaratish" : "Guruhlash"}</span>
                 </button>
 
                 <button onClick={() => {

@@ -13,26 +13,36 @@ export const GroupModal = ({ isOpen, onClose, selectedIds, onSuccess }: GroupMod
   const [groupSku, setGroupSku] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Pre-fill groupSku if any of the selected IDs are virtual groups
+  React.useEffect(() => {
+    if (isOpen) {
+      const gId = Array.from(selectedIds).find(id => id.startsWith('group-'));
+      if (gId) {
+        setGroupSku(gId.replace('group-', ''));
+      } else {
+        setGroupSku('');
+      }
+    }
+  }, [isOpen, selectedIds]);
+
   const handleGroup = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!groupSku.trim()) {
+    const finalSku = groupSku.trim().toUpperCase();
+    if (!finalSku) {
       toast.error("Guruh SKU kodini kiriting!");
       return;
     }
 
     setLoading(true);
     try {
-      // Bulk update group_sku for selected products
-      const ids = Array.from(selectedIds);
+      // Filter out virtual group IDs, we only want to update real products
+      const realIds = Array.from(selectedIds).filter(id => !id.startsWith('group-'));
       
-      // We'll use a direct API call or multiple calls if no bulk endpoint, 
-      // but let's assume we can handle it via /api/products bulk update or similar logic
-      // In this app, we might need a specific endpoint for bulk grouping or loop
-      for (const id of ids) {
-        await apiClient.post('/api/products', { id, group_sku: groupSku });
+      for (const id of realIds) {
+        await apiClient.post('/api/products', { id, group_sku: finalSku });
       }
 
-      toast.success("Mahsulotlar muvaffaqiyatli guruhlandi!");
+      toast.success(realIds.length > 0 ? "Muvaffaqiyatli guruhlandi!" : "Guruh SKU kodi yangilandi!");
       onSuccess();
       onClose();
     } catch (err: any) {
