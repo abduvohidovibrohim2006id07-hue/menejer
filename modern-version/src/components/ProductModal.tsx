@@ -262,25 +262,30 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
   };
 
   const generateBarcode = () => {
-    // Generate a unique 13-digit EAN-like barcode
-    let barcode = "";
-    // Using 200 as a prefix for internal use items (standard EAN practice)
-    const generate = () => "200" + Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+    // Standard Internal EAN-13 like structure: 
+    // 20 (Internal prefix) + YYMMDD (Date: YYMMDD) + 5-digit number
+    const today = new Date();
+    const datePart = today.toISOString().slice(2, 10).replace(/-/g, ''); // YYMMDD
     
-    barcode = generate();
+    // Ensure only numbers are used for the identification part
+    const idStr = (formData.id || "0").toString();
+    let idPart = "";
     
-    let isUnique = false;
-    let attempts = 0;
-    while (!isUnique && attempts < 10) {
-      if (!allProducts.some(p => p.barcode === barcode)) {
-        isUnique = true;
-      } else {
-        barcode = generate();
-      }
-      attempts++;
+    if (/^\d+$/.test(idStr)) {
+        idPart = idStr.length > 5 ? idStr.slice(-5) : idStr.padStart(5, '0');
+    } else {
+        // Simple hash to 5 digits for non-numeric IDs (like Uzum IDs)
+        let hash = 0;
+        for (let i = 0; i < idStr.length; i++) {
+            hash = ((hash << 5) - hash) + idStr.charCodeAt(i);
+            hash |= 0; 
+        }
+        idPart = Math.abs(hash % 100000).toString().padStart(5, '0');
     }
     
+    const barcode = `20${datePart}${idPart}`;
     setFormData(prev => ({ ...prev, barcode }));
+    toast.success("Yangi raqamli shtrixkod generatsiya qilindi!");
   };
 
   if (!isOpen) return null;
