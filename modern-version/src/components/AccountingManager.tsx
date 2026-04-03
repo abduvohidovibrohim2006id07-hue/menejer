@@ -104,7 +104,7 @@ export const AccountingManager = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
   // Modal States
-  const [modalType, setModalType] = useState<'TRANSACTION' | 'BANK_ACCOUNT' | 'CARD' | 'CASH_VAULT' | 'PARTNER' | 'ENTITY' | null>(null);
+  const [modalType, setModalType] = useState<'TRANSACTION' | 'BANK_ACCOUNT' | 'CARD' | 'CASH_VAULT' | 'PARTNER' | 'ENTITY' | 'PAYME_IMPORT' | null>(null);
   const [editItem, setEditItem] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
@@ -185,6 +185,13 @@ export const AccountingManager = () => {
         </div>
         
         <div className="flex gap-3">
+          <button 
+            onClick={() => setModalType('PAYME_IMPORT')}
+            className="px-6 py-4 bg-emerald-50 border border-emerald-200 text-emerald-600 rounded-2xl font-bold flex items-center gap-2 hover:bg-emerald-600 hover:text-white transition-all shadow-sm"
+          >
+             <Briefcase size={20} />
+             <span>Import</span>
+          </button>
           <button className="px-6 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold flex items-center gap-2 hover:border-indigo-400 transition-all shadow-sm">
             <Download size={20} />
             <span>Eksport</span>
@@ -334,6 +341,14 @@ export const AccountingManager = () => {
           onClose={() => setModalType(null)} 
           onSuccess={() => { setModalType(null); fetchData(); }} 
           editItem={editItem}
+        />
+      )}
+
+      {modalType === 'PAYME_IMPORT' && (
+        <PaymeImportModal 
+          onClose={() => setModalType(null)} 
+          onSuccess={() => { setModalType(null); fetchData(); }} 
+          cards={cards}
         />
       )}
     </div>
@@ -909,5 +924,149 @@ const TransactionFormModal = ({ isOpen, onClose, onSuccess, partners, cashVaults
         </form>
       </div>
     </div>
+  );
+};
+
+// --- Payme Import Modal ---
+
+const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, onSuccess: () => void, cards: Card[] }) => {
+  const [loading, setLoading] = useState(false);
+  const [file, setFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<any[]>([]);
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+    setFile(selectedFile);
+
+    const reader = new FileReader();
+    reader.onload = async (event) => {
+      const bstr = event.target?.result;
+      const XLSX = await import('xlsx');
+      const wb = XLSX.read(bstr, { type: 'binary' });
+      const wsname = wb.SheetNames[0];
+      const ws = wb.Sheets[wsname];
+      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
+      setPreview(data.slice(1, 6)); // Preview first 5 rows
+    };
+    reader.readAsBinaryString(selectedFile);
+  };
+
+  const handleImport = async () => {
+    if (!file) return;
+    setLoading(true);
+    try {
+      const reader = new FileReader();
+      const XLSX = await import('xlsx');
+      reader.onload = async (event) => {
+        const bstr = event.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const data: any[] = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
+        const rows = data.slice(1);
+
+        const transactionsToInsert = rows.map((row: any) => {
+          const rawDate = row[0]; // 27-03-2026
+          const rawTime = row[1]; // 15:06:21
+          let transactionDate = new Date().toISOString();
+          if (rawDate && rawTime) {
+             let dStr = String(rawDate);
+             if (dStr.includes('-')) {
+               const parts = dStr.split('-');
+               if (parts.length === 3) {
+                 transactionDate = `${parts[2]}-${parts[1]}-${parts[0]}T${rawTime}`;
+               }
+             }
+          }
+
+          const type = row[2]; // Chiqim/Kirim
+          const amount = Number(row[5]);
+          const cardNumRaw = String(row[9] || ''); // 561468******1324
+          
+          const matchedCard = cards.find(c => {
+             const cleanStored = c.card_number.replace(/\D/g, '');
+             const startStored = cleanStored.slice(0, 6);
+             const endStored = cleanStored.slice(-4);
+             return cardNumRaw.startsWith(startStored) && cardNumRaw.endsWith(endStored);
+          });
+
+          return {
+            transaction_date: transactionDate,
+            is_income: type === 'Kirim',
+            amount_original: amount,
+            amount_uzs: amount,
+            currency: 'UZS',
+            exchange_rate: 1,
+            description: row[11] || row[3] || 'Payme Import',
+            payment_type: 'CARD',
+            card_id: matchedCard?.id || null,
+            payme_category: String(row[6] || ''),
+            payme_receiver: String(row[7] || ''),
+            payme_details: String(row[8] || ''),
+            payme_status: String(row[13] || ''),
+            payme_service_point: String(row[14] || ''),
+            payme_terminal: String(row[15] || ''),
+            payme_provider_name: String(row[3] || ''),
+            payme_provider_org_name: String(row[4] || ''),
+            payme_receipt_type: String(row[12] || '')
+          };
+        }).filter(t => t.amount_original > 0);
+
+        const { error } = await supabase.from('accounting_transactions').insert(transactionsToInsert);
+        if (error) throw error;
+        toast.success(`${transactionsToInsert.length} ta amal muvaffaqiyatli import qilindi`);
+        onSuccess();
+      };
+      reader.readAsBinaryString(file);
+    } catch (error: any) {
+      toast.error('Importda xato: ' + error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ModalWrapper title="Payme Excel Import" description="Payme-dan eksport qilingan faylni tanlang" onClose={onClose}>
+      <div className="space-y-6">
+        <label className="block p-10 border-4 border-dashed border-emerald-100 rounded-[32px] bg-emerald-50/30 text-center cursor-pointer hover:border-emerald-300 transition-all group">
+          <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileChange} />
+          <div className="flex flex-col items-center gap-4">
+             <div className="p-4 bg-emerald-100 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform"><Briefcase size={32} /></div>
+             <div>
+                <p className="text-emerald-700 font-black text-lg">{file ? file.name : 'Faylni tanlang'}</p>
+                <p className="text-emerald-500 text-sm font-bold">Yoki bu yerga tashlang</p>
+             </div>
+          </div>
+        </label>
+
+        {preview.length > 0 && (
+          <div className="space-y-3">
+             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Dastlabki 5 qator</p>
+             <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden text-[9px] font-bold p-3 overflow-x-auto no-scrollbar max-h-40">
+                <table className="w-full">
+                  <tbody>
+                    {preview.map((row, i) => (
+                      <tr key={i} className="border-b border-slate-200 last:border-0">
+                        {row.slice(0, 5).map((cell: any, j: number) => <td key={j} className="py-1 pr-4 text-slate-600 truncate max-w-[100px]">{String(cell)}</td>)}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+             </div>
+          </div>
+        )}
+
+        <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+          <p className="text-[10px] text-amber-700 font-bold">⚠️ DIQQAT: Excel fayldagi karta raqamlari tizimdagi kartalar bilan 6 ta bosh va 4 ta oxirgi raqamlar bo'yicha moslashtiriladi.</p>
+        </div>
+
+        <button 
+          onClick={handleImport}
+          disabled={!file || loading}
+          className="w-full py-5 bg-emerald-600 text-white rounded-[24px] font-black text-lg shadow-xl shadow-emerald-100 flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all disabled:opacity-50"
+        >
+          {loading ? 'Yozilmoqda...' : <><Download size={24} /> IMPORT QILISH</>}
+        </button>
+      </div>
+    </ModalWrapper>
   );
 };
