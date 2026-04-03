@@ -16,6 +16,8 @@ const VideoDownloader = dynamic(() => import("@/components/VideoDownloader").the
 const MarketManager = dynamic(() => import("@/components/MarketManager").then(mod => ({ default: mod.MarketManager })), { ssr: false });
 const NotesManager = dynamic(() => import("@/components/NotesManager").then(mod => ({ default: mod.NotesManager })), { ssr: false });
 const GroupModal = dynamic(() => import("@/components/GroupModal").then(mod => ({ default: mod.GroupModal })), { ssr: false });
+const AccountingManager = dynamic(() => import("@/components/AccountingManager").then(mod => ({ default: mod.AccountingManager })), { ssr: false });
+
 
 // Hooks & Store
 import { useScrollPersistence } from "@/hooks/useScrollPersistence";
@@ -343,7 +345,9 @@ export default function Home() {
           </>
         )}
 
+        {activeTab === "accounting" && <div className="animate-in fade-in slide-in-from-bottom-4 duration-500"><AccountingManager /></div>}
         {activeTab === "video" && <div className="animate-in fade-in slide-in-from-bottom-4 duration-500"><VideoDownloader /></div>}
+
         {activeTab === "categories" && <div className="animate-in fade-in slide-in-from-bottom-4 duration-500"><CategoryManager categories={categories} onRefresh={() => fetchData(true)} /></div>}
         {activeTab === "ai" && <div className="animate-in fade-in slide-in-from-bottom-4 duration-500"><AiSettingsManager /></div>}
         {activeTab === "markets" && <div className="animate-in fade-in slide-in-from-bottom-4 duration-500"><MarketManager markets={markets} onRefresh={() => fetchData(true)} /></div>}

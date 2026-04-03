@@ -12,3 +12,17 @@ modern-version/node_modules/
 modern-version/.env*
 .DS_Store
 *.log
+yandex-sync-tool/yandex_user_data/
+yandex-sync-tool/yandex_user_data_copy/
+.ipynb_checkpoints/
+node_modules/
+.next/
+dist/
+build/
+.history/
+.vscode/
+.idea/
+*.local
+supabase/
+.temp/
+tmp/

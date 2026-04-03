@@ -1,4 +1,5 @@
-firebase-admin
+requests
+supabase
 selenium
 webdriver-manager
 colorama

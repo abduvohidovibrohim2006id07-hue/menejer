@@ -44,6 +44,7 @@ export const Navbar = ({ onAddProduct, onRefreshProducts }: NavbarProps) => {
 
   const tabs = [
     { id: 'products', label: '📦 Mahsulotlar' },
+    { id: 'accounting', label: '💰 Buxgalteriya' },
     { id: 'video', label: '🎥 Video' },
     { id: 'categories', label: '📁 Kategoriyalar' },
     { id: 'ai', label: '🤖 AI Panel' },

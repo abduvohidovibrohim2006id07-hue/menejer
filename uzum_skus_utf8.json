@@ -1,0 +1,214 @@
+[
+  {
+    "id": 7966127,
+    "characteristics": [
+      {
+        "charIndex": 0,
+        "valueIndex": 1
+      }
+    ],
+    "availableAmount": 33,
+    "fullPrice": 450000,
+    "charityProfit": 0,
+    "purchasePrice": 255000,
+    "barcode": 1000079661279,
+    "address": null,
+    "offer": null,
+    "discountBadge": null,
+    "installment": null,
+    "productOptionDtos": [
+      {
+        "optionId": 1,
+        "text": "\u0420\u0430\u0441\u0441\u0440\u043e\u0447\u043a\u0430 Uzum Nasiya",
+        "type": "UZUM_INSTALLMENT",
+        "paymentInfo": "Oyiga 18\u00a0062 so\u2018mdan muddatli tolov",
+        "paymentPerMonth": 18062,
+        "period": 12,
+        "active": true
+      }
+    ],
+    "vat": {
+      "type": "VAT0",
+      "vatAmount": 0,
+      "price": 255000,
+      "vatRate": 0
+    },
+    "circularPhotosList": [],
+    "videoUrl": null,
+    "restriction": null,
+    "stock": {
+      "type": "FBS",
+      "deliveryDays": 6,
+      "deliveryTitle": "31-mart orasida yetkazamiz",
+      "deliveryDate": 1774962488300
+    },
+    "discount": null,
+    "fastDeliveryInfo": {
+      "title": "Yetkazib berish\u00a06\u00a0kun ichida",
+      "badge": {
+        "text": "Sotuvchi ombori",
+        "color": "#5CA3FF"
+      }
+    },
+    "oversized": false
+  },
+  {
+    "id": 7966126,
+    "characteristics": [
+      {
+        "charIndex": 0,
+        "valueIndex": 0
+      }
+    ],
+    "availableAmount": 32,
+    "fullPrice": 450000,
+    "charityProfit": 0,
+    "purchasePrice": 255000,
+    "barcode": 1000079661262,
+    "address": null,
+    "offer": null,
+    "discountBadge": null,
+    "installment": null,
+    "productOptionDtos": [
+      {
+        "optionId": 1,
+        "text": "\u0420\u0430\u0441\u0441\u0440\u043e\u0447\u043a\u0430 Uzum Nasiya",
+        "type": "UZUM_INSTALLMENT",
+        "paymentInfo": "Oyiga 18\u00a0062 so\u2018mdan muddatli tolov",
+        "paymentPerMonth": 18062,
+        "period": 12,
+        "active": true
+      }
+    ],
+    "vat": {
+      "type": "VAT0",
+      "vatAmount": 0,
+      "price": 255000,
+      "vatRate": 0
+    },
+    "circularPhotosList": [],
+    "videoUrl": null,
+    "restriction": null,
+    "stock": {
+      "type": "FBS",
+      "deliveryDays": 6,
+      "deliveryTitle": "31-mart orasida yetkazamiz",
+      "deliveryDate": 1774962488300
+    },
+    "discount": null,
+    "fastDeliveryInfo": {
+      "title": "Yetkazib berish\u00a06\u00a0kun ichida",
+      "badge": {
+        "text": "Sotuvchi ombori",
+        "color": "#5CA3FF"
+      }
+    },
+    "oversized": false
+  },
+  {
+    "id": 7966125,
+    "characteristics": [
+      {
+        "charIndex": 0,
+        "valueIndex": 2
+      }
+    ],
+    "availableAmount": 36,
+    "fullPrice": 400000,
+    "charityProfit": 0,
+    "purchasePrice": 235000,
+    "barcode": 1000079661255,
+    "address": null,
+    "offer": null,
+    "discountBadge": null,
+    "installment": null,
+    "productOptionDtos": [
+      {
+        "optionId": 1,
+        "text": "\u0420\u0430\u0441\u0441\u0440\u043e\u0447\u043a\u0430 Uzum Nasiya",
+        "type": "UZUM_INSTALLMENT",
+        "paymentInfo": "Oyiga 16\u00a0645 so\u2018mdan muddatli tolov",
+        "paymentPerMonth": 16645,
+        "period": 12,
+        "active": true
+      }
+    ],
+    "vat": {
+      "type": "VAT0",
+      "vatAmount": 0,
+      "price": 235000,
+      "vatRate": 0
+    },
+    "circularPhotosList": [],
+    "videoUrl": null,
+    "restriction": null,
+    "stock": {
+      "type": "FBS",
+      "deliveryDays": 6,
+      "deliveryTitle": "31-mart orasida yetkazamiz",
+      "deliveryDate": 1774962488300
+    },
+    "discount": null,
+    "fastDeliveryInfo": {
+      "title": "Yetkazib berish\u00a06\u00a0kun ichida",
+      "badge": {
+        "text": "Sotuvchi ombori",
+        "color": "#5CA3FF"
+      }
+    },
+    "oversized": false
+  },
+  {
+    "id": 8057947,
+    "characteristics": [
+      {
+        "charIndex": 0,
+        "valueIndex": 3
+      }
+    ],
+    "availableAmount": 35,
+    "fullPrice": 400000,
+    "charityProfit": 0,
+    "purchasePrice": 240000,
+    "barcode": 1000080579471,
+    "address": null,
+    "offer": null,
+    "discountBadge": null,
+    "installment": null,
+    "productOptionDtos": [
+      {
+        "optionId": 1,
+        "text": "\u0420\u0430\u0441\u0441\u0440\u043e\u0447\u043a\u0430 Uzum Nasiya",
+        "type": "UZUM_INSTALLMENT",
+        "paymentInfo": "Oyiga 17\u00a0000 so\u2018mdan muddatli tolov",
+        "paymentPerMonth": 17000,
+        "period": 12,
+        "active": true
+      }
+    ],
+    "vat": {
+      "type": "VAT0",
+      "vatAmount": 0,
+      "price": 240000,
+      "vatRate": 0
+    },
+    "circularPhotosList": [],
+    "videoUrl": null,
+    "restriction": null,
+    "stock": {
+      "type": "FBS",
+      "deliveryDays": 6,
+      "deliveryTitle": "31-mart orasida yetkazamiz",
+      "deliveryDate": 1774962488300
+    },
+    "discount": null,
+    "fastDeliveryInfo": {
+      "title": "Yetkazib berish\u00a06\u00a0kun ichida",
+      "badge": {
+        "text": "Sotuvchi ombori",
+        "color": "#5CA3FF"
+      }
+    },
+    "oversized": false
+  }
+]
