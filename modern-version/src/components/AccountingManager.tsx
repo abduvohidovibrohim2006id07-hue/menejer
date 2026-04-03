@@ -26,7 +26,8 @@ import {
   Edit2,
   ChevronRight,
   ArrowRightLeft,
-  DollarSign
+  DollarSign,
+  X
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
@@ -103,8 +104,8 @@ export const AccountingManager = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
   // Modal States
-  const [showTransactionModal, setShowTransactionModal] = useState(false);
-  const [transactionType, setTransactionType] = useState<'income' | 'expense'>('expense');
+  const [modalType, setModalType] = useState<'TRANSACTION' | 'BANK_ACCOUNT' | 'CARD' | 'CASH_VAULT' | 'PARTNER' | 'ENTITY' | null>(null);
+  const [editItem, setEditItem] = useState<any>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -122,7 +123,7 @@ export const AccountingManager = () => {
         supabase.from('accounting_cards').select('*').order('created_at'),
         supabase.from('accounting_cash_vaults').select('*').order('name'),
         supabase.from('accounting_partners').select('*').order('name'),
-        supabase.from('accounting_transactions').select('*, partner:accounting_partners(*)').order('transaction_date', { ascending: false }).limit(20)
+        supabase.from('accounting_transactions').select('*, partner:accounting_partners(*)').order('transaction_date', { ascending: false }).limit(50)
       ]);
 
       setEntities(entitiesData || []);
@@ -143,6 +144,17 @@ export const AccountingManager = () => {
     fetchData();
   }, [fetchData]);
 
+  const handleDelete = async (table: string, id: string) => {
+    if (!confirm('O\'chirishga ishonchingiz komilmi?')) return;
+    const { error } = await supabase.from(table).delete().eq('id', id);
+    if (error) {
+      toast.error('Xatolik: ' + error.message);
+    } else {
+      toast.success('Muvaffaqiyatli o\'chirildi');
+      fetchData();
+    }
+  };
+
   const totalBalance = 
     bankAccounts.reduce((sum, acc) => sum + Number(acc.balance), 0) + 
     cards.reduce((sum, card) => sum + Number(card.balance), 0) + 
@@ -150,13 +162,13 @@ export const AccountingManager = () => {
 
   const stats = [
     { label: 'Umumiy Balans', value: `${totalBalance.toLocaleString()} UZS`, change: '+12.5%', icon: Wallet, color: 'indigo' },
-    { label: 'Debitorlik (Qarz)', value: `${partners.filter(p => p.total_debt_uzs > 0).reduce((sum, p) => sum + Number(p.total_debt_uzs), 0).toLocaleString()} UZS`, change: '+8.2%', icon: Users, color: 'emerald' },
-    { label: 'Kreditorlik (Qarz)', value: `${Math.abs(partners.filter(p => p.total_debt_uzs < 0).reduce((sum, p) => sum + Number(p.total_debt_uzs), 0)).toLocaleString()} UZS`, change: '-2.4%', icon: TrendingDown, color: 'rose' },
+    { label: 'Haqdorlik', value: `${partners.filter(p => p.total_debt_uzs > 0).reduce((sum, p) => sum + Number(p.total_debt_uzs), 0).toLocaleString()} UZS`, change: '+8.2%', icon: Users, color: 'emerald' },
+    { label: 'Qarzdorlik', value: `${Math.abs(partners.filter(p => p.total_debt_uzs < 0).reduce((sum, p) => sum + Number(p.total_debt_uzs), 0)).toLocaleString()} UZS`, change: '-2.4%', icon: TrendingDown, color: 'rose' },
     { label: 'Sof Foyda', value: '26,900,000 UZS', change: '+15.7%', icon: Target, color: 'amber' },
   ];
 
   const subTabs = [
-    { id: 'overview', label: 'Umumiy ko\'rinish', icon: PieChart },
+    { id: 'overview', label: 'Umumiy', icon: PieChart },
     { id: 'transactions', label: 'Amallar', icon: History },
     { id: 'wallets', label: 'Hisoblar', icon: Briefcase },
     { id: 'partners', label: 'Hamkorlar', icon: Users },
@@ -178,7 +190,7 @@ export const AccountingManager = () => {
             <span>Eksport</span>
           </button>
           <button 
-            onClick={() => setShowTransactionModal(true)}
+            onClick={() => { setEditItem(null); setModalType('TRANSACTION'); }}
             className="px-6 py-4 bg-indigo-600 text-white rounded-2xl font-bold flex items-center gap-2 hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100"
           >
             <Plus size={20} />
@@ -207,7 +219,6 @@ export const AccountingManager = () => {
 
       {/* Main Content Area */}
       <div className="bg-white rounded-[40px] border border-slate-200 shadow-xl overflow-hidden min-h-[600px] flex flex-col">
-        {/* Sub-navigation */}
         <div className="px-8 pt-8 flex gap-8 border-b border-slate-100 overflow-x-auto no-scrollbar">
           {subTabs.map((tab) => (
             <button
@@ -226,57 +237,59 @@ export const AccountingManager = () => {
           ))}
         </div>
 
-        {/* Filters and Search Bar (Only for transactions) */}
-        {activeSubTab === 'transactions' && (
-          <div className="p-8 flex flex-col md:flex-row gap-4 border-b border-slate-50 bg-slate-50/30">
-            <div className="relative flex-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-              <input 
-                type="text" 
-                placeholder="Tranzaksiyalarni qidirish..." 
-                className="w-full pl-12 pr-4 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 transition-all font-medium"
-              />
-            </div>
-            <div className="flex gap-2">
-              <button className="px-6 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-all">
-                <Calendar size={18} />
-                <span>Bugun</span>
-              </button>
-              <button className="px-6 py-4 bg-white border border-slate-200 text-slate-600 rounded-2xl font-bold flex items-center gap-2 hover:bg-slate-50 transition-all">
-                <Filter size={18} />
-                <span>Filtrlar</span>
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* View Content */}
         <div className="flex-1 p-8">
           {loading ? (
-            <div className="h-full flex items-center justify-center">
+            <div className="h-full flex items-center justify-center py-20">
               <div className="w-12 h-12 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : (
             <>
               {activeSubTab === 'overview' && <OverviewView transactions={transactions} partners={partners} />}
-              {activeSubTab === 'transactions' && <TransactionsView transactions={transactions} onRefresh={fetchData} />}
-              {activeSubTab === 'wallets' && <WalletsView bankAccounts={bankAccounts} cards={cards} cashVaults={cashVaults} onRefresh={fetchData} />}
-              {activeSubTab === 'partners' && <PartnersView partners={partners} onRefresh={fetchData} />}
-              {activeSubTab === 'settings' && <SettingsView entities={entities} onRefresh={fetchData} />}
+              {activeSubTab === 'transactions' && <TransactionsView transactions={transactions} onRefresh={fetchData} onDelete={(id) => handleDelete('accounting_transactions', id)} />}
+              {activeSubTab === 'wallets' && (
+                <WalletsView 
+                  bankAccounts={bankAccounts} 
+                  cards={cards} 
+                  cashVaults={cashVaults} 
+                  onRefresh={fetchData} 
+                  onAddBank={() => { setEditItem(null); setModalType('BANK_ACCOUNT'); }}
+                  onAddCard={(bankId) => { setEditItem({ bank_account_id: bankId }); setModalType('CARD'); }}
+                  onAddCash={() => { setEditItem(null); setModalType('CASH_VAULT'); }}
+                  onDeleteBank={(id) => handleDelete('accounting_bank_accounts', id)}
+                  onDeleteCard={(id) => handleDelete('accounting_cards', id)}
+                  onDeleteCash={(id) => handleDelete('accounting_cash_vaults', id)}
+                />
+              )}
+              {activeSubTab === 'partners' && (
+                <PartnersView 
+                  partners={partners} 
+                  onRefresh={fetchData} 
+                  onAdd={() => { setEditItem(null); setModalType('PARTNER'); }}
+                  onEdit={(item) => { setEditItem(item); setModalType('PARTNER'); }}
+                  onDelete={(id) => handleDelete('accounting_partners', id)} 
+                />
+              )}
+              {activeSubTab === 'settings' && (
+                <SettingsView 
+                  entities={entities} 
+                  onRefresh={fetchData} 
+                  onAdd={() => { setEditItem(null); setModalType('ENTITY'); }}
+                  onEdit={(item) => { setEditItem(item); setModalType('ENTITY'); }}
+                  onDelete={(id) => handleDelete('accounting_legal_entities', id)}
+                />
+              )}
             </>
           )}
         </div>
       </div>
 
-      {/* Transaction Modal Placeholder */}
-      {showTransactionModal && (
+      {/* --- MODALS --- */}
+
+      {modalType === 'TRANSACTION' && (
         <TransactionFormModal 
-          isOpen={showTransactionModal} 
-          onClose={() => setShowTransactionModal(false)}
-          onSuccess={() => {
-            setShowTransactionModal(false);
-            fetchData();
-          }}
+          isOpen={true} 
+          onClose={() => setModalType(null)}
+          onSuccess={() => { setModalType(null); fetchData(); }}
           partners={partners}
           cashVaults={cashVaults}
           cards={cards}
@@ -284,20 +297,60 @@ export const AccountingManager = () => {
           entities={entities}
         />
       )}
+
+      {modalType === 'BANK_ACCOUNT' && (
+        <BankAccountModal 
+          onClose={() => setModalType(null)} 
+          onSuccess={() => { setModalType(null); fetchData(); }} 
+          entities={entities}
+          editItem={editItem}
+        />
+      )}
+
+      {modalType === 'CARD' && (
+        <CardModal 
+          onClose={() => setModalType(null)} 
+          onSuccess={() => { setModalType(null); fetchData(); }} 
+          bankAccounts={bankAccounts}
+          editItem={editItem}
+        />
+      )}
+
+      {modalType === 'CASH_VAULT' && (
+        <CashVaultModal 
+          onClose={() => setModalType(null)} 
+          onSuccess={() => { setModalType(null); fetchData(); }} 
+          editItem={editItem}
+        />
+      )}
+
+      {modalType === 'PARTNER' && (
+        <PartnerModal 
+          onClose={() => setModalType(null)} 
+          onSuccess={() => { setModalType(null); fetchData(); }} 
+          editItem={editItem}
+        />
+      )}
+
+      {modalType === 'ENTITY' && (
+        <EntityModal 
+          onClose={() => setModalType(null)} 
+          onSuccess={() => { setModalType(null); fetchData(); }} 
+          editItem={editItem}
+        />
+      )}
     </div>
   );
 };
 
-// Sub-components for better organization
+// --- View Sub-components ---
 
 const OverviewView = ({ transactions, partners }: { transactions: Transaction[], partners: Partner[] }) => (
   <div className="space-y-8">
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Recent Activity */}
       <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
         <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
-          <History size={20} className="text-indigo-600" />
-          So'nggi amallar
+          <History size={20} className="text-indigo-600" /> So'nggi amallar
         </h3>
         <div className="space-y-4">
           {transactions.slice(0, 5).map((tx) => (
@@ -314,7 +367,7 @@ const OverviewView = ({ transactions, partners }: { transactions: Transaction[],
                 </div>
               </div>
               <p className={`font-black ${tx.is_income ? 'text-emerald-600' : 'text-rose-600'}`}>
-                {tx.is_income ? '+' : '-'} {tx.amount_uzs.toLocaleString()} UZS
+                {tx.is_income ? '+' : '-'} {tx.amount_uzs.toLocaleString()} <span className="text-[10px] opacity-70">UZS</span>
               </p>
             </div>
           ))}
@@ -322,11 +375,9 @@ const OverviewView = ({ transactions, partners }: { transactions: Transaction[],
         </div>
       </div>
 
-      {/* Partner Debts */}
       <div className="bg-slate-50 rounded-3xl p-6 border border-slate-100">
         <h3 className="text-xl font-black text-slate-900 mb-6 flex items-center gap-2">
-          <Users size={20} className="text-indigo-600" />
-          Hamkorlar qarzdorligi
+          <Users size={20} className="text-indigo-600" /> Qarzdorlik holati
         </h3>
         <div className="space-y-4">
           {partners.filter(p => Math.abs(p.total_debt_uzs) > 0).slice(0, 5).map((p) => (
@@ -338,7 +389,7 @@ const OverviewView = ({ transactions, partners }: { transactions: Transaction[],
                 <div>
                   <p className="font-bold text-slate-900 text-sm">{p.name}</p>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-                    {p.total_debt_uzs > 0 ? 'Ulardan haqdorlik' : 'Ularga qarzmiz'}
+                    {p.total_debt_uzs > 0 ? 'Haqdormiz' : 'Qarzmiz'}
                   </p>
                 </div>
               </div>
@@ -354,584 +405,446 @@ const OverviewView = ({ transactions, partners }: { transactions: Transaction[],
   </div>
 );
 
-const TransactionsView = ({ transactions, onRefresh }: { transactions: Transaction[], onRefresh: () => void }) => {
-  const handleDelete = async (id: string) => {
-    if (!confirm('Ushbu amalni o\'chirishga ishonchingiz komilmi?')) return;
-    const { error } = await supabase.from('accounting_transactions').delete().eq('id', id);
-    if (error) toast.error('Xatolik yuz berdi');
-    else {
-      toast.success('Amal o\'chirildi');
-      onRefresh();
-    }
-  };
-
-  return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-left">
-        <thead>
-          <tr className="text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
-            <th className="pb-4 pt-0 px-4">Sana / Vaqt</th>
-            <th className="pb-4 pt-0 px-4">Turi</th>
-            <th className="pb-4 pt-0 px-4">Tavsif / Hamkor</th>
-            <th className="pb-4 pt-0 px-4">To'lov turi</th>
-            <th className="pb-4 pt-0 px-4 text-right">Summa (UZS)</th>
-            <th className="pb-4 pt-0 px-4"></th>
+const TransactionsView = ({ transactions, onRefresh, onDelete }: { transactions: Transaction[], onRefresh: () => void, onDelete: (id: string) => void }) => (
+  <div className="overflow-x-auto">
+    <table className="w-full text-left">
+      <thead>
+        <tr className="text-slate-400 text-[10px] uppercase font-black tracking-widest border-b border-slate-100">
+          <th className="pb-4 pt-0 px-4">Sana</th>
+          <th className="pb-4 pt-0 px-4">Turi</th>
+          <th className="pb-4 pt-0 px-4">Tavsif / Hamkor</th>
+          <th className="pb-4 pt-0 px-4">Hamyon</th>
+          <th className="pb-4 pt-0 px-4 text-right">Summa (UZS)</th>
+          <th className="pb-4 pt-0 px-4"></th>
+        </tr>
+      </thead>
+      <tbody className="divide-y divide-slate-50">
+        {transactions.map((tx) => (
+          <tr key={tx.id} className="group hover:bg-slate-50/50 transition-all">
+            <td className="py-5 px-4 font-bold text-slate-900 text-sm">
+              {new Date(tx.transaction_date).toLocaleDateString()}
+              <p className="text-[10px] text-slate-400 font-medium">{new Date(tx.transaction_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+            </td>
+            <td className="py-5 px-4">
+              <span className={`px-2 py-1 rounded text-[9px] font-black uppercase ${tx.is_income ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                {tx.is_income ? 'Kirim' : 'Chiqim'}
+              </span>
+            </td>
+            <td className="py-5 px-4">
+              <p className="font-bold text-slate-700 text-sm">{tx.description || '—'}</p>
+              <p className="text-[10px] text-slate-400 font-bold">{tx.partner?.name || 'Kontragentsiz'}</p>
+            </td>
+            <td className="py-5 px-4 font-bold text-slate-500 text-xs">
+               <div className="flex items-center gap-1">
+                {tx.payment_type === 'CASH' && <Banknote size={14} className="text-amber-500" />}
+                {tx.payment_type === 'CARD' && <CreditCard size={14} className="text-blue-500" />}
+                {tx.payment_type === 'BANK' && <Building2 size={14} className="text-indigo-500" />}
+                {tx.payment_type === 'DEBT' && <Users size={14} className="text-rose-500" />}
+                {tx.payment_type}
+               </div>
+            </td>
+            <td className="py-5 px-4 text-right font-black">
+              <p className={tx.is_income ? 'text-emerald-600' : 'text-rose-600'}>
+                {tx.is_income ? '+' : '-'} {tx.amount_uzs.toLocaleString()}
+              </p>
+            </td>
+            <td className="py-5 px-4 text-right">
+              <button onClick={() => onDelete(tx.id)} className="p-2 text-slate-300 hover:text-rose-600 transition-colors opacity-0 group-hover:opacity-100">
+                <Trash2 size={16} />
+              </button>
+            </td>
           </tr>
-        </thead>
-        <tbody className="divide-y divide-slate-50">
-          {transactions.map((tx) => (
-            <tr key={tx.id} className="group hover:bg-slate-50/50 transition-all">
-              <td className="py-5 px-4">
-                <p className="font-bold text-slate-900">{new Date(tx.transaction_date).toLocaleDateString()}</p>
-                <p className="text-[10px] text-slate-400 font-medium">{new Date(tx.transaction_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-              </td>
-              <td className="py-5 px-4">
-                <span className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-wider ${
-                  tx.is_income ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'
-                }`}>
-                  {tx.is_income ? 'Kirim' : 'Chiqim'}
-                </span>
-              </td>
-              <td className="py-5 px-4">
-                <p className="font-bold text-slate-700">{tx.description || '—'}</p>
-                <p className="text-xs text-slate-400 font-medium">{tx.partner?.name || 'Kategoriyasiz'}</p>
-              </td>
-              <td className="py-5 px-4">
-                <div className="flex items-center gap-2 text-slate-500 font-bold text-xs uppercase tracking-tight">
-                  {tx.payment_type === 'CASH' && <Banknote size={14} className="text-amber-500" />}
-                  {tx.payment_type === 'CARD' && <CreditCard size={14} className="text-blue-500" />}
-                  {tx.payment_type === 'BANK' && <Building2 size={14} className="text-indigo-500" />}
-                  {tx.payment_type === 'DEBT' && <Users size={14} className="text-rose-500" />}
-                  {tx.payment_type}
-                </div>
-              </td>
-              <td className="py-5 px-4 text-right">
-                <p className={`font-black ${tx.is_income ? 'text-emerald-600' : 'text-rose-600'}`}>
-                  {tx.is_income ? '+' : '-'} {tx.amount_uzs.toLocaleString()}
-                </p>
-                {tx.currency === 'USD' && (
-                  <p className="text-[10px] text-slate-400 font-bold">
-                    ({tx.amount_original.toLocaleString()} $)
-                  </p>
-                )}
-              </td>
-              <td className="py-5 px-4 text-right">
-                <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button onClick={() => handleDelete(tx.id)} className="p-2 text-slate-400 hover:text-rose-600 transition-colors">
-                    <Trash2 size={18} />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          ))}
-          {transactions.length === 0 && (
-            <tr>
-              <td colSpan={6} className="py-20 text-center text-slate-400 font-medium">Hozircha amallar mavjud emas</td>
-            </tr>
-          )}
-        </tbody>
-      </table>
-    </div>
-  )
-};
+        ))}
+      </tbody>
+    </table>
+  </div>
+);
 
-const WalletsView = ({ bankAccounts, cards, cashVaults, onRefresh }: { bankAccounts: BankAccount[], cards: Card[], cashVaults: CashVault[], onRefresh: () => void }) => {
-  return (
-    <div className="space-y-10">
-      {/* Cash Wallets */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
-            <div className="p-2 bg-amber-50 text-amber-600 rounded-xl"><Banknote size={24} /></div>
-            Naqd pul hamyonlari
-          </h3>
-          <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-600 hover:border-amber-400 transition-all shadow-sm">
-            <Plus size={20} />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {cashVaults.map(vault => (
-            <div key={vault.id} className="p-8 bg-gradient-to-br from-amber-500 to-orange-600 rounded-[32px] text-white shadow-xl shadow-amber-100 relative overflow-hidden group">
-              <div className="relative z-10">
-                <p className="text-amber-100 text-xs font-black uppercase tracking-widest mb-1">{vault.name}</p>
-                <h4 className="text-3xl font-black mb-8">{vault.balance.toLocaleString()} <span className="text-xl font-bold opacity-80">UZS</span></h4>
-                <div className="flex gap-2">
-                  <button className="flex-1 py-3 bg-white/20 hover:bg-white/30 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 border border-white/10 backdrop-blur-md">
-                    <ArrowRightLeft size={16} /> O'tkazma
-                  </button>
-                </div>
-              </div>
-              <div className="absolute -right-10 -bottom-10 opacity-10 group-hover:scale-150 transition-transform duration-700">
-                <Banknote size={200} />
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* Bank Accounts & Cards */}
-      <section>
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="text-xl font-black text-slate-900 flex items-center gap-3">
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl"><Building2 size={24} /></div>
-            Bank hisoblari va Kartalar
-          </h3>
-          <button className="p-3 bg-white border border-slate-200 rounded-xl text-slate-600 hover:border-blue-400 transition-all shadow-sm">
-            <Plus size={20} />
-          </button>
-        </div>
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {bankAccounts.map(account => (
-            <div key={account.id} className="bg-white border border-slate-200 rounded-[32px] overflow-hidden group">
-              <div className="p-6 border-b border-slate-100">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h4 className="font-black text-slate-900 text-lg">{account.name}</h4>
-                    <p className="text-xs text-slate-500 font-bold">{account.bank_name} • {account.account_number}</p>
-                  </div>
-                  <p className="text-xl font-black text-blue-600">{account.balance.toLocaleString()} UZS</p>
-                </div>
-              </div>
-              <div className="p-4 bg-slate-50 space-y-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Bog'langan kartalar</p>
-                {cards.filter(c => c.bank_account_id === account.id).map(card => (
-                  <div key={card.id} className="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-3">
-                      <CreditCard size={18} className="text-slate-400" />
-                      <p className="text-sm font-bold text-slate-700 tracking-wider">
-                        **** **** **** {card.card_number.slice(-4) || '—'}
-                      </p>
-                    </div>
-                    <p className="font-bold text-slate-900 text-sm">{card.balance.toLocaleString()} UZS</p>
-                  </div>
-                ))}
-                <button className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold text-xs hover:border-blue-400 hover:text-blue-500 transition-all">
-                  + Karta qo'shish
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-    </div>
-  )
-};
-
-const PartnersView = ({ partners, onRefresh }: { partners: Partner[], onRefresh: () => void }) => {
-  const [showAddPartner, setShowAddPartner] = useState(false);
-  const [formData, setFormData] = useState({ name: '', address: '', phone: '' });
-
-  const handleAdd = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const { error } = await supabase.from('accounting_partners').insert([{
-      name: formData.name,
-      address: formData.address,
-      phone_numbers: formData.phone ? [formData.phone] : []
-    }]);
-    if (error) toast.error('Xatolik yuz berdi');
-    else {
-      toast.success('Hamkor qo\'shildi');
-      setShowAddPartner(false);
-      onRefresh();
-    }
-  };
-
-  return (
-    <div className="space-y-8">
-      <div className="flex justify-between items-center bg-slate-50 p-6 rounded-3xl border border-slate-100">
-        <p className="text-slate-500 font-bold">Jami {partners.length} ta hamkor</p>
-        <button 
-          onClick={() => setShowAddPartner(true)}
-          className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all flex items-center gap-2"
-        >
-          <Plus size={18} /> Yangi Hamkor
+const WalletsView = ({ bankAccounts, cards, cashVaults, onAddBank, onAddCard, onAddCash, onDeleteBank, onDeleteCard, onDeleteCash }: any) => (
+  <div className="space-y-12">
+    {/* Cash Section */}
+    <section>
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+          <Banknote size={24} className="text-amber-500" /> Naqd pul (G'aznalar)
+        </h3>
+        <button onClick={onAddCash} className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all">
+          <Plus size={20} />
         </button>
       </div>
-
-      {showAddPartner && (
-        <form onSubmit={handleAdd} className="p-8 bg-white border-2 border-indigo-100 rounded-[32px] grid grid-cols-1 md:grid-cols-3 gap-4 animate-in zoom-in-95 duration-200">
-          <input 
-            required
-            placeholder="Nomi" 
-            className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-            value={formData.name}
-            onChange={e => setFormData({...formData, name: e.target.value})}
-          />
-          <input 
-            placeholder="Manzil" 
-            className="px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-            value={formData.address}
-            onChange={e => setFormData({...formData, address: e.target.value})}
-          />
-          <div className="flex gap-2">
-            <input 
-              placeholder="Telefon" 
-              className="flex-1 px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-              value={formData.phone}
-              onChange={e => setFormData({...formData, phone: e.target.value})}
-            />
-            <button type="submit" className="px-8 bg-indigo-600 text-white rounded-2xl font-black">Saqlash</button>
-          </div>
-        </form>
-      )}
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {partners.map(partner => (
-          <div key={partner.id} className="bg-white p-6 rounded-[32px] border border-slate-200 hover:shadow-xl transition-all group border-b-4 border-b-transparent hover:border-b-indigo-500">
-            <div className="flex justify-between items-start mb-6">
-              <div className="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black text-xl">
-                {partner.name[0]}
-              </div>
-              <div className="flex gap-1 text-slate-300 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button className="p-2 hover:text-indigo-600"><Edit2 size={18} /></button>
-                <button className="p-2 hover:text-rose-600"><Trash2 size={18} /></button>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {cashVaults.map((vault: any) => (
+          <div key={vault.id} className="p-6 bg-white border border-slate-200 rounded-[32px] shadow-sm group">
+            <div className="flex justify-between items-start mb-4">
+              <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl"><Banknote size={20} /></div>
+              <button onClick={() => onDeleteCash(vault.id)} className="p-2 text-slate-300 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={16} /></button>
             </div>
-            <h4 className="text-xl font-black text-slate-900 mb-1">{partner.name}</h4>
-            <p className="text-xs text-slate-400 font-bold mb-6 overflow-hidden text-ellipsis whitespace-nowrap">
-              {partner.address || 'Manzil kiritilmagan'}
-            </p>
-            <div className={`p-4 rounded-2xl border ${partner.total_debt_uzs >= 0 ? 'bg-emerald-50 border-emerald-100' : 'bg-rose-50 border-rose-100'}`}>
-              <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Status</p>
-              <div className="flex justify-between items-end">
-                <p className={`font-black text-lg ${partner.total_debt_uzs >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                  {partner.total_debt_uzs >= 0 ? 'Haqdormiz' : 'Qarzmiz'}
-                </p>
-                <p className="font-black text-slate-900">
-                  {Math.abs(partner.total_debt_uzs).toLocaleString()} <span className="text-xs opacity-60">UZS</span>
-                </p>
+            <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{vault.name}</p>
+            <p className="text-2xl font-black text-slate-900">{vault.balance.toLocaleString()} <span className="text-sm font-bold opacity-50 text-slate-500">UZS</span></p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    {/* Bank Section */}
+    <section>
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-black text-slate-900 flex items-center gap-2">
+          <Building2 size={24} className="text-blue-500" /> Bank hisoblari
+        </h3>
+        <button onClick={onAddBank} className="p-2 bg-indigo-50 text-indigo-600 rounded-xl hover:bg-indigo-600 hover:text-white transition-all">
+          <Plus size={20} />
+        </button>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {bankAccounts.map((account: any) => (
+          <div key={account.id} className="bg-white border border-slate-200 rounded-[40px] overflow-hidden group border-b-4 border-b-transparent hover:border-b-blue-500 transition-all">
+            <div className="p-8">
+              <div className="flex justify-between items-start mb-4">
+                <div>
+                  <h4 className="font-black text-slate-900 text-lg">{account.name}</h4>
+                  <p className="text-xs text-slate-500 font-bold">{account.bank_name} • {account.account_number}</p>
+                </div>
+                <div className="flex gap-2">
+                   <button onClick={() => onDeleteBank(account.id)} className="p-2 text-slate-300 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-all"><Trash2 size={16} /></button>
+                </div>
+              </div>
+              <p className="text-3xl font-black text-blue-600 mb-6">{account.balance.toLocaleString()} <span className="text-sm">UZS</span></p>
+              
+              <div className="space-y-3">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Bog'langan kartalar</p>
+                {cards.filter((c: any) => c.bank_account_id === account.id).map((card: any) => (
+                  <div key={card.id} className="flex justify-between items-center p-4 bg-slate-50 rounded-2xl group/card">
+                    <div className="flex items-center gap-3">
+                      <CreditCard size={18} className="text-slate-400" />
+                      <p className="text-xs font-bold text-slate-700">**** **** **** {card.card_number.slice(-4)}</p>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <p className="font-black text-slate-900 text-xs">{card.balance.toLocaleString()} UZS</p>
+                      <button onClick={() => onDeleteCard(card.id)} className="text-slate-300 hover:text-rose-600 opacity-0 group-hover/card:opacity-100"><Trash2 size={14} /></button>
+                    </div>
+                  </div>
+                ))}
+                <button 
+                  onClick={() => onAddCard(account.id)}
+                  className="w-full py-3 border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 font-bold text-[10px] hover:border-blue-400 hover:text-blue-500 transition-all"
+                >
+                  + KARTA QO'SHISH
+                </button>
               </div>
             </div>
           </div>
         ))}
-        {partners.length === 0 && <p className="col-span-full py-20 text-center text-slate-400 font-medium bg-slate-50 rounded-[40px]">Hamkorlar ro'yxati hozircha bo'sh</p>}
       </div>
+    </section>
+  </div>
+);
+
+const PartnersView = ({ partners, onRefresh, onAdd, onEdit, onDelete }: any) => (
+  <div className="space-y-8">
+     <div className="flex justify-between items-center bg-slate-50 p-6 rounded-3xl border border-slate-100">
+        <p className="text-slate-500 font-bold">Jami {partners.length} ta hamkor</p>
+        <button onClick={onAdd} className="px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-sm hover:bg-indigo-700 transition-all flex items-center gap-2">
+          <Plus size={18} /> Yangi Hamkor
+        </button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {partners.map((p: any) => (
+          <div key={p.id} className="bg-white p-6 rounded-[32px] border border-slate-200 hover:shadow-xl transition-all group">
+            <div className="flex justify-between items-start mb-4">
+              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center font-black">{p.name[0]}</div>
+              <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+                <button onClick={() => onEdit(p)} className="p-2 text-slate-300 hover:text-indigo-600"><Edit2 size={16} /></button>
+                <button onClick={() => onDelete(p.id)} className="p-2 text-slate-300 hover:text-rose-600"><Trash2 size={16} /></button>
+              </div>
+            </div>
+            <h4 className="font-black text-slate-900 mb-1">{p.name}</h4>
+            <p className="text-xs text-slate-400 mb-4">{p.address || 'Manzil yo\'q'}</p>
+            <div className={`p-4 rounded-xl font-black text-sm flex justify-between items-center ${p.total_debt_uzs >= 0 ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+              <span>{p.total_debt_uzs >= 0 ? 'Haqdormiz' : 'Qarzmiz'}</span>
+              <span>{Math.abs(p.total_debt_uzs).toLocaleString()} UZS</span>
+            </div>
+          </div>
+        ))}
+      </div>
+  </div>
+);
+
+const SettingsView = ({ entities, onRefresh, onAdd, onEdit, onDelete }: any) => (
+  <div className="max-w-4xl mx-auto space-y-10">
+    <div className="flex justify-between items-center bg-white p-8 border border-slate-200 rounded-[40px] shadow-sm">
+      <div>
+        <h3 className="text-2xl font-black text-slate-900">Yuridik shaxslar</h3>
+        <p className="text-slate-500 font-medium">Barcha bank hisoblari shaxslarga bog'lanadi</p>
+      </div>
+      <button onClick={onAdd} className="px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-lg flex items-center gap-2">
+        <Plus size={20} /> Yangi qo'shish
+      </button>
     </div>
-  )
-};
+    <div className="space-y-4">
+      {entities.map((e: any) => (
+        <div key={e.id} className="p-6 bg-white border border-slate-200 rounded-[32px] flex justify-between items-center hover:bg-slate-50 transition-colors group">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500"><Building2 size={24} /></div>
+            <p className="font-black text-slate-900 text-lg">{e.name}</p>
+          </div>
+          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-all">
+             <button onClick={() => onEdit(e)} className="p-3 text-slate-300 hover:text-indigo-600"><Edit2 size={20} /></button>
+             <button onClick={() => onDelete(e.id)} className="p-3 text-slate-300 hover:text-rose-600"><Trash2 size={20} /></button>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+);
 
-const SettingsView = ({ entities, onRefresh }: { entities: Entity[], onRefresh: () => void }) => {
-  const [showAdd, setShowAdd] = useState(false);
-  const [name, setName] = useState('');
+// --- Form Modals ---
 
-  const handleAdd = async (e: React.FormEvent) => {
+const ModalWrapper = ({ children, title, description, onClose }: any) => (
+  <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
+    <div className="bg-white w-full max-w-lg rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+      <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+        <div>
+          <h3 className="text-2xl font-black text-slate-900">{title}</h3>
+          <p className="text-slate-500 font-bold text-sm">{description}</p>
+        </div>
+        <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-xl transition-colors"><X size={24} className="text-slate-400" /></button>
+      </div>
+      <div className="p-8">{children}</div>
+    </div>
+  </div>
+);
+
+const EntityModal = ({ onClose, onSuccess, editItem }: any) => {
+  const [name, setName] = useState(editItem?.name || '');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
-    const { error } = await supabase.from('accounting_legal_entities').insert([{ name }]);
-    if (error) toast.error('Xatolik yuz berdi');
-    else {
-      toast.success('Yuridik shaxs qo\'shildi');
-      setName('');
-      setShowAdd(false);
-      onRefresh();
-    }
+    setLoading(true);
+    const data = { name };
+    const { error } = editItem 
+      ? await supabase.from('accounting_legal_entities').update(data).eq('id', editItem.id)
+      : await supabase.from('accounting_legal_entities').insert([data]);
+    
+    if (error) toast.error(error.message);
+    else { toast.success('Saqlandi'); onSuccess(); }
+    setLoading(false);
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-10">
-      <section>
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h3 className="text-2xl font-black text-slate-900">Yuridik shaxslar</h3>
-            <p className="text-slate-500 font-medium">Barcha bank hisoblari shaxslarga biriktiriladi</p>
-          </div>
-          <button 
-            onClick={() => setShowAdd(true)}
-            className="px-6 py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all flex items-center gap-2"
-          >
-            <Plus size={20} /> Yangi qo'shish
-          </button>
-        </div>
-
-        {showAdd && (
-          <form onSubmit={handleAdd} className="mb-8 p-8 bg-slate-50 rounded-[32px] border-2 border-indigo-100 flex gap-4 animate-in slide-in-from-top-4 duration-300">
-            <input 
-              required
-              autoFocus
-              placeholder="Yuridik shaxs nomi (masalan: ООО 'Menejer Group')" 
-              className="flex-1 px-6 py-4 bg-white border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-              value={name}
-              onChange={e => setName(e.target.value)}
-            />
-            <button type="submit" className="px-10 bg-indigo-600 text-white rounded-2xl font-black">Saqlash</button>
-            <button type="button" onClick={() => setShowAdd(false)} className="px-6 text-slate-400 font-bold">Bekor qilish</button>
-          </form>
-        )}
-
-        <div className="bg-white rounded-[32px] border border-slate-200 divide-y divide-slate-100 overflow-hidden shadow-sm">
-          {entities.map(entity => (
-            <div key={entity.id} className="p-6 flex items-center justify-between hover:bg-slate-50 transition-colors">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-500"><Building2 size={24} /></div>
-                <div>
-                  <p className="font-black text-slate-900 text-lg">{entity.name}</p>
-                  <p className="text-xs text-slate-400 font-bold">ID: {entity.id.slice(0,8)}...</p>
-                </div>
-              </div>
-              <div className="flex gap-2">
-                <button className="p-3 text-slate-400 hover:text-indigo-600 transition-colors"><Edit2 size={20} /></button>
-                <button className="p-3 text-slate-400 hover:text-rose-600 transition-colors"><Trash2 size={20} /></button>
-              </div>
-            </div>
-          ))}
-          {entities.length === 0 && <div className="p-20 text-center text-slate-400 font-medium">Yuridik shaxslar kiritilmagan</div>}
-        </div>
-      </section>
-    </div>
-  )
+    <ModalWrapper title={editItem ? "Tahrirlash" : "Yangi Shaxs"} description="Yuridik shaxs ma'lumotlari" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <input required autoFocus placeholder="Nomi" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={name} onChange={e => setName(e.target.value)} />
+        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Saqlash</button>
+      </form>
+    </ModalWrapper>
+  );
 };
 
-// --- Transaction Modal Component ---
-
-const TransactionFormModal = ({ 
-  isOpen, onClose, onSuccess, partners, cashVaults, cards, bankAccounts, entities 
-}: { 
-  isOpen: boolean, onClose: () => void, onSuccess: () => void,
-  partners: Partner[], cashVaults: CashVault[], cards: Card[], bankAccounts: BankAccount[], entities: Entity[]
-}) => {
+const PartnerModal = ({ onClose, onSuccess, editItem }: any) => {
+  const [formData, setFormData] = useState({ name: editItem?.name || '', address: editItem?.address || '', phone: editItem?.phone_numbers?.[0] || '' });
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    description: '',
-    amount_original: '',
-    currency: 'UZS',
-    exchange_rate: 1,
-    is_income: false,
-    payment_type: 'CASH',
-    partner_id: '',
-    source_id: '', // Unified source ID
-    transaction_date: new Date().toISOString().split('T')[0]
-  });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault();
     setLoading(true);
-
-    const amount_uzs = Number(formData.amount_original) * (formData.currency === 'USD' ? Number(formData.exchange_rate) : 1);
+    const data = { name: formData.name, address: formData.address, phone_numbers: [formData.phone] };
+    const { error } = editItem 
+      ? await supabase.from('accounting_partners').update(data).eq('id', editItem.id)
+      : await supabase.from('accounting_partners').insert([data]);
     
-    // Preparation for source update
-    let cash_id = null;
-    let card_id = null;
-    let bank_id = null;
+    if (error) toast.error(error.message);
+    else { toast.success('Saqlandi'); onSuccess(); }
+    setLoading(false);
+  };
 
-    if (formData.payment_type === 'CASH') cash_id = formData.source_id || (cashVaults[0]?.id);
-    if (formData.payment_type === 'CARD') card_id = formData.source_id;
-    if (formData.payment_type === 'BANK') bank_id = formData.source_id;
+  return (
+    <ModalWrapper title="Hamkor" description="Hamkor ma'lumotlari" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <input required placeholder="Nomi" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+        <input placeholder="Manzil" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.address} onChange={e => setFormData({...formData, address: e.target.value})} />
+        <input placeholder="Telefon" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
+        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Saqlash</button>
+      </form>
+    </ModalWrapper>
+  );
+};
 
-    try {
-      // 1. Insert Transaction
-      const { data: tx, error: txError } = await supabase.from('accounting_transactions').insert([{
-        description: formData.description,
-        amount_original: Number(formData.amount_original),
-        amount_uzs,
-        currency: formData.currency,
-        exchange_rate: Number(formData.exchange_rate),
-        is_income: formData.is_income,
-        payment_type: formData.payment_type,
-        partner_id: formData.partner_id || null,
-        cash_vault_id: cash_id,
-        card_id,
-        bank_account_id: bank_id,
-        transaction_date: formData.transaction_date
-      }]).select().single();
+const BankAccountModal = ({ onClose, onSuccess, entities, editItem }: any) => {
+  const [formData, setFormData] = useState({ 
+    name: editItem?.name || '', 
+    bank_name: editItem?.bank_name || '', 
+    mfo: editItem?.mfo || '', 
+    account_number: editItem?.account_number || '',
+    entity_id: editItem?.entity_id || ''
+  });
+  const [loading, setLoading] = useState(false);
 
-      if (txError) throw txError;
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = editItem 
+      ? await supabase.from('accounting_bank_accounts').update(formData).eq('id', editItem.id)
+      : await supabase.from('accounting_bank_accounts').insert([formData]);
+    
+    if (error) toast.error(error.message);
+    else { toast.success('Saqlandi'); onSuccess(); }
+    setLoading(false);
+  };
 
-      // 2. Update Balances (Simpler version for now, better to use DB functions/triggers later)
-      const multiplier = formData.is_income ? 1 : -1;
+  return (
+    <ModalWrapper title="Bank Hisobi" description="Yuridik shaxs hisob raqami" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <select required className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.entity_id} onChange={e => setFormData({...formData, entity_id: e.target.value})}>
+          <option value="">Shaxsni tanlang...</option>
+          {entities.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
+        </select>
+        <input required placeholder="Hisob nomi (masalan: Asosiy)" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
+        <input required placeholder="Bank nomi" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.bank_name} onChange={e => setFormData({...formData, bank_name: e.target.value})} />
+        <div className="grid grid-cols-2 gap-4">
+          <input placeholder="MFO" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.mfo} onChange={e => setFormData({...formData, mfo: e.target.value})} />
+          <input required placeholder="Hisob raqam" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.account_number} onChange={e => setFormData({...formData, account_number: e.target.value})} />
+        </div>
+        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Saqlash</button>
+      </form>
+    </ModalWrapper>
+  );
+};
 
-      if (cash_id) {
-        await supabase.rpc('increment_accounting_balance', { 
-          table_name: 'accounting_cash_vaults', row_id: cash_id, amount: amount_uzs * multiplier 
-        });
-      } else if (card_id) {
-        await supabase.rpc('increment_accounting_balance', { 
-          table_name: 'accounting_cards', row_id: card_id, amount: amount_uzs * multiplier 
-        });
-      } else if (bank_id) {
-        await supabase.rpc('increment_accounting_balance', { 
-          table_name: 'accounting_bank_accounts', row_id: bank_id, amount: amount_uzs * multiplier 
-        });
-      }
+const CardModal = ({ onClose, onSuccess, bankAccounts, editItem }: any) => {
+  const [formData, setFormData] = useState({ 
+    card_number: editItem?.card_number || '', 
+    bank_name: editItem?.bank_name || '', 
+    bank_account_id: editItem?.bank_account_id || ''
+  });
+  const [loading, setLoading] = useState(false);
 
-      // 3. Update Partner Debt
-      if (formData.partner_id || formData.payment_type === 'DEBT') {
-        const partner_id = formData.partner_id || formData.source_id; // If debt chosen as payment type
-        if (partner_id) {
-           await supabase.rpc('increment_accounting_balance', { 
-            table_name: 'accounting_partners', row_id: partner_id, amount: amount_uzs * (formData.is_income ? 1 : -1), column_name: 'total_debt_uzs'
-          });
-        }
-      }
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = editItem?.id 
+      ? await supabase.from('accounting_cards').update(formData).eq('id', editItem.id)
+      : await supabase.from('accounting_cards').insert([formData]);
+    
+    if (error) toast.error(error.message);
+    else { toast.success('Saqlandi'); onSuccess(); }
+    setLoading(false);
+  };
 
-      toast.success('Amal muvaffaqiyatli saqlandi');
-      onSuccess();
-    } catch (error: any) {
-      console.error(error);
-      toast.error('Xatolik: ' + error.message);
-    } finally {
-      setLoading(false);
-    }
+  return (
+    <ModalWrapper title="Plastik Karta" description="Bank hisobiga bog'langan karta" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <select required className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.bank_account_id} onChange={e => setFormData({...formData, bank_account_id: e.target.value})}>
+          <option value="">Hisob tanlang...</option>
+          {bankAccounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.bank_name})</option>)}
+        </select>
+        <input required maxLength={16} placeholder="Karta raqami (16 xonali)" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-black tracking-widest text-center text-lg" value={formData.card_number} onChange={e => setFormData({...formData, card_number: e.target.value.replace(/\D/g, '')})} />
+        <input required placeholder="Karta banki nomi" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.bank_name} onChange={e => setFormData({...formData, bank_name: e.target.value})} />
+        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Saqlash</button>
+      </form>
+    </ModalWrapper>
+  );
+};
+
+const CashVaultModal = ({ onClose, onSuccess, editItem }: any) => {
+  const [name, setName] = useState(editItem?.name || '');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    const { error } = editItem 
+      ? await supabase.from('accounting_cash_vaults').update({ name }).eq('id', editItem.id)
+      : await supabase.from('accounting_cash_vaults').insert([{ name }]);
+    
+    if (error) toast.error(error.message);
+    else { toast.success('Saqlandi'); onSuccess(); }
+    setLoading(false);
+  };
+
+  return (
+    <ModalWrapper title="Naqd pul g''aznasi" description="Kassa nomi (masalan: Office cash)" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <input required placeholder="G'azna nomi" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={name} onChange={e => setName(e.target.value)} />
+        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Saqlash</button>
+      </form>
+    </ModalWrapper>
+  );
+};
+
+const TransactionFormModal = ({ isOpen, onClose, onSuccess, partners, cashVaults, cards, bankAccounts }: any) => {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    description: '', amount_original: '', currency: 'UZS', exchange_rate: 12850, is_income: false,
+    payment_type: 'CASH', partner_id: '', source_id: '', transaction_date: new Date().toISOString().split('T')[0]
+  });
+
+  const handleSubmit = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    const amount_uzs = Number(formData.amount_original) * (formData.currency === 'USD' ? Number(formData.exchange_rate) : 1);
+    const data = {
+      description: formData.description, amount_original: Number(formData.amount_original), amount_uzs,
+      currency: formData.currency, exchange_rate: Number(formData.exchange_rate), is_income: formData.is_income,
+      payment_type: formData.payment_type, partner_id: formData.partner_id || null, transaction_date: formData.transaction_date,
+      cash_vault_id: formData.payment_type === 'CASH' ? formData.source_id : null,
+      card_id: formData.payment_type === 'CARD' ? formData.source_id : null,
+      bank_account_id: formData.payment_type === 'BANK' ? formData.source_id : null
+    };
+
+    const { error } = await supabase.from('accounting_transactions').insert([data]);
+    if (error) toast.error(error.message);
+    else { toast.success('Amal muvaffaqiyatli saqlandi'); onSuccess(); }
+    setLoading(false);
   };
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-300">
-      <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
-        <div className="p-8 border-b border-slate-100 flex justify-between items-center bg-slate-50">
-          <div>
-            <h3 className="text-2xl font-black text-slate-900">Yangi moliyaviy amal</h3>
-            <p className="text-slate-500 font-bold text-sm">Amal tafsilotlarini kiriting</p>
-          </div>
-          <button onClick={onClose} className="p-3 hover:bg-slate-200 rounded-2xl transition-colors">
-            <Plus size={24} className="rotate-45 text-slate-400" />
-          </button>
+      <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden">
+        <div className="p-8 border-b bg-slate-50 flex justify-between items-center">
+          <div><h3 className="text-2xl font-black text-slate-900">Yangi moliyaviy amal</h3></div>
+          <button onClick={onClose} className="p-2 hover:bg-slate-200 rounded-xl"><X size={24} /></button>
         </div>
-
-        <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[70vh] overflow-y-auto">
-          {/* Income / Expense Switcher */}
+        <form onSubmit={handleSubmit} className="p-8 space-y-6 max-h-[75vh] overflow-y-auto">
           <div className="grid grid-cols-2 gap-4">
-            <button 
-              type="button"
-              onClick={() => setFormData({...formData, is_income: false})}
-              className={`py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 ${
-                !formData.is_income ? 'bg-rose-600 text-white shadow-lg shadow-rose-100' : 'bg-slate-100 text-slate-400'
-              }`}
-            >
-              <TrendingDown size={20} /> Chiqim
-            </button>
-            <button 
-              type="button"
-              onClick={() => setFormData({...formData, is_income: true})}
-              className={`py-4 rounded-2xl font-black transition-all flex items-center justify-center gap-2 ${
-                formData.is_income ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-100' : 'bg-slate-100 text-slate-400'
-              }`}
-            >
-              <TrendingUp size={20} /> Kirim
-            </button>
+            <button type="button" onClick={()=>setFormData({...formData, is_income: false})} className={`py-4 rounded-2xl font-black ${!formData.is_income ? 'bg-rose-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>Chiqim</button>
+            <button type="button" onClick={()=>setFormData({...formData, is_income: true})} className={`py-4 rounded-2xl font-black ${formData.is_income ? 'bg-emerald-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>Kirim</button>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Sana</label>
-              <input 
-                type="date"
-                required
-                className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-                value={formData.transaction_date}
-                onChange={e => setFormData({...formData, transaction_date: e.target.value})}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Valyuta</label>
-              <div className="grid grid-cols-2 gap-2">
-                <button 
-                  type="button"
-                  onClick={() => setFormData({...formData, currency: 'UZS', exchange_rate: 1})}
-                  className={`py-4 rounded-2xl font-black border transition-all ${formData.currency === 'UZS' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500 border-slate-200'}`}
-                >UZS</button>
-                <button 
-                  type="button"
-                  onClick={() => setFormData({...formData, currency: 'USD'})}
-                  className={`py-4 rounded-2xl font-black border transition-all ${formData.currency === 'USD' ? 'bg-indigo-600 text-white' : 'bg-white text-slate-500 border-slate-200'}`}
-                >USD</button>
-              </div>
+          <div className="grid grid-cols-2 gap-6">
+            <input type="date" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.transaction_date} onChange={e=>setFormData({...formData, transaction_date: e.target.value})} />
+            <div className="flex gap-2 p-1 bg-slate-100 rounded-2xl">
+              <button type="button" onClick={()=>setFormData({...formData, currency:'UZS', exchange_rate: 1})} className={`flex-1 py-1 rounded-xl text-xs font-black ${formData.currency==='UZS'?'bg-white text-indigo-600':'text-slate-400'}`}>UZS</button>
+              <button type="button" onClick={()=>setFormData({...formData, currency:'USD'})} className={`flex-1 py-1 rounded-xl text-xs font-black ${formData.currency==='USD'?'bg-white text-indigo-600':'text-slate-400'}`}>USD</button>
             </div>
           </div>
-
-          {formData.currency === 'USD' && (
-            <div className="space-y-2 animate-in slide-in-from-top-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Kurs (1 $ = ? UZS)</label>
-              <input 
-                type="number"
-                placeholder="12,800"
-                className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-                value={formData.exchange_rate}
-                onChange={e => setFormData({...formData, exchange_rate: Number(e.target.value)})}
-              />
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Summa ({formData.currency})</label>
-            <input 
-              type="number"
-              required
-              placeholder="0.00"
-              className="w-full px-8 py-6 bg-slate-50 border border-slate-200 rounded-[24px] outline-none focus:ring-2 focus:ring-indigo-500 font-black text-3xl text-indigo-600"
-              value={formData.amount_original}
-              onChange={e => setFormData({...formData, amount_original: e.target.value})}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Tavsif</label>
-            <textarea 
-              placeholder="Amal mazmuni..."
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-medium h-24 resize-none"
-              value={formData.description}
-              onChange={e => setFormData({...formData, description: e.target.value})}
-            />
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-             <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">To'lov turi</label>
-              <select 
-                className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-                value={formData.payment_type}
-                onChange={e => setFormData({...formData, payment_type: e.target.value, source_id: ''})}
-              >
-                <option value="CASH">💵 Naqd pul</option>
-                <option value="CARD">💳 Plastik karta</option>
-                <option value="BANK">🏛 Bank (Hisob raqam)</option>
-                <option value="DEBT">🤝 Qarz (Hamkordan)</option>
-              </select>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Hamyon / Hisob</label>
-              <select 
-                required
-                className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-                value={formData.source_id}
-                onChange={e => setFormData({...formData, source_id: e.target.value})}
-              >
-                <option value="">Tanlang...</option>
-                {formData.payment_type === 'CASH' && cashVaults.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                {formData.payment_type === 'CARD' && cards.map(c => <option key={c.id} value={c.id}>**** {c.card_number.slice(-4)} ({c.bank_name})</option>)}
-                {formData.payment_type === 'BANK' && bankAccounts.map(a => <option key={a.id} value={a.id}>{a.name} ({a.bank_name})</option>)}
-                {formData.payment_type === 'DEBT' && partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-xs font-black text-slate-400 uppercase tracking-widest px-2">Hamkor (Ixtiyoriy)</label>
-            <select 
-              className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl outline-none focus:ring-2 focus:ring-indigo-500 font-bold"
-              value={formData.partner_id}
-              onChange={e => setFormData({...formData, partner_id: e.target.value})}
-            >
-              <option value="">Hamkor tanlanmagan</option>
-              {partners.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+          {formData.currency==='USD' && <input type="number" placeholder="Kurs" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.exchange_rate} onChange={e=>setFormData({...formData, exchange_rate: Number(e.target.value)})} />}
+          <input required type="number" placeholder="Summa" className="w-full px-8 py-6 bg-slate-50 border-2 border-indigo-100 rounded-[24px] font-black text-4xl text-indigo-600" value={formData.amount_original} onChange={e=>setFormData({...formData, amount_original: e.target.value})} />
+          <textarea placeholder="Mazmuni..." className="w-full px-6 py-4 bg-slate-50 border rounded-2xl h-24" value={formData.description} onChange={e=>setFormData({...formData, description: e.target.value})} />
+          <div className="grid grid-cols-2 gap-6">
+            <select className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.payment_type} onChange={e=>setFormData({...formData, payment_type: e.target.value, source_id:''})}>
+              <option value="CASH">💵 Naqd</option>
+              <option value="CARD">💳 Plastik</option>
+              <option value="BANK">🏛 Bank (Hisob)</option>
+              <option value="DEBT">🤝 Qarz</option>
+            </select>
+            <select required className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold italic" value={formData.source_id} onChange={e=>setFormData({...formData, source_id: e.target.value})}>
+              <option value="">Hamyon tanlang...</option>
+              {formData.payment_type==='CASH' && cashVaults.map((v:any) => <option key={v.id} value={v.id}>{v.name}</option>)}
+              {formData.payment_type==='CARD' && cards.map((c:any) => <option key={c.id} value={c.id}>**** {c.card_number.slice(-4)}</option>)}
+              {formData.payment_type==='BANK' && bankAccounts.map((a:any) => <option key={a.id} value={a.id}>{a.name}</option>)}
+              {formData.payment_type==='DEBT' && partners.map((p:any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-        </form>
-
-        <div className="p-8 border-t border-slate-100 flex gap-4">
-          <button 
-            type="button" 
-            onClick={onClose}
-            className="flex-1 py-4 bg-slate-100 text-slate-600 rounded-2xl font-black hover:bg-slate-200 transition-all"
-          >Bekor qilish</button>
-          <button 
-            disabled={loading}
-            onClick={handleSubmit}
-            className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-black hover:bg-indigo-700 transition-all shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"
-          >
-            {loading ? 'Saqlanmoqda...' : <><Plus size={20} /> Saqlash</>}
+          <select className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.partner_id} onChange={e=>setFormData({...formData, partner_id: e.target.value})}>
+            <option value="">Kontragent (Ixtiyoriy)</option>
+            {partners.map((p:any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+          </select>
+          <button disabled={loading} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] font-black text-lg shadow-xl shadow-indigo-100 flex items-center justify-center gap-2">
+            {loading ? 'Saqlanmoqda...' : <><Plus size={24} /> SAQLASH</>}
           </button>
-        </div>
+        </form>
       </div>
     </div>
-  )
-}
+  );
+};
