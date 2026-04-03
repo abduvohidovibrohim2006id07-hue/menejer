@@ -658,8 +658,8 @@ const EntityModal = ({ onClose, onSuccess, editItem }: any) => {
   return (
     <ModalWrapper title={editItem ? "Tahrirlash" : "Yangi Shaxs"} description="Yuridik shaxs ma'lumotlari" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <input required autoFocus placeholder="Nomi" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={name} onChange={(e) => setName(e.target.value)} />
-        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Saqlash</button>
+        <input required autoFocus placeholder="Nomi" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={name} onChange={(e) => setName(e.target.value)} />
+        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all">Saqlash</button>
       </form>
     </ModalWrapper>
   );
@@ -685,10 +685,10 @@ const PartnerModal = ({ onClose, onSuccess, editItem }: any) => {
   return (
     <ModalWrapper title="Hamkor" description="Hamkor ma'lumotlari" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <input required placeholder="Nomi" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-        <input placeholder="Manzil" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
-        <input placeholder="Telefon" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
-        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Saqlash</button>
+        <input required placeholder="Nomi" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+        <input placeholder="Manzil" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.address} onChange={(e) => setFormData({...formData, address: e.target.value})} />
+        <input placeholder="Telefon" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.phone} onChange={(e) => setFormData({...formData, phone: e.target.value})} />
+        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all">Saqlash</button>
       </form>
     </ModalWrapper>
   );
@@ -719,17 +719,17 @@ const BankAccountModal = ({ onClose, onSuccess, entities, editItem }: any) => {
   return (
     <ModalWrapper title="Bank Hisobi" description="Yuridik shaxs hisob raqami" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <select required className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.entity_id} onChange={(e) => setFormData({...formData, entity_id: e.target.value})}>
+        <select required className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.entity_id} onChange={(e) => setFormData({...formData, entity_id: e.target.value})}>
           <option value="">Shaxsni tanlang...</option>
           {entities.map((e: any) => <option key={e.id} value={e.id}>{e.name}</option>)}
         </select>
-        <input required placeholder="Hisob nomi (masalan: Asosiy)" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
-        <input required placeholder="Bank nomi" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.bank_name} onChange={(e) => setFormData({...formData, bank_name: e.target.value})} />
+        <input required placeholder="Hisob nomi (masalan: Asosiy)" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} />
+        <input required placeholder="Bank nomi" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.bank_name} onChange={(e) => setFormData({...formData, bank_name: e.target.value})} />
         <div className="grid grid-cols-2 gap-4">
-          <input placeholder="MFO" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.mfo} onChange={(e) => setFormData({...formData, mfo: e.target.value})} />
-          <input required placeholder="Hisob raqam" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.account_number} onChange={(e) => setFormData({...formData, account_number: e.target.value})} />
+          <input placeholder="MFO" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.mfo} onChange={(e) => setFormData({...formData, mfo: e.target.value})} />
+          <input required placeholder="Hisob raqam" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.account_number} onChange={(e) => setFormData({...formData, account_number: e.target.value})} />
         </div>
-        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Saqlash</button>
+        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all">Saqlash</button>
       </form>
     </ModalWrapper>
   );
@@ -758,13 +758,13 @@ const CardModal = ({ onClose, onSuccess, bankAccounts, editItem }: any) => {
   return (
     <ModalWrapper title="Plastik Karta" description="Bank hisobiga bog'langan karta" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <select required className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.bank_account_id} onChange={(e) => setFormData({...formData, bank_account_id: e.target.value})}>
+        <select required className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.bank_account_id} onChange={(e) => setFormData({...formData, bank_account_id: e.target.value})}>
           <option value="">Hisob tanlang...</option>
           {bankAccounts.map((a: any) => <option key={a.id} value={a.id}>{a.name} ({a.bank_name})</option>)}
         </select>
-        <input required maxLength={16} placeholder="Karta raqami (16 xonali)" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-black tracking-widest text-center text-lg" value={formData.card_number} onChange={(e) => setFormData({...formData, card_number: e.target.value.replace(/\D/g, '')})} />
-        <input required placeholder="Karta banki nomi" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.bank_name} onChange={(e) => setFormData({...formData, bank_name: e.target.value})} />
-        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Saqlash</button>
+        <input required maxLength={16} placeholder="Karta raqami (16 xonali)" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-black tracking-widest text-center text-lg text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.card_number} onChange={(e) => setFormData({...formData, card_number: e.target.value.replace(/\D/g, '')})} />
+        <input required placeholder="Karta banki nomi" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={formData.bank_name} onChange={(e) => setFormData({...formData, bank_name: e.target.value})} />
+        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all">Saqlash</button>
       </form>
     </ModalWrapper>
   );
@@ -789,8 +789,8 @@ const CashVaultModal = ({ onClose, onSuccess, editItem }: any) => {
   return (
     <ModalWrapper title="Naqd pul g''aznasi" description="Kassa nomi (masalan: Office cash)" onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-6">
-        <input required placeholder="G'azna nomi" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={name} onChange={(e) => setName(e.target.value)} />
-        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg">Saqlash</button>
+        <input required placeholder="G'azna nomi" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 focus:bg-white focus:border-indigo-500 transition-all outline-none" value={name} onChange={(e) => setName(e.target.value)} />
+        <button disabled={loading} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all">Saqlash</button>
       </form>
     </ModalWrapper>
   );
@@ -835,23 +835,23 @@ const TransactionFormModal = ({ isOpen, onClose, onSuccess, partners, cashVaults
             <button type="button" onClick={()=>setFormData({...formData, is_income: true})} className={`py-4 rounded-2xl font-black ${formData.is_income ? 'bg-emerald-600 text-white shadow-lg' : 'bg-slate-100 text-slate-400'}`}>Kirim</button>
           </div>
           <div className="grid grid-cols-2 gap-6">
-            <input type="date" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.transaction_date} onChange={(e)=>setFormData({...formData, transaction_date: e.target.value})} />
+            <input type="date" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.transaction_date} onChange={(e)=>setFormData({...formData, transaction_date: e.target.value})} />
             <div className="flex gap-2 p-1 bg-slate-100 rounded-2xl">
               <button type="button" onClick={()=>setFormData({...formData, currency:'UZS', exchange_rate: 1})} className={`flex-1 py-1 rounded-xl text-xs font-black ${formData.currency==='UZS'?'bg-white text-indigo-600':'text-slate-400'}`}>UZS</button>
               <button type="button" onClick={()=>setFormData({...formData, currency:'USD'})} className={`flex-1 py-1 rounded-xl text-xs font-black ${formData.currency==='USD'?'bg-white text-indigo-600':'text-slate-400'}`}>USD</button>
             </div>
           </div>
-          {formData.currency==='USD' && <input type="number" placeholder="Kurs" className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.exchange_rate} onChange={(e)=>setFormData({...formData, exchange_rate: Number(e.target.value)})} />}
-          <input required type="number" placeholder="Summa" className="w-full px-8 py-6 bg-slate-50 border-2 border-indigo-100 rounded-[24px] font-black text-4xl text-indigo-600" value={formData.amount_original} onChange={(e)=>setFormData({...formData, amount_original: e.target.value})} />
-          <textarea placeholder="Mazmuni..." className="w-full px-6 py-4 bg-slate-50 border rounded-2xl h-24" value={formData.description} onChange={(e)=>setFormData({...formData, description: e.target.value})} />
+          {formData.currency==='USD' && <input type="number" placeholder="Kurs" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.exchange_rate} onChange={(e)=>setFormData({...formData, exchange_rate: Number(e.target.value)})} />}
+          <input required type="number" placeholder="Summa" className="w-full px-8 py-6 bg-slate-50 border-2 border-indigo-100 rounded-[24px] font-black text-4xl text-indigo-600 placeholder:text-slate-300 outline-none focus:bg-white transition-all" value={formData.amount_original} onChange={(e)=>setFormData({...formData, amount_original: e.target.value})} />
+          <textarea placeholder="Mazmuni..." className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl h-24 text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.description} onChange={(e)=>setFormData({...formData, description: e.target.value})} />
           <div className="grid grid-cols-2 gap-6">
-            <select className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.payment_type} onChange={(e)=>setFormData({...formData, payment_type: e.target.value, source_id:''})}>
+            <select className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.payment_type} onChange={(e)=>setFormData({...formData, payment_type: e.target.value, source_id:''})}>
               <option value="CASH">💵 Naqd</option>
               <option value="CARD">💳 Plastik</option>
               <option value="BANK">🏛 Bank (Hisob)</option>
               <option value="DEBT">🤝 Qarz</option>
             </select>
-            <select required className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold italic" value={formData.source_id} onChange={(e)=>setFormData({...formData, source_id: e.target.value})}>
+            <select required className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold italic text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.source_id} onChange={(e)=>setFormData({...formData, source_id: e.target.value})}>
               <option value="">Hamyon tanlang...</option>
               {formData.payment_type==='CASH' && cashVaults.map((v:any) => <option key={v.id} value={v.id}>{v.name}</option>)}
               {formData.payment_type==='CARD' && cards.map((c:any) => <option key={c.id} value={c.id}>**** {c.card_number.slice(-4)}</option>)}
@@ -859,11 +859,11 @@ const TransactionFormModal = ({ isOpen, onClose, onSuccess, partners, cashVaults
               {formData.payment_type==='DEBT' && partners.map((p:any) => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
           </div>
-          <select className="w-full px-6 py-4 bg-slate-50 border rounded-2xl font-bold" value={formData.partner_id} onChange={(e)=>setFormData({...formData, partner_id: e.target.value})}>
+          <select className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.partner_id} onChange={(e)=>setFormData({...formData, partner_id: e.target.value})}>
             <option value="">Kontragent (Ixtiyoriy)</option>
             {partners.map((p:any) => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
-          <button disabled={loading} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] font-black text-lg shadow-xl shadow-indigo-100 flex items-center justify-center gap-2">
+          <button disabled={loading} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] font-black text-lg shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all">
             {loading ? 'Saqlanmoqda...' : <><Plus size={24} /> SAQLASH</>}
           </button>
         </form>
