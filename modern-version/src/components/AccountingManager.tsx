@@ -844,25 +844,65 @@ const TransactionFormModal = ({ isOpen, onClose, onSuccess, partners, cashVaults
           {formData.currency==='USD' && <input type="number" placeholder="Kurs" className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.exchange_rate} onChange={(e)=>setFormData({...formData, exchange_rate: Number(e.target.value)})} />}
           <input required type="number" placeholder="Summa" className="w-full px-8 py-6 bg-slate-50 border-2 border-indigo-100 rounded-[24px] font-black text-4xl text-indigo-600 placeholder:text-slate-300 outline-none focus:bg-white transition-all" value={formData.amount_original} onChange={(e)=>setFormData({...formData, amount_original: e.target.value})} />
           <textarea placeholder="Mazmuni..." className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl h-24 text-slate-900 placeholder:text-slate-400 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.description} onChange={(e)=>setFormData({...formData, description: e.target.value})} />
-          <div className="grid grid-cols-2 gap-6">
-            <select className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.payment_type} onChange={(e)=>setFormData({...formData, payment_type: e.target.value, source_id:''})}>
-              <option value="CASH">💵 Naqd</option>
-              <option value="CARD">💳 Plastik</option>
-              <option value="BANK">🏛 Bank (Hisob)</option>
-              <option value="DEBT">🤝 Qarz</option>
-            </select>
-            <select required className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold italic text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.source_id} onChange={(e)=>setFormData({...formData, source_id: e.target.value})}>
-              <option value="">Hamyon tanlang...</option>
-              {formData.payment_type==='CASH' && cashVaults.map((v:any) => <option key={v.id} value={v.id}>{v.name}</option>)}
-              {formData.payment_type==='CARD' && cards.map((c:any) => <option key={c.id} value={c.id}>**** {c.card_number.slice(-4)}</option>)}
-              {formData.payment_type==='BANK' && bankAccounts.map((a:any) => <option key={a.id} value={a.id}>{a.name}</option>)}
-              {formData.payment_type==='DEBT' && partners.map((p:any) => <option key={p.id} value={p.id}>{p.name}</option>)}
-            </select>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">To'lov turi</p>
+              <select 
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" 
+                value={formData.payment_type} 
+                onChange={(e) => setFormData({...formData, payment_type: e.target.value as any, source_id: ''})}
+              >
+                <option value="CASH">💵 Naqd pul (G'azna)</option>
+                <option value="CARD">💳 Plastik karta</option>
+                <option value="BANK">🏛 Bank hisob raqami</option>
+                <option value="DEBT">🤝 Qarz / Haqdorlik</option>
+              </select>
+            </div>
+
+            {formData.payment_type !== 'DEBT' ? (
+              <div className="space-y-2">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Hamyonni tanlang</p>
+                <select 
+                  required 
+                  className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" 
+                  value={formData.source_id} 
+                  onChange={(e) => setFormData({...formData, source_id: e.target.value})}
+                >
+                  <option value="">Hamyon tanlang...</option>
+                  {formData.payment_type === 'CASH' && cashVaults.map((v: any) => <option key={v.id} value={v.id}>{v.name}</option>)}
+                  {formData.payment_type === 'CARD' && cards.map((c: any) => <option key={c.id} value={c.id}>**** {c.card_number.slice(-4)}</option>)}
+                  {formData.payment_type === 'BANK' && bankAccounts.map((a: any) => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Hamkor (Qarz beruvchi/oluvchi)</p>
+                <select 
+                  required 
+                  className="w-full px-6 py-4 bg-indigo-50 border border-indigo-200 rounded-2xl font-black text-indigo-600 outline-none focus:bg-white focus:border-indigo-500 transition-all" 
+                  value={formData.partner_id} 
+                  onChange={(e) => setFormData({...formData, partner_id: e.target.value, source_id: e.target.value})}
+                >
+                  <option value="">Hamkorni tanlang...</option>
+                  {partners.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+                </select>
+              </div>
+            )}
           </div>
-          <select className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" value={formData.partner_id} onChange={(e)=>setFormData({...formData, partner_id: e.target.value})}>
-            <option value="">Kontragent (Ixtiyoriy)</option>
-            {partners.map((p:any) => <option key={p.id} value={p.id}>{p.name}</option>)}
-          </select>
+
+          {formData.payment_type !== 'DEBT' && (
+            <div className="space-y-2">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Hamkor (Ixtiyoriy)</p>
+              <select 
+                className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" 
+                value={formData.partner_id} 
+                onChange={(e) => setFormData({...formData, partner_id: e.target.value})}
+              >
+                <option value="">Kontragent (Ixtiyoriy)</option>
+                {partners.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
+              </select>
+            </div>
+          )}
           <button disabled={loading} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] font-black text-lg shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all">
             {loading ? 'Saqlanmoqda...' : <><Plus size={24} /> SAQLASH</>}
           </button>
