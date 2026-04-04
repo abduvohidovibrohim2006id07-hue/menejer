@@ -89,6 +89,9 @@ interface Transaction {
   card_id?: string;
   bank_account_id?: string;
   attachment_url?: string;
+  payme_category?: string;
+  payme_terminal?: string;
+  payme_status?: string;
 }
 
 export const AccountingManager = () => {
@@ -444,7 +447,12 @@ const TransactionsView = ({ transactions, onDelete }: { transactions: Transactio
             </td>
             <td className="py-5 px-4">
               <p className="font-bold text-slate-700 text-sm">{tx.description || '—'}</p>
-              <p className="text-[10px] text-slate-400 font-bold">{tx.partner?.name || 'Kontragentsiz'}</p>
+              <div className="flex flex-wrap gap-1 mt-1">
+                <p className="text-[10px] text-slate-400 font-bold">{tx.partner?.name || 'Kontragentsiz'}</p>
+                {tx.payme_category && <span className="text-[9px] bg-slate-100 text-slate-500 px-1 rounded uppercase">{tx.payme_category}</span>}
+                {tx.payme_terminal && <span className="text-[9px] bg-indigo-50 text-indigo-400 px-1 rounded uppercase">Term: {tx.payme_terminal}</span>}
+                {tx.payme_status && <span className={`text-[9px] px-1 rounded uppercase ${tx.payme_status === 'Success' ? 'bg-emerald-50 text-emerald-500' : 'bg-rose-50 text-rose-500'}`}>{tx.payme_status}</span>}
+              </div>
             </td>
             <td className="py-5 px-4 font-bold text-slate-500 text-xs">
                <div className="flex items-center gap-1">
