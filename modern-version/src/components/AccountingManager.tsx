@@ -1057,8 +1057,12 @@ const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, 
         throw new Error("Import qilish uchun yaroqli ma'lumot topilmadi");
       }
 
-      const { error } = await supabase.from('accounting_transactions').insert(transactionsToInsert);
-      if (error) throw error;
+      // Dublikatlarni shunchaki skip qilish (upsert ignore duplicates)
+      const { error } = await supabase.from('accounting_transactions').upsert(transactionsToInsert, { 
+         onConflict: 'transaction_date,amount_uzs,payme_details' 
+      });
+      
+      if (error && !error.message.includes('unique constraint')) throw error;
 
       toast.success(`${transactionsToInsert.length} ta amal muvaffaqiyatli import qilindi`, { id: loadingToast });
       onSuccess();
