@@ -27,13 +27,14 @@ import {
   ChevronRight,
   ArrowRightLeft,
   DollarSign,
+  User,
   X
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import toast from 'react-hot-toast';
 
 // Types
-type TabType = 'overview' | 'transactions' | 'wallets' | 'partners' | 'settings';
+type TabType = 'overview' | 'transactions' | 'wallets' | 'partners' | 'employees' | 'settings';
 
 interface Entity {
   id: string;
@@ -97,6 +98,23 @@ interface Transaction {
   payme_receiver?: string;
   payme_receipt_type?: string;
   payme_details?: string;
+  expense_type?: 'PRODUCT' | 'EMPLOYEE' | 'LOGISTICS' | 'FUEL' | 'OTHER' | 'AD';
+  product_name?: string;
+  supplier_name?: string;
+  employee_id?: string;
+  logistics_from?: string;
+  logistics_to?: string;
+  ad_platform?: string;
+  expense_reason?: string;
+  employee?: Employee;
+}
+
+interface Employee {
+  id: string;
+  full_name: string;
+  position: string;
+  phone: string;
+  created_at: string;
 }
 
 export const AccountingManager = () => {
@@ -109,10 +127,11 @@ export const AccountingManager = () => {
   const [cards, setCards] = useState<Card[]>([]);
   const [cashVaults, setCashVaults] = useState<CashVault[]>([]);
   const [partners, setPartners] = useState<Partner[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   
   // Modal States
-  const [modalType, setModalType] = useState<'TRANSACTION' | 'BANK_ACCOUNT' | 'CARD' | 'CASH_VAULT' | 'PARTNER' | 'ENTITY' | 'PAYME_IMPORT' | null>(null);
+  const [modalType, setModalType] = useState<'TRANSACTION' | 'BANK_ACCOUNT' | 'CARD' | 'CASH_VAULT' | 'PARTNER' | 'ENTITY' | 'PAYME_IMPORT' | 'EMPLOYEE' | null>(null);
   const [editItem, setEditItem] = useState<any>(null);
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
@@ -125,6 +144,7 @@ export const AccountingManager = () => {
         { data: cardsData },
         { data: cashVaultsData },
         { data: partnersData },
+        { data: employeesData },
         { data: transactionsData }
       ] = await Promise.all([
         supabase.from('accounting_legal_entities').select('*').order('name'),
@@ -132,7 +152,8 @@ export const AccountingManager = () => {
         supabase.from('accounting_cards').select('*').order('created_at'),
         supabase.from('accounting_cash_vaults').select('*').order('name'),
         supabase.from('accounting_partners').select('*').order('name'),
-        supabase.from('accounting_transactions').select('*, partner:accounting_partners(*)').order('transaction_date', { ascending: false }).limit(50)
+        supabase.from('accounting_employees').select('*').order('full_name'),
+        supabase.from('accounting_transactions').select('*, partner:accounting_partners(*), employee:accounting_employees(*)').order('transaction_date', { ascending: false }).limit(50)
       ]);
 
       setEntities(entitiesData || []);
@@ -140,6 +161,7 @@ export const AccountingManager = () => {
       setCards(cardsData || []);
       setCashVaults(cashVaultsData || []);
       setPartners(partnersData || []);
+      setEmployees(employeesData || []);
       setTransactions(transactionsData || []);
     } catch (error) {
       console.error('Error fetching accounting data:', error);
@@ -181,6 +203,7 @@ export const AccountingManager = () => {
     { id: 'transactions', label: 'Amallar', icon: History },
     { id: 'wallets', label: 'Hisoblar', icon: Briefcase },
     { id: 'partners', label: 'Hamkorlar', icon: Users },
+    { id: 'employees', label: 'Xodimlar', icon: Users },
     { id: 'settings', label: 'Sozlamalar', icon: Settings },
   ];
 
@@ -290,6 +313,14 @@ export const AccountingManager = () => {
                   onDelete={(id: string) => handleDelete('accounting_partners', id)} 
                 />
               )}
+              {activeSubTab === 'employees' && (
+                <EmployeesView 
+                  employees={employees} 
+                  onAdd={() => { setEditItem(null); setModalType('EMPLOYEE'); }}
+                  transactions={transactions}
+                  onRefresh={fetchData}
+                />
+              )}
               {activeSubTab === 'settings' && (
                 <SettingsView 
                   entities={entities} 
@@ -348,7 +379,15 @@ export const AccountingManager = () => {
         <PartnerModal 
           onClose={() => setModalType(null)} 
           onSuccess={() => { setModalType(null); fetchData(); }} 
-          editItem={editItem}
+          partner={editItem}
+        />
+      )}
+
+      {modalType === 'EMPLOYEE' && (
+        <EmployeeModal 
+          onClose={() => setModalType(null)} 
+          onSuccess={() => { setModalType(null); fetchData(); }} 
+          employee={editItem}
         />
       )}
 
@@ -365,6 +404,7 @@ export const AccountingManager = () => {
           onClose={() => setModalType(null)} 
           onSuccess={() => { setModalType(null); fetchData(); }} 
           cards={cards}
+          employees={employees}
         />
       )}
 
@@ -961,7 +1001,7 @@ const TransactionFormModal = ({ isOpen, onClose, onSuccess, partners, cashVaults
 
 // --- Payme Import Modal ---
 
-const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, onSuccess: () => void, cards: Card[] }) => {
+const PaymeImportModal = ({ onClose, onSuccess, cards, employees }: { onClose: () => void, onSuccess: () => void, cards: Card[], employees: Employee[] }) => {
   const [loading, setLoading] = useState(false);
   const [checkingDuplicates, setCheckingDuplicates] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -1034,6 +1074,14 @@ const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, 
             payme_provider_name: String(row[3] || ''),
             payme_provider_org_name: String(row[4] || ''),
             payme_receipt_type: String(row[12] || ''),
+            expense_type: '',
+            product_name: '',
+            supplier_name: '',
+            employee_id: '',
+            logistics_from: '',
+            logistics_to: '',
+            ad_platform: '',
+            expense_reason: '',
             hash,
             selected: true
           };
@@ -1114,13 +1162,12 @@ const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, 
             </div>
 
             <div className="flex-1 overflow-auto p-4 md:p-8 custom-scrollbar">
-               <table className="w-full text-left border-separate border-spacing-y-2">
-                  <thead className="sticky top-0 bg-white z-10">
+               <table className="w-full text-left border-separate border-spacing-y-4">
+                  <thead className="sticky top-0 bg-white z-10 px-4">
                      <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400">
                         <th className="px-4 py-2"></th>
                         <th className="px-4 py-2">Sana / Vaqt</th>
-                        <th className="px-4 py-2">Tavsif</th>
-                        <th className="px-4 py-2">Hamyon</th>
+                        <th className="px-4 py-2">Tafsilotlar</th>
                         <th className="px-4 py-2 text-right">Summa (UZS)</th>
                      </tr>
                   </thead>
@@ -1130,9 +1177,9 @@ const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, 
                         return (
                            <tr 
                              key={item.id} 
-                             className={`group transition-all rounded-3xl ${item.selected ? (isDuplicate ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 hover:bg-white hover:shadow-lg hover:border-indigo-200') : 'opacity-40 grayscale'} border-2 border-transparent`}
+                             className={`group transition-all rounded-3xl ${item.selected ? (isDuplicate ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 border-slate-100 hover:bg-white hover:shadow-xl hover:border-indigo-200') : 'opacity-40 grayscale'} border-2`}
                            >
-                              <td className="p-4 rounded-l-3xl w-10">
+                              <td className="p-4 rounded-l-3xl w-10 align-top">
                                  <button 
                                    onClick={() => setImportData(importData.map(d => d.id === item.id ? { ...d, selected: !d.selected } : d))}
                                    className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${item.selected ? (isDuplicate ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white') : 'bg-slate-200 text-transparent'}`}
@@ -1140,32 +1187,132 @@ const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, 
                                     <Plus size={14} className={item.selected ? 'rotate-45' : ''} />
                                  </button>
                               </td>
-                              <td className="p-4">
+                              <td className="p-4 align-top w-40">
                                  <p className="text-sm font-black text-slate-900">{new Date(item.transaction_date).toLocaleDateString()}</p>
                                  <p className="text-[10px] text-slate-400 font-bold">{new Date(item.transaction_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                              </td>
-                              <td className="p-4 min-w-[200px]">
-                                 <input 
-                                   className="w-full bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-300"
-                                   value={item.description}
-                                   onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, description: e.target.value } : d))}
-                                 />
-                                 <div className="flex flex-wrap gap-1 mt-1">
-                                    {item.payme_category && <span className="text-[8px] font-black uppercase bg-slate-100 text-slate-400 px-1 rounded">{item.payme_category}</span>}
-                                    {item.payme_terminal && <span className="text-[8px] font-black uppercase bg-emerald-50 text-emerald-500 px-1 rounded">Term: {item.payme_terminal}</span>}
-                                    {item.payme_receipt_type && <span className="text-[8px] font-black uppercase bg-indigo-50 text-indigo-400 px-1 rounded">{item.payme_receipt_type}</span>}
-                                    {isDuplicate && <span className="text-[8px] font-black uppercase bg-rose-50 text-rose-500 px-1 rounded animate-pulse">⚠️ ALOHIDA O'CHIRILGAN YOKI BAZADA BOR</span>}
-                                 </div>
-                              </td>
-                              <td className="p-4">
-                                 <div className="p-2 bg-white rounded-xl border border-slate-100 flex items-center justify-center">
+                                 <div className="mt-2 p-2 bg-white rounded-xl border border-slate-100 inline-flex items-center justify-center">
                                     <CreditCard size={14} className="text-indigo-500" />
                                  </div>
                               </td>
-                              <td className="p-4 text-right rounded-r-3xl">
+                              <td className="p-4 align-top">
+                                 <div className="space-y-4">
+                                    {/* Default Description */}
+                                    <div>
+                                       <input 
+                                         className="w-full bg-transparent border-none focus:ring-0 text-sm font-black text-slate-900 p-0"
+                                         value={item.description}
+                                         onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, description: e.target.value } : d))}
+                                       />
+                                       <div className="flex flex-wrap gap-1 mt-1">
+                                          {item.payme_category && <span className="text-[8px] font-black uppercase bg-slate-100 text-slate-400 px-1 rounded">{item.payme_category}</span>}
+                                          {isDuplicate && <span className="text-[8px] font-black uppercase bg-rose-50 text-rose-500 px-1 rounded">⚠️ BAZADA BOR</span>}
+                                       </div>
+                                    </div>
+
+                                    {/* Expense Type Selector */}
+                                    <div className="pt-2 border-t border-slate-100">
+                                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-2">Xarajat turi</p>
+                                       <div className="flex flex-wrap gap-2">
+                                          {[
+                                            { id: 'PRODUCT', label: 'Mahsulot', icon: Briefcase },
+                                            { id: 'EMPLOYEE', label: 'Xodim', icon: User },
+                                            { id: 'LOGISTICS', label: 'Logistika', icon: ArrowRightLeft },
+                                            { id: 'FUEL', label: 'Yoqilg\'i', icon: Target },
+                                            { id: 'AD', label: 'Reklama', icon: PieChart },
+                                            { id: 'OTHER', label: 'Boshqa', icon: Settings },
+                                          ].map(type => (
+                                            <button
+                                              key={type.id}
+                                              onClick={() => setImportData(importData.map(d => d.id === item.id ? { ...d, expense_type: type.id } : d))}
+                                              className={`px-3 py-1.5 rounded-xl text-[10px] font-black border transition-all flex items-center gap-1.5 ${item.expense_type === type.id ? 'bg-indigo-600 border-indigo-600 text-white' : 'bg-white border-slate-100 text-slate-500 hover:border-indigo-300'}`}
+                                            >
+                                              <type.icon size={12} /> {type.label}
+                                            </button>
+                                          ))}
+                                       </div>
+                                    </div>
+
+                                    {/* Dynamic Fields */}
+                                    {item.expense_type === 'PRODUCT' && (
+                                       <div className="grid grid-cols-2 gap-3 p-4 bg-white rounded-2xl border border-slate-100 animate-in slide-in-from-top-2">
+                                          <div className="space-y-1">
+                                             <label className="text-[8px] font-black uppercase text-slate-400 px-1">Mahsulot nomi *</label>
+                                             <input required className="w-full text-xs font-bold p-2 bg-slate-50 rounded-lg outline-none" placeholder="Masalan: Paxta yog'i" value={item.product_name} onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, product_name: e.target.value } : d))} />
+                                          </div>
+                                          <div className="space-y-1">
+                                             <label className="text-[8px] font-black uppercase text-slate-400 px-1">Kimdan olindi *</label>
+                                             <input required className="w-full text-xs font-bold p-2 bg-slate-50 rounded-lg outline-none" placeholder="Masalan: Savdogar aka" value={item.supplier_name} onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, supplier_name: e.target.value } : d))} />
+                                          </div>
+                                       </div>
+                                    )}
+
+                                    {item.expense_type === 'EMPLOYEE' && (
+                                       <div className="p-4 bg-white rounded-2xl border border-slate-100 animate-in slide-in-from-top-2">
+                                          <div className="space-y-1">
+                                             <label className="text-[8px] font-black uppercase text-slate-400 px-1">Xodimni tanlang *</label>
+                                             <select required className="w-full text-xs font-bold p-2 bg-slate-50 rounded-lg outline-none cursor-pointer" value={item.employee_id} onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, employee_id: e.target.value } : d))}>
+                                                <option value="">Tanlang...</option>
+                                                {employees.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                                             </select>
+                                          </div>
+                                       </div>
+                                    )}
+
+                                    {item.expense_type === 'LOGISTICS' && (
+                                       <div className="grid grid-cols-3 gap-3 p-4 bg-white rounded-2xl border border-slate-100 animate-in slide-in-from-top-2">
+                                          <div className="space-y-1">
+                                             <label className="text-[8px] font-black uppercase text-slate-400 px-1">Qayerdan *</label>
+                                             <input required className="w-full text-xs font-bold p-2 bg-slate-50 rounded-lg outline-none" placeholder="Toshkent" value={item.logistics_from} onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, logistics_from: e.target.value } : d))} />
+                                          </div>
+                                          <div className="space-y-1">
+                                             <label className="text-[8px] font-black uppercase text-slate-400 px-1">Qayerga *</label>
+                                             <input required className="w-full text-xs font-bold p-2 bg-slate-50 rounded-lg outline-none" placeholder="Samarqand" value={item.logistics_to} onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, logistics_to: e.target.value } : d))} />
+                                          </div>
+                                          <div className="space-y-1">
+                                             <label className="text-[8px] font-black uppercase text-slate-400 px-1">Haydovchi *</label>
+                                             <select required className="w-full text-xs font-bold p-2 bg-slate-50 rounded-lg outline-none cursor-pointer" value={item.employee_id} onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, employee_id: e.target.value } : d))}>
+                                                <option value="">Tanlang...</option>
+                                                {employees.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                                             </select>
+                                          </div>
+                                       </div>
+                                    )}
+
+                                    {item.expense_type === 'FUEL' && (
+                                       <div className="p-4 bg-white rounded-2xl border border-slate-100 animate-in slide-in-from-top-2">
+                                          <div className="space-y-1">
+                                             <label className="text-[8px] font-black uppercase text-slate-400 px-1">Kimga quyildi *</label>
+                                             <select required className="w-full text-xs font-bold p-2 bg-slate-50 rounded-lg outline-none cursor-pointer" value={item.employee_id} onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, employee_id: e.target.value } : d))}>
+                                                <option value="">Tanlang...</option>
+                                                {employees.map(e => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                                             </select>
+                                          </div>
+                                       </div>
+                                    )}
+
+                                    {item.expense_type === 'AD' && (
+                                       <div className="p-4 bg-white rounded-2xl border border-slate-100 animate-in slide-in-from-top-2">
+                                          <div className="space-y-1">
+                                             <label className="text-[8px] font-black uppercase text-slate-400 px-1">Reklama kanali *</label>
+                                             <input required className="w-full text-xs font-bold p-2 bg-slate-50 rounded-lg outline-none" placeholder="Masalan: Instagram, Telegram" value={item.ad_platform} onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, ad_platform: e.target.value } : d))} />
+                                          </div>
+                                       </div>
+                                    )}
+
+                                    {item.expense_type === 'OTHER' && (
+                                       <div className="p-4 bg-white rounded-2xl border border-slate-100 animate-in slide-in-from-top-2">
+                                          <div className="space-y-1">
+                                             <label className="text-[8px] font-black uppercase text-slate-400 px-1">Xarajat sababi *</label>
+                                             <input required className="w-full text-xs font-bold p-2 bg-slate-50 rounded-lg outline-none" placeholder="Sababini yozing..." value={item.expense_reason} onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, expense_reason: e.target.value } : d))} />
+                                          </div>
+                                       </div>
+                                    )}
+                                 </div>
+                              </td>
+                              <td className="p-4 text-right rounded-r-3xl align-top">
                                  <input 
                                    type="number"
-                                   className={`w-32 text-right bg-transparent border-none focus:ring-0 font-black ${item.is_income ? 'text-emerald-600' : 'text-rose-600'}`}
+                                   className={`w-32 text-right bg-transparent border-none focus:ring-0 font-black text-lg ${item.is_income ? 'text-emerald-600' : 'text-rose-600'}`}
                                    value={item.amount_uzs}
                                    onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, amount_uzs: Number(e.target.value), amount_original: Number(e.target.value) } : d))}
                                  />
@@ -1305,5 +1452,131 @@ const TransactionDetailModal = ({ transaction, onClose }: { transaction: Transac
         </div>
       </div>
     </div>
+  );
+};
+
+// --- Employees View ---
+const EmployeesView = ({ employees, onAdd, transactions, onRefresh }: { employees: Employee[], onAdd: () => void, transactions: Transaction[], onRefresh: () => void }) => {
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">Xodimlar ro'yxati</h3>
+        <button onClick={onAdd} className="px-5 py-3 bg-indigo-600 text-white rounded-2xl font-bold flex items-center gap-2 shadow-lg shadow-indigo-100 hover:bg-indigo-700 transition-all text-sm">
+          <Plus size={18} /> Yangi xodim
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {employees.map(emp => {
+          const empTxs = transactions.filter(t => t.employee_id === emp.id);
+          const totalPaid = empTxs.reduce((sum, t) => sum + t.amount_uzs, 0);
+
+          return (
+            <div key={emp.id} className="bg-slate-50 border border-slate-200 rounded-[32px] p-6 hover:bg-white hover:shadow-xl hover:border-indigo-200 transition-all group">
+              <div className="flex items-center gap-4 mb-6">
+                <div className="p-4 bg-indigo-100 text-indigo-600 rounded-2xl group-hover:scale-110 transition-transform">
+                  <User size={24} />
+                </div>
+                <div>
+                  <h4 className="font-black text-slate-900">{emp.full_name}</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{emp.position || 'Lavozimsiz'}</p>
+                </div>
+              </div>
+
+              <div className="space-y-3 pt-6 border-t border-slate-200 border-dashed">
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-slate-400 uppercase">Tel:</span>
+                  <span className="text-xs font-bold text-slate-700">{emp.phone || '—'}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-slate-400 uppercase">Jami to'langan:</span>
+                  <span className="text-sm font-black text-indigo-600">{totalPaid.toLocaleString()} UZS</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-[10px] font-black text-slate-400 uppercase">Amallar:</span>
+                  <span className="text-xs font-bold text-slate-500">{empTxs.length} ta</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
+
+// --- Employee Modal ---
+const EmployeeModal = ({ onClose, onSuccess, employee }: { onClose: () => void, onSuccess: () => void, employee?: any }) => {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    full_name: employee?.full_name || '',
+    position: employee?.position || '',
+    phone: employee?.phone || ''
+  });
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    const toastId = toast.loading('Saqlanmoqda...');
+    
+    try {
+      if (employee?.id) {
+        const { error } = await supabase.from('accounting_employees').update(formData).eq('id', employee.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase.from('accounting_employees').insert([formData]);
+        if (error) throw error;
+      }
+      toast.success('Muvaffaqiyatli saqlandi', { id: toastId });
+      onSuccess();
+    } catch (error: any) {
+      toast.error('Xatolik: ' + error.message, { id: toastId });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <ModalWrapper title={employee?.id ? "Tahrirlash" : "Yangi xodim"} description="Xodim ma'lumotlarini kiriting" onClose={onClose}>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="space-y-4">
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">F.I.SH</label>
+            <input 
+              required
+              className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:bg-white focus:border-indigo-400 outline-none transition-all font-bold text-slate-700" 
+              placeholder="Eshmatov Toshmat"
+              value={formData.full_name}
+              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Lavozimi</label>
+            <input 
+              className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:bg-white focus:border-indigo-400 outline-none transition-all font-bold text-slate-700" 
+              placeholder="Haydovchi, Operator..."
+              value={formData.position}
+              onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Telefon</label>
+            <input 
+              className="w-full px-6 py-4 bg-slate-50 rounded-2xl border border-slate-200 focus:bg-white focus:border-indigo-400 outline-none transition-all font-bold text-slate-700" 
+              placeholder="+998 90 123 45 67"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+            />
+          </div>
+        </div>
+        <button 
+          type="submit" 
+          disabled={loading}
+          className="w-full py-5 bg-indigo-600 text-white rounded-[24px] font-black text-lg shadow-xl shadow-indigo-100 hover:bg-slate-900 transition-all disabled:opacity-50"
+        >
+          {loading ? 'SAQLANMOQDA...' : 'SAQLASH'}
+        </button>
+      </form>
+    </ModalWrapper>
   );
 };
