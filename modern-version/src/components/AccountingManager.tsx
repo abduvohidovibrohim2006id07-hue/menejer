@@ -963,115 +963,245 @@ const TransactionFormModal = ({ isOpen, onClose, onSuccess, partners, cashVaults
 
 const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, onSuccess: () => void, cards: Card[] }) => {
   const [loading, setLoading] = useState(false);
+  const [checkingDuplicates, setCheckingDuplicates] = useState(false);
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<any[]>([]);
+  const [importData, setImportData] = useState<any[]>([]);
+  const [view, setView] = useState<'upload' | 'review'>('upload');
+  const [existingHashes, setExistingHashes] = useState<Set<string>>(new Set());
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
     if (!selectedFile) return;
     setFile(selectedFile);
+    setCheckingDuplicates(true);
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const bstr = event.target?.result;
-      const XLSX = await import('xlsx');
-      const wb = XLSX.read(bstr, { type: 'binary' });
-      const wsname = wb.SheetNames[0];
-      const ws = wb.Sheets[wsname];
-      const data = XLSX.utils.sheet_to_json(ws, { header: 1 });
-      setPreview(data.slice(1, 6)); // Preview first 5 rows
-    };
-    reader.readAsBinaryString(selectedFile);
-  };
-
-  const handleImport = async () => {
-    if (!file) return;
-    setLoading(true);
-    const loadingToast = toast.loading("Excel fayl o'qilmoqda...");
-    
     try {
       const XLSX = await import('xlsx');
+      const reader = new FileReader();
+      
+      reader.onload = async (event) => {
+        const bstr = event.target?.result;
+        const wb = XLSX.read(bstr, { type: 'binary' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const data: any[] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+        const rows = data.slice(1);
 
-      // Faylni promise yordamida o'qish
-      const data = await new Promise<any[]>((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          const bstr = e.target?.result;
-          const wb = XLSX.read(bstr, { type: 'binary' });
-          const ws = wb.Sheets[wb.SheetNames[0]];
-          resolve(XLSX.utils.sheet_to_json(ws, { header: 1 }));
-        };
-        reader.onerror = (e) => reject(new Error("Faylni o'qishda xatolik"));
-        reader.readAsBinaryString(file);
-      });
-
-      const rows = data.slice(1);
-      const transactionsToInsert = rows.map((row: any) => {
-        const rawDate = row[0];
-        const rawTime = row[1];
-        let transactionDate = new Date().toISOString();
-        
-        if (rawDate && rawTime) {
-          const dStr = String(rawDate);
-          const parts = dStr.split(/[-.]/); // - yoki . bilan ajratilgan bo'lsa ham ishlaydi
-          if (parts.length === 3) {
-            // YYYY-MM-DD formatiga keltirish
-            transactionDate = `${parts[2]}-${parts[1]}-${parts[0]}T${rawTime}`;
+        const parsed = rows.map((row: any, index: number) => {
+          const rawDate = row[0];
+          const rawTime = row[1];
+          let transactionDate = new Date().toISOString();
+          
+          if (rawDate && rawTime) {
+            const dStr = String(rawDate);
+            const parts = dStr.split(/[-.]/);
+            if (parts.length === 3) {
+              transactionDate = `${parts[2]}-${parts[1]}-${parts[0]}T${rawTime}`;
+            }
           }
+
+          const type = String(row[2] || '');
+          const amount = Number(String(row[5] || '0').replace(/\s/g, ''));
+          const details = String(row[8] || '');
+          const cardNumRaw = String(row[9] || '');
+          
+          const matchedCard = cards.find(c => {
+            const cleanStored = c.card_number.replace(/\D/g, '');
+            const startStored = cleanStored.slice(0, 6);
+            const endStored = cleanStored.slice(-4);
+            return cardNumRaw.startsWith(startStored) && cardNumRaw.endsWith(endStored);
+          });
+
+          // Unikallik uchun hash yaratamiz (Sana + Summa + Tafsilot)
+          const hash = `${transactionDate}_${amount}_${details}`;
+
+          return {
+            id: `temp_${index}`,
+            transaction_date: transactionDate,
+            is_income: type.toLowerCase() === 'kirim',
+            amount_original: amount,
+            amount_uzs: amount,
+            currency: 'UZS',
+            exchange_rate: 1,
+            description: row[11] || row[3] || 'Payme Import',
+            payment_type: 'CARD' as const,
+            card_id: matchedCard?.id || null,
+            payme_category: String(row[6] || ''),
+            payme_receiver: String(row[7] || ''),
+            payme_details: details,
+            payme_status: String(row[13] || ''),
+            payme_service_point: String(row[14] || ''),
+            payme_terminal: String(row[15] || ''),
+            payme_provider_name: String(row[3] || ''),
+            payme_provider_org_name: String(row[4] || ''),
+            payme_receipt_type: String(row[12] || ''),
+            hash,
+            selected: true
+          };
+        }).filter(t => !isNaN(t.amount_original) && t.amount_original > 0);
+
+        // Bazadagi dublikatlarni tekshirish
+        const dateRange = parsed.reduce((acc, curr) => {
+           const d = new Date(curr.transaction_date);
+           if (!acc.min || d < acc.min) acc.min = d;
+           if (!acc.max || d > acc.max) acc.max = d;
+           return acc;
+        }, { min: null as Date | null, max: null as Date | null });
+
+        if (dateRange.min && dateRange.max) {
+           const { data: existing } = await supabase
+             .from('accounting_transactions')
+             .select('transaction_date, amount_uzs, payme_details')
+             .gte('transaction_date', dateRange.min.toISOString())
+             .lte('transaction_date', dateRange.max.toISOString());
+           
+           if (existing) {
+              const hashes = new Set(existing.map(t => `${t.transaction_date}_${t.amount_uzs}_${t.payme_details || ''}`));
+              setExistingHashes(hashes);
+           }
         }
 
-        const type = String(row[2] || '');
-        const amount = Number(String(row[5] || '0').replace(/\s/g, '')); // Probellarni olib tashlash
-        const cardNumRaw = String(row[9] || '');
-        
-        const matchedCard = cards.find(c => {
-          const cleanStored = c.card_number.replace(/\D/g, '');
-          const startStored = cleanStored.slice(0, 6);
-          const endStored = cleanStored.slice(-4);
-          return cardNumRaw.startsWith(startStored) && cardNumRaw.endsWith(endStored);
-        });
+        setImportData(parsed);
+        setCheckingDuplicates(false);
+        setView('review');
+      };
+      reader.readAsBinaryString(selectedFile);
+    } catch (err) {
+      toast.error("Faylni o'qishda xatolik");
+      setCheckingDuplicates(false);
+    }
+  };
 
-        return {
-          transaction_date: transactionDate,
-          is_income: type.toLowerCase() === 'kirim',
-          amount_original: amount,
-          amount_uzs: amount,
-          currency: 'UZS',
-          exchange_rate: 1,
-          description: row[11] || row[3] || 'Payme Import',
-          payment_type: 'CARD' as const,
-          card_id: matchedCard?.id || null,
-          payme_category: String(row[6] || ''),
-          payme_receiver: String(row[7] || ''),
-          payme_details: String(row[8] || ''),
-          payme_status: String(row[13] || ''),
-          payme_service_point: String(row[14] || ''),
-          payme_terminal: String(row[15] || ''),
-          payme_provider_name: String(row[3] || ''),
-          payme_provider_org_name: String(row[4] || ''),
-          payme_receipt_type: String(row[12] || '')
-        };
-      }).filter(t => !isNaN(t.amount_original) && t.amount_original > 0);
+  const handleFinalizeImport = async () => {
+    const toInsert = importData.filter(d => d.selected && !existingHashes.has(d.hash));
+    if (toInsert.length === 0) {
+      toast.error("Hech qanday yangi ma'lumot tanlanmadi");
+      return;
+    }
 
-      if (transactionsToInsert.length === 0) {
-        throw new Error("Import qilish uchun yaroqli ma'lumot topilmadi");
-      }
-
-      // Dublikatlarni shunchaki skip qilish (upsert ignore duplicates)
-      const { error } = await supabase.from('accounting_transactions').upsert(transactionsToInsert, { 
-         onConflict: 'transaction_date,amount_uzs,payme_details' 
+    setLoading(true);
+    const loadingToast = toast.loading("Saqlanmoqda...");
+    try {
+      const cleanData = toInsert.map(({ id, hash, selected, ...rest }) => rest);
+      const { error } = await supabase.from('accounting_transactions').upsert(cleanData, { 
+        onConflict: 'transaction_date,amount_uzs,payme_details' 
       });
-      
-      if (error && !error.message.includes('unique constraint')) throw error;
+      if (error) throw error;
 
-      toast.success(`${transactionsToInsert.length} ta amal muvaffaqiyatli import qilindi`, { id: loadingToast });
+      toast.success(`${cleanData.length} ta amal muvaffaqiyatli saqlandi`, { id: loadingToast });
       onSuccess();
     } catch (error: any) {
-      toast.error('Importda xato: ' + error.message, { id: loadingToast });
+      toast.error('Xatolik: ' + error.message, { id: loadingToast });
     } finally {
       setLoading(false);
     }
   };
+
+  if (view === 'review') {
+    return (
+      <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-xl animate-in fade-in duration-300">
+         <div className="bg-white w-full max-w-5xl rounded-[40px] shadow-2xl overflow-hidden flex flex-col h-[90vh]">
+            <div className="p-8 border-b bg-slate-50 flex justify-between items-center shrink-0">
+               <div>
+                  <h3 className="text-2xl font-black text-slate-900 flex items-center gap-3">
+                    👀 Ma'lumotlarni tekshirish 
+                    <span className="text-xs bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full font-black uppercase tracking-wider">
+                      {importData.length} ta amal
+                    </span>
+                  </h3>
+                  <p className="text-slate-500 font-bold text-sm">Siz saqlashdan avval tahrirlashingiz yoki dublikatlarni ko'rishingiz mumkin</p>
+               </div>
+               <button onClick={onClose} className="p-3 hover:bg-slate-200 rounded-2xl"><X size={24} /></button>
+            </div>
+
+            <div className="flex-1 overflow-auto p-4 md:p-8 custom-scrollbar">
+               <table className="w-full text-left border-separate border-spacing-y-2">
+                  <thead className="sticky top-0 bg-white z-10">
+                     <tr className="text-[10px] font-black uppercase tracking-widest text-slate-400">
+                        <th className="px-4 py-2"></th>
+                        <th className="px-4 py-2">Sana / Vaqt</th>
+                        <th className="px-4 py-2">Tavsif</th>
+                        <th className="px-4 py-2">Hamyon</th>
+                        <th className="px-4 py-2 text-right">Summa (UZS)</th>
+                     </tr>
+                  </thead>
+                  <tbody>
+                     {importData.map((item, idx) => {
+                        const isDuplicate = existingHashes.has(item.hash);
+                        return (
+                           <tr 
+                             key={item.id} 
+                             className={`group transition-all rounded-3xl ${item.selected ? (isDuplicate ? 'bg-rose-50 border-rose-200' : 'bg-slate-50 hover:bg-white hover:shadow-lg hover:border-indigo-200') : 'opacity-40 grayscale'} border-2 border-transparent`}
+                           >
+                              <td className="p-4 rounded-l-3xl w-10">
+                                 <button 
+                                   onClick={() => setImportData(importData.map(d => d.id === item.id ? { ...d, selected: !d.selected } : d))}
+                                   className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all ${item.selected ? (isDuplicate ? 'bg-rose-600 text-white' : 'bg-indigo-600 text-white') : 'bg-slate-200 text-transparent'}`}
+                                 >
+                                    <Plus size={14} className={item.selected ? 'rotate-45' : ''} />
+                                 </button>
+                              </td>
+                              <td className="p-4">
+                                 <p className="text-sm font-black text-slate-900">{new Date(item.transaction_date).toLocaleDateString()}</p>
+                                 <p className="text-[10px] text-slate-400 font-bold">{new Date(item.transaction_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                              </td>
+                              <td className="p-4 min-w-[200px]">
+                                 <input 
+                                   className="w-full bg-transparent border-none focus:ring-0 text-sm font-bold text-slate-700 placeholder:text-slate-300"
+                                   value={item.description}
+                                   onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, description: e.target.value } : d))}
+                                 />
+                                 <div className="flex gap-2">
+                                    <span className="text-[9px] font-black uppercase text-slate-400">{item.payme_category}</span>
+                                    {isDuplicate && <span className="text-[9px] font-black uppercase text-rose-500">⚠️ BAZADA MAVJUD</span>}
+                                 </div>
+                              </td>
+                              <td className="p-4">
+                                 <div className="p-2 bg-white rounded-xl border border-slate-100 flex items-center justify-center">
+                                    <CreditCard size={14} className="text-indigo-500" />
+                                 </div>
+                              </td>
+                              <td className="p-4 text-right rounded-r-3xl">
+                                 <input 
+                                   type="number"
+                                   className={`w-32 text-right bg-transparent border-none focus:ring-0 font-black ${item.is_income ? 'text-emerald-600' : 'text-rose-600'}`}
+                                   value={item.amount_uzs}
+                                   onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, amount_uzs: Number(e.target.value), amount_original: Number(e.target.value) } : d))}
+                                 />
+                              </td>
+                           </tr>
+                        );
+                     })}
+                  </tbody>
+               </table>
+            </div>
+
+            <div className="p-8 bg-slate-50 border-t flex items-center justify-between shrink-0">
+               <button 
+                 onClick={() => setView('upload')}
+                 className="px-8 py-4 text-slate-500 font-black text-sm uppercase tracking-widest hover:text-slate-900 transition-colors"
+               >
+                 ⬅️ Ortga qaytish
+               </button>
+               <div className="flex gap-4">
+                  <div className="hidden md:flex flex-col items-end justify-center mr-4">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Jami saqlanadi:</p>
+                     <p className="text-xl font-black text-indigo-600">
+                        {importData.filter(d => d.selected && !existingHashes.has(d.hash)).length} ta amal
+                     </p>
+                  </div>
+                  <button 
+                    disabled={loading}
+                    onClick={handleFinalizeImport}
+                    className="px-12 py-5 bg-indigo-600 text-white rounded-[24px] font-black text-lg shadow-2xl shadow-indigo-200 hover:bg-slate-900 transition-all flex items-center gap-2"
+                  >
+                    {loading ? 'SAQLANMOQDA...' : <>TASDIQLASH VA SAQLASH ✅</>}
+                  </button>
+               </div>
+            </div>
+         </div>
+      </div>
+    );
+  }
 
   return (
     <ModalWrapper title="Payme Excel Import" description="Payme-dan eksport qilingan faylni tanlang" onClose={onClose}>
@@ -1079,42 +1209,19 @@ const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, 
         <label className="block p-10 border-4 border-dashed border-emerald-100 rounded-[32px] bg-emerald-50/30 text-center cursor-pointer hover:border-emerald-300 transition-all group">
           <input type="file" accept=".xlsx, .xls" className="hidden" onChange={handleFileChange} />
           <div className="flex flex-col items-center gap-4">
-             <div className="p-4 bg-emerald-100 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform"><Briefcase size={32} /></div>
+             <div className="p-4 bg-emerald-100 text-emerald-600 rounded-2xl group-hover:scale-110 transition-transform">
+               {checkingDuplicates ? <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin"></div> : <Briefcase size={32} />}
+             </div>
              <div>
-                <p className="text-emerald-700 font-black text-lg">{file ? file.name : 'Faylni tanlang'}</p>
+                <p className="text-emerald-700 font-black text-lg">{checkingDuplicates ? 'Dublikatlar tekshirilmoqda...' : (file ? file.name : 'Faylni tanlang')}</p>
                 <p className="text-emerald-500 text-sm font-bold">Yoki bu yerga tashlang</p>
              </div>
           </div>
         </label>
 
-        {preview.length > 0 && (
-          <div className="space-y-3">
-             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Dastlabki 5 qator</p>
-             <div className="bg-slate-50 border border-slate-200 rounded-2xl overflow-hidden text-[9px] font-bold p-3 overflow-x-auto no-scrollbar max-h-40">
-                <table className="w-full">
-                  <tbody>
-                    {preview.map((row, i) => (
-                      <tr key={i} className="border-b border-slate-200 last:border-0">
-                        {row.slice(0, 5).map((cell: any, j: number) => <td key={j} className="py-1 pr-4 text-slate-600 truncate max-w-[100px]">{String(cell)}</td>)}
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-             </div>
-          </div>
-        )}
-
         <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-          <p className="text-[10px] text-amber-700 font-bold">⚠️ DIQQAT: Excel fayldagi karta raqamlari tizimdagi kartalar bilan 6 ta bosh va 4 ta oxirgi raqamlar bo'yicha moslashtiriladi.</p>
+          <p className="text-[10px] text-amber-700 font-bold">⚠️ DIQQAT: Keyingi bosqichda ma'lumotlarni tahrirlashingiz mumkin bo'ladi.</p>
         </div>
-
-        <button 
-          onClick={handleImport}
-          disabled={!file || loading}
-          className="w-full py-5 bg-emerald-600 text-white rounded-[24px] font-black text-lg shadow-xl shadow-emerald-100 flex items-center justify-center gap-2 hover:bg-emerald-700 transition-all disabled:opacity-50"
-        >
-          {loading ? 'Yozilmoqda...' : <><Download size={24} /> IMPORT QILISH</>}
-        </button>
       </div>
     </ModalWrapper>
   );
