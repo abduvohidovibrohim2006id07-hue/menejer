@@ -1150,9 +1150,11 @@ const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, 
                                    value={item.description}
                                    onChange={(e) => setImportData(importData.map(d => d.id === item.id ? { ...d, description: e.target.value } : d))}
                                  />
-                                 <div className="flex gap-2">
-                                    <span className="text-[9px] font-black uppercase text-slate-400">{item.payme_category}</span>
-                                    {isDuplicate && <span className="text-[9px] font-black uppercase text-rose-500">⚠️ BAZADA MAVJUD</span>}
+                                 <div className="flex flex-wrap gap-1 mt-1">
+                                    {item.payme_category && <span className="text-[8px] font-black uppercase bg-slate-100 text-slate-400 px-1 rounded">{item.payme_category}</span>}
+                                    {item.payme_terminal && <span className="text-[8px] font-black uppercase bg-emerald-50 text-emerald-500 px-1 rounded">Term: {item.payme_terminal}</span>}
+                                    {item.payme_receipt_type && <span className="text-[8px] font-black uppercase bg-indigo-50 text-indigo-400 px-1 rounded">{item.payme_receipt_type}</span>}
+                                    {isDuplicate && <span className="text-[8px] font-black uppercase bg-rose-50 text-rose-500 px-1 rounded animate-pulse">⚠️ ALOHIDA O'CHIRILGAN YOKI BAZADA BOR</span>}
                                  </div>
                               </td>
                               <td className="p-4">
