@@ -955,70 +955,83 @@ const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, 
   const handleImport = async () => {
     if (!file) return;
     setLoading(true);
+    const loadingToast = toast.loading("Excel fayl o'qilmoqda...");
+    
     try {
-      const reader = new FileReader();
       const XLSX = await import('xlsx');
-      reader.onload = async (event) => {
-        const bstr = event.target?.result;
-        const wb = XLSX.read(bstr, { type: 'binary' });
-        const data: any[] = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1 });
-        const rows = data.slice(1);
 
-        const transactionsToInsert = rows.map((row: any) => {
-          const rawDate = row[0]; // 27-03-2026
-          const rawTime = row[1]; // 15:06:21
-          let transactionDate = new Date().toISOString();
-          if (rawDate && rawTime) {
-             let dStr = String(rawDate);
-             if (dStr.includes('-')) {
-               const parts = dStr.split('-');
-               if (parts.length === 3) {
-                 transactionDate = `${parts[2]}-${parts[1]}-${parts[0]}T${rawTime}`;
-               }
-             }
+      // Faylni promise yordamida o'qish
+      const data = await new Promise<any[]>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const bstr = e.target?.result;
+          const wb = XLSX.read(bstr, { type: 'binary' });
+          const ws = wb.Sheets[wb.SheetNames[0]];
+          resolve(XLSX.utils.sheet_to_json(ws, { header: 1 }));
+        };
+        reader.onerror = (e) => reject(new Error("Faylni o'qishda xatolik"));
+        reader.readAsBinaryString(file);
+      });
+
+      const rows = data.slice(1);
+      const transactionsToInsert = rows.map((row: any) => {
+        const rawDate = row[0];
+        const rawTime = row[1];
+        let transactionDate = new Date().toISOString();
+        
+        if (rawDate && rawTime) {
+          const dStr = String(rawDate);
+          const parts = dStr.split(/[-.]/); // - yoki . bilan ajratilgan bo'lsa ham ishlaydi
+          if (parts.length === 3) {
+            // YYYY-MM-DD formatiga keltirish
+            transactionDate = `${parts[2]}-${parts[1]}-${parts[0]}T${rawTime}`;
           }
+        }
 
-          const type = row[2]; // Chiqim/Kirim
-          const amount = Number(row[5]);
-          const cardNumRaw = String(row[9] || ''); // 561468******1324
-          
-          const matchedCard = cards.find(c => {
-             const cleanStored = c.card_number.replace(/\D/g, '');
-             const startStored = cleanStored.slice(0, 6);
-             const endStored = cleanStored.slice(-4);
-             return cardNumRaw.startsWith(startStored) && cardNumRaw.endsWith(endStored);
-          });
+        const type = String(row[2] || '');
+        const amount = Number(String(row[5] || '0').replace(/\s/g, '')); // Probellarni olib tashlash
+        const cardNumRaw = String(row[9] || '');
+        
+        const matchedCard = cards.find(c => {
+          const cleanStored = c.card_number.replace(/\D/g, '');
+          const startStored = cleanStored.slice(0, 6);
+          const endStored = cleanStored.slice(-4);
+          return cardNumRaw.startsWith(startStored) && cardNumRaw.endsWith(endStored);
+        });
 
-          return {
-            transaction_date: transactionDate,
-            is_income: type === 'Kirim',
-            amount_original: amount,
-            amount_uzs: amount,
-            currency: 'UZS',
-            exchange_rate: 1,
-            description: row[11] || row[3] || 'Payme Import',
-            payment_type: 'CARD',
-            card_id: matchedCard?.id || null,
-            payme_category: String(row[6] || ''),
-            payme_receiver: String(row[7] || ''),
-            payme_details: String(row[8] || ''),
-            payme_status: String(row[13] || ''),
-            payme_service_point: String(row[14] || ''),
-            payme_terminal: String(row[15] || ''),
-            payme_provider_name: String(row[3] || ''),
-            payme_provider_org_name: String(row[4] || ''),
-            payme_receipt_type: String(row[12] || '')
-          };
-        }).filter(t => t.amount_original > 0);
+        return {
+          transaction_date: transactionDate,
+          is_income: type.toLowerCase() === 'kirim',
+          amount_original: amount,
+          amount_uzs: amount,
+          currency: 'UZS',
+          exchange_rate: 1,
+          description: row[11] || row[3] || 'Payme Import',
+          payment_type: 'CARD' as const,
+          card_id: matchedCard?.id || null,
+          payme_category: String(row[6] || ''),
+          payme_receiver: String(row[7] || ''),
+          payme_details: String(row[8] || ''),
+          payme_status: String(row[13] || ''),
+          payme_service_point: String(row[14] || ''),
+          payme_terminal: String(row[15] || ''),
+          payme_provider_name: String(row[3] || ''),
+          payme_provider_org_name: String(row[4] || ''),
+          payme_receipt_type: String(row[12] || '')
+        };
+      }).filter(t => !isNaN(t.amount_original) && t.amount_original > 0);
 
-        const { error } = await supabase.from('accounting_transactions').insert(transactionsToInsert);
-        if (error) throw error;
-        toast.success(`${transactionsToInsert.length} ta amal muvaffaqiyatli import qilindi`);
-        onSuccess();
-      };
-      reader.readAsBinaryString(file);
+      if (transactionsToInsert.length === 0) {
+        throw new Error("Import qilish uchun yaroqli ma'lumot topilmadi");
+      }
+
+      const { error } = await supabase.from('accounting_transactions').insert(transactionsToInsert);
+      if (error) throw error;
+
+      toast.success(`${transactionsToInsert.length} ta amal muvaffaqiyatli import qilindi`, { id: loadingToast });
+      onSuccess();
     } catch (error: any) {
-      toast.error('Importda xato: ' + error.message);
+      toast.error('Importda xato: ' + error.message, { id: loadingToast });
     } finally {
       setLoading(false);
     }
