@@ -92,6 +92,11 @@ interface Transaction {
   payme_category?: string;
   payme_terminal?: string;
   payme_status?: string;
+  payme_provider_name?: string;
+  payme_provider_org_name?: string;
+  payme_receiver?: string;
+  payme_receipt_type?: string;
+  payme_details?: string;
 }
 
 export const AccountingManager = () => {
@@ -109,6 +114,7 @@ export const AccountingManager = () => {
   // Modal States
   const [modalType, setModalType] = useState<'TRANSACTION' | 'BANK_ACCOUNT' | 'CARD' | 'CASH_VAULT' | 'PARTNER' | 'ENTITY' | 'PAYME_IMPORT' | null>(null);
   const [editItem, setEditItem] = useState<any>(null);
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -255,7 +261,14 @@ export const AccountingManager = () => {
           ) : (
             <>
               {activeSubTab === 'overview' && <OverviewView transactions={transactions} partners={partners} />}
-              {activeSubTab === 'transactions' && <TransactionsView transactions={transactions} onRefresh={fetchData} onDelete={(id) => handleDelete('accounting_transactions', id)} />}
+              {activeSubTab === 'transactions' && (
+                <TransactionsView 
+                  transactions={transactions} 
+                  onRefresh={fetchData} 
+                  onDelete={(id) => handleDelete('accounting_transactions', id)} 
+                  onSelect={(tx) => setSelectedTransaction(tx)}
+                />
+              )}
               {activeSubTab === 'wallets' && (
                 <WalletsView 
                   bankAccounts={bankAccounts} 
@@ -354,6 +367,13 @@ export const AccountingManager = () => {
           cards={cards}
         />
       )}
+
+      {selectedTransaction && (
+        <TransactionDetailModal 
+          transaction={selectedTransaction} 
+          onClose={() => setSelectedTransaction(null)} 
+        />
+      )}
     </div>
   );
 };
@@ -420,7 +440,7 @@ const OverviewView = ({ transactions, partners }: { transactions: Transaction[],
   </div>
 );
 
-const TransactionsView = ({ transactions, onDelete }: { transactions: Transaction[], onRefresh: () => void, onDelete: (id: string) => void }) => (
+const TransactionsView = ({ transactions, onSelect, onDelete }: { transactions: Transaction[], onRefresh: () => void, onSelect: (tx: Transaction) => void, onDelete: (id: string) => void }) => (
   <div className="overflow-x-auto">
     <table className="w-full text-left">
       <thead>
@@ -435,7 +455,11 @@ const TransactionsView = ({ transactions, onDelete }: { transactions: Transactio
       </thead>
       <tbody className="divide-y divide-slate-50">
         {transactions.map((tx) => (
-          <tr key={tx.id} className="group hover:bg-slate-50/50 transition-all">
+          <tr 
+            key={tx.id} 
+            onClick={() => onSelect(tx)}
+            className="group hover:bg-slate-50 transition-all cursor-pointer"
+          >
             <td className="py-5 px-4 font-bold text-slate-900 text-sm">
               {new Date(tx.transaction_date).toLocaleDateString()}
               <p className="text-[10px] text-slate-400 font-medium">{new Date(tx.transaction_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
@@ -1089,5 +1113,84 @@ const PaymeImportModal = ({ onClose, onSuccess, cards }: { onClose: () => void, 
         </button>
       </div>
     </ModalWrapper>
+  );
+};
+
+// --- Transaction Detail Modal ---
+
+const TransactionDetailModal = ({ transaction, onClose }: { transaction: Transaction, onClose: () => void }) => {
+  const detailGroups = [
+    {
+      title: "Asosiy ma'lumotlar",
+      items: [
+        { label: "Sana va Vaqt", value: new Date(transaction.transaction_date).toLocaleString(), icon: Calendar },
+        { label: "Turi", value: transaction.is_income ? "Kirim" : "Chiqim", color: transaction.is_income ? "text-emerald-600" : "text-rose-600", icon: TrendingUp },
+        { label: "Miqdor", value: `${transaction.amount_uzs.toLocaleString()} UZS`, icon: DollarSign, bold: true },
+        { label: "Tavsif", value: transaction.description || "—", icon: History },
+      ]
+    },
+    {
+      title: "Payme Tafsilotlari",
+      icon: CreditCard,
+      items: [
+        { label: "Kategoriya", value: transaction.payme_category, icon: PieChart },
+        { label: "Terminal ID", value: transaction.payme_terminal, icon: Target },
+        { label: "Holati", value: transaction.payme_status, icon: Settings },
+        { label: "Xizmat ko'rsatuvchi", value: transaction.payme_provider_name, icon: Building2 },
+        { label: "Tashkilot", value: transaction.payme_provider_org_name, icon: Briefcase },
+        { label: "Qabul qiluvchi", value: transaction.payme_receiver, icon: Users },
+        { label: "Chek turi", value: transaction.payme_receipt_type, icon: History },
+        { label: "Batafsil ma'lumot", value: transaction.payme_details, icon: Search },
+      ]
+    }
+  ];
+
+  return (
+    <div className="fixed inset-0 z-[110] flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-md animate-in fade-in duration-300">
+      <div className="bg-white w-full max-w-2xl rounded-[40px] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="p-8 border-b bg-gradient-to-r from-slate-50 to-white flex justify-between items-center">
+          <div>
+            <h3 className="text-2xl font-black text-slate-900">Amal tafsilotlari</h3>
+            <p className="text-slate-500 font-bold text-sm tracking-tight">ID: {transaction.id}</p>
+          </div>
+          <button onClick={onClose} className="p-3 hover:bg-slate-100 rounded-2xl transition-colors"><X size={24} className="text-slate-400" /></button>
+        </div>
+        <div className="p-8 max-h-[70vh] overflow-y-auto space-y-10 custom-scrollbar">
+           {detailGroups.map((group, idx) => {
+             const hasData = group.items.some(item => item.value);
+             if (!hasData) return null;
+
+             return (
+               <div key={idx} className="space-y-4">
+                 <div className="flex items-center gap-2 px-2">
+                    {group.icon && <group.icon size={16} className="text-indigo-600" />}
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400">{group.title}</h4>
+                 </div>
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {group.items.filter(item => item.value).map((item: any, i) => (
+                      <div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100 hover:bg-white hover:border-indigo-100 transition-all">
+                        <div className="flex items-center gap-3 mb-2">
+                           <div className="p-1.5 bg-white rounded-lg text-slate-400">
+                             {item.icon && <item.icon size={14} />}
+                           </div>
+                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{item.label}</p>
+                        </div>
+                        <p className={`text-sm font-bold text-slate-900 break-words ${item.color || ""} ${item.bold ? "text-lg font-black" : ""}`}>
+                          {item.value}
+                        </p>
+                      </div>
+                    ))}
+                 </div>
+               </div>
+             );
+           })}
+        </div>
+        <div className="p-8 bg-slate-50 border-t border-slate-100 flex justify-end">
+           <button onClick={onClose} className="px-10 py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-lg hover:bg-indigo-700 transition-all">
+              Yopish
+           </button>
+        </div>
+      </div>
+    </div>
   );
 };
