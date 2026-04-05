@@ -75,14 +75,23 @@ export const POST = withGateway(async (req) => {
     if (duplicate) status = 'quarantine';
   }
 
+  const toUpsert: any = {
+    id: id.toString(),
+    ...rest,
+    status,
+    updated_at: new Date().toISOString(),
+  };
+
+  // Convert empty unique fields to null to prevent uniqueness constraint violations (multiple '' strings)
+  ['barcode', 'sku_uzum', 'sku_yandex'].forEach(key => {
+    if (toUpsert[key] === '') {
+      toUpsert[key] = null;
+    }
+  });
+
   const { error } = await supabase
     .from('products')
-    .upsert({
-      id: id.toString(),
-      ...rest,
-      status,
-      updated_at: new Date().toISOString(),
-    });
+    .upsert(toUpsert);
 
   if (error) throw { message: error.message, status: 500 };
 

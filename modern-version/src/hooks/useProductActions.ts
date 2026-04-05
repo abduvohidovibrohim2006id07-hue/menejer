@@ -64,6 +64,9 @@ export const useProductActions = (allProducts: any[], mutateProducts: any, mutat
       const clone = { 
         ...product, 
         id: nextId,
+        barcode: '',
+        sku_uzum: '',
+        sku_yandex: '',
         updated_at: new Date().toISOString()
       };
       
