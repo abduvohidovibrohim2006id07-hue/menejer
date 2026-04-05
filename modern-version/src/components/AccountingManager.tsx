@@ -883,11 +883,13 @@ const CashVaultModal = ({ onClose, onSuccess, editItem }: any) => {
   );
 };
 
-const TransactionFormModal = ({ isOpen, onClose, onSuccess, partners, cashVaults, cards, bankAccounts }: any) => {
+const TransactionFormModal = ({ onClose, onSuccess, partners, cashVaults, cards, bankAccounts, employees }: any) => {
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     description: '', amount_original: '', currency: 'UZS', exchange_rate: 12850, is_income: false,
-    payment_type: 'CASH', partner_id: '', source_id: '', transaction_date: new Date().toISOString().split('T')[0]
+    payment_type: 'CASH', partner_id: '', source_id: '', transaction_date: new Date().toISOString().split('T')[0],
+    expense_type: '', product_name: '', supplier_name: '', employee_id: '', 
+    logistics_from: '', logistics_to: '', ad_platform: '', expense_reason: ''
   });
 
   const handleSubmit = async (e: any) => {
@@ -900,7 +902,15 @@ const TransactionFormModal = ({ isOpen, onClose, onSuccess, partners, cashVaults
       payment_type: formData.payment_type, partner_id: formData.partner_id || null, transaction_date: formData.transaction_date,
       cash_vault_id: formData.payment_type === 'CASH' ? formData.source_id : null,
       card_id: formData.payment_type === 'CARD' ? formData.source_id : null,
-      bank_account_id: formData.payment_type === 'BANK' ? formData.source_id : null
+      bank_account_id: formData.payment_type === 'BANK' ? formData.source_id : null,
+      expense_type: formData.expense_type || null,
+      product_name: formData.product_name,
+      supplier_name: formData.supplier_name,
+      employee_id: formData.employee_id || null,
+      logistics_from: formData.logistics_from,
+      logistics_to: formData.logistics_to,
+      ad_platform: formData.ad_platform,
+      expense_reason: formData.expense_reason
     };
 
     const { error } = await supabase.from('accounting_transactions').insert([data]);
@@ -977,17 +987,93 @@ const TransactionFormModal = ({ isOpen, onClose, onSuccess, partners, cashVaults
             )}
           </div>
 
-          {formData.payment_type !== 'DEBT' && (
-            <div className="space-y-2">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Hamkor (Ixtiyoriy)</p>
-              <select 
-                className="w-full px-6 py-4 bg-slate-50 border border-slate-200 rounded-2xl font-bold text-slate-900 outline-none focus:bg-white focus:border-indigo-500 transition-all" 
-                value={formData.partner_id} 
-                onChange={(e) => setFormData({...formData, partner_id: e.target.value})}
-              >
-                <option value="">Kontragent (Ixtiyoriy)</option>
-                {partners.map((p: any) => <option key={p.id} value={p.id}>{p.name}</option>)}
-              </select>
+          {!formData.is_income && (
+            <div className="space-y-4 pt-4 border-t border-slate-100">
+               <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-2">Xarajat turi</p>
+               <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  {[
+                    { id: 'PRODUCT', label: 'Mahsulot', icon: Briefcase },
+                    { id: 'EMPLOYEE', label: 'Xodim', icon: Users },
+                    { id: 'LOGISTICS', label: 'Logistika', icon: ArrowRightLeft },
+                    { id: 'FUEL', label: 'Yoqilg\'i', icon: Target },
+                    { id: 'AD', label: 'Reklama', icon: PieChart },
+                    { id: 'OTHER', label: 'Boshqa', icon: Settings },
+                  ].map(type => (
+                    <button
+                      key={type.id}
+                      type="button"
+                      onClick={() => setFormData({ ...formData, expense_type: type.id })}
+                      className={`p-3 rounded-2xl text-xs font-bold border transition-all flex flex-col items-center gap-2 ${formData.expense_type === type.id ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg' : 'bg-slate-50 border-slate-200 text-slate-500 hover:border-indigo-300'}`}
+                    >
+                      <type.icon size={18} /> {type.label}
+                    </button>
+                  ))}
+               </div>
+
+               {/* Dynamic Expense Fields */}
+               <div className="animate-in fade-in slide-in-from-top-2 duration-300">
+                 {formData.expense_type === 'PRODUCT' && (
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                     <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Mahsulot nomi *</label>
+                        <input required className="w-full px-6 py-3 bg-slate-50 rounded-xl border border-slate-200" placeholder="Olma..." value={formData.product_name} onChange={e=>setFormData({...formData, product_name:e.target.value})} />
+                     </div>
+                     <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Kimdan olindi *</label>
+                        <input required className="w-full px-6 py-3 bg-slate-50 rounded-xl border border-slate-200" placeholder="Fermer..." value={formData.supplier_name} onChange={e=>setFormData({...formData, supplier_name:e.target.value})} />
+                     </div>
+                   </div>
+                 )}
+                 {formData.expense_type === 'EMPLOYEE' && (
+                   <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Xodimni tanlang *</label>
+                      <select required className="w-full px-6 py-3 bg-slate-50 rounded-xl border border-slate-200" value={formData.employee_id} onChange={e=>setFormData({...formData, employee_id:e.target.value})}>
+                        <option value="">Tanlang...</option>
+                        {employees.map((e:any) => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                      </select>
+                   </div>
+                 )}
+                 {formData.expense_type === 'LOGISTICS' && (
+                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Qayerdan *</label>
+                        <input required className="w-full px-6 py-3 bg-slate-50 rounded-xl border border-slate-200" value={formData.logistics_from} onChange={e=>setFormData({...formData, logistics_from:e.target.value})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Qayerga *</label>
+                        <input required className="w-full px-6 py-3 bg-slate-50 rounded-xl border border-slate-200" value={formData.logistics_to} onChange={e=>setFormData({...formData, logistics_to:e.target.value})} />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Haydovchi *</label>
+                        <select required className="w-full px-6 py-3 bg-slate-50 rounded-xl border border-slate-200" value={formData.employee_id} onChange={e=>setFormData({...formData, employee_id:e.target.value})}>
+                          <option value="">Tanlang...</option>
+                          {employees.map((e:any) => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                        </select>
+                      </div>
+                   </div>
+                 )}
+                 {formData.expense_type === 'FUEL' && (
+                   <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Kimga quyildi *</label>
+                      <select required className="w-full px-6 py-3 bg-slate-50 rounded-xl border border-slate-200" value={formData.employee_id} onChange={e=>setFormData({...formData, employee_id:e.target.value})}>
+                        <option value="">Tanlang...</option>
+                        {employees.map((e:any) => <option key={e.id} value={e.id}>{e.full_name}</option>)}
+                      </select>
+                   </div>
+                 )}
+                 {formData.expense_type === 'AD' && (
+                   <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Platforma *</label>
+                      <input required className="w-full px-6 py-3 bg-slate-50 rounded-xl border border-slate-200" placeholder="Facebook, Google..." value={formData.ad_platform} onChange={e=>setFormData({...formData, ad_platform:e.target.value})} />
+                   </div>
+                 )}
+                 {formData.expense_type === 'OTHER' && (
+                   <div className="space-y-1">
+                      <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">Sababi *</label>
+                      <input required className="w-full px-6 py-3 bg-slate-50 rounded-xl border border-slate-200" value={formData.expense_reason} onChange={e=>setFormData({...formData, expense_reason:e.target.value})} />
+                   </div>
+                 )}
+               </div>
             </div>
           )}
           <button disabled={loading} className="w-full py-5 bg-indigo-600 text-white rounded-[24px] font-black text-lg shadow-xl shadow-indigo-100 flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all">
