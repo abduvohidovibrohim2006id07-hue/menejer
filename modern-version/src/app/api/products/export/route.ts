@@ -12,7 +12,14 @@ export const GET = withGateway(async (req) => {
   if (idsParam) {
     const idList = idsParam.split(',').filter(id => id.trim() !== '');
     if (idList.length > 0) {
-      allProducts = allProducts.filter((p: any) => idList.includes(p.id));
+      const regularIds = idList.filter(id => !id.startsWith('group-'));
+      const groupSkus = idList.filter(id => id.startsWith('group-')).map(id => id.replace('group-', ''));
+
+      allProducts = allProducts.filter((p: any) => {
+        const isRegularMatch = regularIds.includes(p.id.toString());
+        const isGroupMatch = p.group_sku && groupSkus.includes(p.group_sku);
+        return isRegularMatch || isGroupMatch;
+      });
     }
   }
 
@@ -34,7 +41,11 @@ export const GET = withGateway(async (req) => {
 
     return {
       'ID': data.id,
+      'Group SKU': data.group_sku || '',
       'SKU': data.sku || '',
+      'SKU Uzum': data.sku_uzum || '',
+      'SKU Yandex': data.sku_yandex || '',
+      'Barcode': data.barcode || '',
       'Kategoriya': data.category || '',
       'Brend': data.brand || '',
       'Model': data.model || '',
@@ -65,7 +76,11 @@ export const GET = withGateway(async (req) => {
   // Ustunlar kengligini o'rnatish (Column widths)
   worksheet['!cols'] = [
     { wch: 15 }, // ID
+    { wch: 15 }, // Group SKU
     { wch: 15 }, // SKU
+    { wch: 15 }, // SKU Uzum
+    { wch: 15 }, // SKU Yandex
+    { wch: 15 }, // Barcode
     { wch: 20 }, // Kategoriya
     { wch: 15 }, // Brend
     { wch: 15 }, // Model
