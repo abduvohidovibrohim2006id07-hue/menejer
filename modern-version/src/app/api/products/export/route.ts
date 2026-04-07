@@ -23,7 +23,7 @@ export const GET = withGateway(async (req) => {
     }
   }
 
-  const products = allProducts.map((data: any) => {
+  const rows = allProducts.map((data: any) => {
     const allMedia = (data.local_images || []) as string[];
     
     // Ajratish: Rasmlar va Videolar
@@ -39,48 +39,57 @@ export const GET = withGateway(async (req) => {
       .map((c: any) => `${c.shopName || 'Noma\'lum'}: ${c.url || '-'}`)
       .join('\n');
 
-    return {
-      'ID': data.id,
-      'Group SKU': data.group_sku || '',
-      'SKU': data.sku || '',
-      'SKU Uzum': data.sku_uzum || '',
-      'SKU Yandex': data.sku_yandex || '',
-      'Barcode': data.barcode || '',
-      'Kategoriya': data.category || '',
-      'Brend': data.brand || '',
-      'Model': data.model || '',
-      'Rang': data.color || '',
-      'Nomi': data.name || '',
-      'Nomi RU': data.name_ru || '',
-      'Narx': Number(data.price) || 0,
-      'Chakana Narx': Number(data.price_retail) || 0,
-      'Status': data.status || 'active',
-      'Sotuv bozorlari': (data.marketplaces || []).join(', '),
-      'Rasm havolalari': images,
-      'Video havolalari': videos,
-      'Qisqa Tavsif': data.description_short || '',
-      'To\'liq Tavsif': data.description_full || '',
-      'Qisqa Tavsif RU': data.description_short_ru || '',
-      'To\'liq Tavsif RU': data.description_full_ru || '',
-      'Uzunligi (mm)': Number(data.length_mm) || 0,
-      'Kengligi (mm)': Number(data.width_mm) || 0,
-      'Balandligi (mm)': Number(data.height_mm) || 0,
-      'Vazni (gr)': Number(data.weight_g) || 0,
-      'Raqobatchilar': competitorsText,
-      'Updated At': data.updated_at || '',
-    };
+    return [
+      data.id,
+      data.group_sku || '',
+      data.sku || '',
+      data.sku_uzum || '',
+      data.sku_yandex || '',
+      data.barcode ? String(data.barcode) : '',
+      data.category || '',
+      data.brand || '',
+      data.model || '',
+      data.color || '',
+      data.name || '',
+      data.name_ru || '',
+      Number(data.price) || 0,
+      Number(data.price_retail) || 0,
+      data.status || 'active',
+      (data.marketplaces || []).join(', '),
+      images,
+      videos,
+      data.description_short || '',
+      data.description_full || '',
+      data.description_short_ru || '',
+      data.description_full_ru || '',
+      Number(data.length_mm) || 0,
+      Number(data.width_mm) || 0,
+      Number(data.height_mm) || 0,
+      Number(data.weight_g) || 0,
+      competitorsText,
+      data.updated_at || '',
+    ];
   });
 
-  const worksheet = XLSX.utils.json_to_sheet(products);
+  const headers = [
+    'ID', 'Guruh SKU', 'SKU', 'SKU Uzum', 'SKU Yandex', 'Shtrixkod', 
+    'Kategoriya', 'Brend', 'Model', 'Rang', 'Nomi', 'Nomi RU', 
+    'Narx', 'Chakana Narx', 'Status', 'Sotuv bozorlari', 
+    'Rasm havolalari', 'Video havolasi', 'Qisqa Tavsif', 'To\'liq Tavsif', 
+    'Qisqa Tavsif RU', 'To\'liq Tavsif RU', 'Uzunligi (mm)', 'Kengligi (mm)', 
+    'Balandligi (mm)', 'Vazni (gr)', 'Raqobatchilar', 'Yangilangan sana'
+  ];
+
+  const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
 
   // Ustunlar kengligini o'rnatish (Column widths)
   worksheet['!cols'] = [
     { wch: 15 }, // ID
-    { wch: 15 }, // Group SKU
+    { wch: 15 }, // Guruh SKU
     { wch: 15 }, // SKU
     { wch: 15 }, // SKU Uzum
     { wch: 15 }, // SKU Yandex
-    { wch: 15 }, // Barcode
+    { wch: 15 }, // Shtrixkod
     { wch: 20 }, // Kategoriya
     { wch: 15 }, // Brend
     { wch: 15 }, // Model
@@ -92,7 +101,7 @@ export const GET = withGateway(async (req) => {
     { wch: 12 }, // Status
     { wch: 25 }, // Sotuv bozorlari
     { wch: 50 }, // Rasm havolalari
-    { wch: 50 }, // Video havolalari
+    { wch: 50 }, // Video havolasi
     { wch: 50 }, // Qisqa Tavsif
     { wch: 50 }, // To'liq Tavsif
     { wch: 50 }, // Qisqa Tavsif RU
@@ -102,8 +111,9 @@ export const GET = withGateway(async (req) => {
     { wch: 12 }, // Balandligi
     { wch: 12 }, // Vazni
     { wch: 40 }, // Raqobatchilar
-    { wch: 25 }, // Updated At
+    { wch: 25 }, // Yangilangan sana
   ];
+
 
   // Auto-filter qo'shish
   const range = XLSX.utils.decode_range(worksheet['!ref'] || 'A1');
