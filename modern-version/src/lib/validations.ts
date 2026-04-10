@@ -14,7 +14,7 @@ export const productSchema = z.object({
   description_full: z.string().nullable().optional(),
   description_full_ru: z.string().nullable().optional(),
   local_images: z.array(z.string()).optional().default([]),
-  sku: z.string().nullable().optional(),
+
   status: z.enum(['active', 'quarantine', 'archive']).optional().default('active'),
   marketplaces: z.array(z.string()).optional().default([]),
   price_retail: z.any().nullable().optional(),

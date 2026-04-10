@@ -125,7 +125,6 @@ export const POST = withGateway(async (req) => {
       height_mm: Number(row['Balandligi (mm)']) || 0,
       weight_g: Number(row['Vazni (gr)']) || 0,
       barcode: barcode || null,
-      sku: row['SKU'] || null,
       sku_uzum: skuUzum,
       sku_yandex: skuYandex,
       group_sku: row['Guruh SKU'] || row['Group SKU'] || null,
@@ -133,9 +132,10 @@ export const POST = withGateway(async (req) => {
     };
 
     // Clean up empty strings for unique fields
-    ['barcode', 'sku', 'sku_uzum', 'sku_yandex', 'group_sku'].forEach(field => {
+    ['barcode', 'sku_uzum', 'sku_yandex', 'group_sku'].forEach(field => {
        if (toUpsert[field] === '') toUpsert[field] = null;
     });
+
 
     productsToUpsert.push(toUpsert);
   }
