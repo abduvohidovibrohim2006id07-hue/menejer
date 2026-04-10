@@ -37,16 +37,26 @@ export async function getProducts() {
     // 3. Map images to products
     return (productsData || []).map((p: any) => {
       const prefix = `images/${p.id}/`;
-      const imgs = allKeys
+      
+      // Images from S3
+      const s3Imgs = allKeys
         .filter(key => key.startsWith(prefix))
         .sort()
         .map(key => `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${key}`);
       
+      // External images stored in DB (e.g. from Yandex Cloud during import)
+      // We filter out any old/stale S3 links that might be in the DB column to avoid duplicates
+      const dbImgs = Array.isArray(p.local_images) ? p.local_images : [];
+      const externalImgs = dbImgs.filter((url: string) => 
+        url.startsWith('http') && !url.includes(PUBLIC_ENDPOINT)
+      );
+      
       return {
         ...p,
-        local_images: imgs
+        local_images: [...new Set([...externalImgs, ...s3Imgs])]
       };
     });
+
   } catch (error) {
     console.error("Error fetching data:", error);
     return [];

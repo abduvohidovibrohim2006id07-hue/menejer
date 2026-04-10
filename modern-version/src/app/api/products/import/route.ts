@@ -57,9 +57,10 @@ export const POST = withGateway(async (req) => {
     const rasmText = row['Rasm havolalari'] || '';
     const videoText = row['Video havolasi'] || row['Video havolalari'] || '';
     
-    const imagesArray = rasmText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
-    const videosArray = videoText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
+    const imagesArray = rasmText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '').map((u: string) => u.startsWith('http') ? encodeURI(u) : u);
+    const videosArray = videoText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '').map((u: string) => u.startsWith('http') ? encodeURI(u) : u);
     const local_images = [...imagesArray, ...videosArray];
+
 
     let rowStatus = row['Status'] || 'active';
 
@@ -128,6 +129,7 @@ export const POST = withGateway(async (req) => {
       sku_uzum: skuUzum,
       sku_yandex: skuYandex,
       group_sku: row['Guruh SKU'] || row['Group SKU'] || null,
+      local_images: local_images,
       updated_at: new Date().toISOString(),
     };
 
