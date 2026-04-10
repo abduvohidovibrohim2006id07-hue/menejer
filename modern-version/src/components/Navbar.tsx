@@ -7,40 +7,11 @@ import toast from 'react-hot-toast';
 interface NavbarProps {
   onAddProduct: () => void;
   onRefreshProducts: () => void;
+  onImportClick: () => void;
 }
 
-export const Navbar = ({ onAddProduct, onRefreshProducts }: NavbarProps) => {
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
-  const [importing, setImporting] = React.useState(false);
+export const Navbar = ({ onAddProduct, onRefreshProducts, onImportClick }: NavbarProps) => {
   const { activeTab, setActiveTab } = useAppStore();
-
-  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setImporting(true);
-    const formData = new FormData();
-    formData.append('file', file);
-
-    try {
-      const response = await fetch('/api/products/import', {
-        method: 'POST',
-        body: formData,
-      });
-      const data = await response.json();
-      if (response.ok) {
-        toast.success(`${data.count} ta mahsulot muvaffaqiyatli import qilindi!`);
-        onRefreshProducts();
-      } else {
-        toast.error("Xatolik: " + data.error);
-      }
-    } catch (e: any) {
-      toast.error("Xatolik: " + e.message);
-    } finally {
-      setImporting(false);
-      if (fileInputRef.current) fileInputRef.current.value = '';
-    }
-  };
 
   const tabs = [
     { id: 'products', label: '📦 Mahsulotlar' },
@@ -89,21 +60,13 @@ export const Navbar = ({ onAddProduct, onRefreshProducts }: NavbarProps) => {
       </div>
 
       <div className="flex items-center justify-between md:justify-end w-full md:w-auto gap-2 md:gap-4 border-t md:border-t-0 pt-4 md:pt-0">
-        <input 
-          type="file" 
-          ref={fileInputRef} 
-          className="hidden" 
-          accept=".xlsx, .xls"
-          onChange={handleImport}
-        />
         <div className="flex gap-2">
           <button 
-            onClick={() => fileInputRef.current?.click()}
-            disabled={importing}
-            className="p-3 md:p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100 disabled:opacity-50"
+            onClick={onImportClick}
+            className="p-3 md:p-3.5 bg-indigo-50 text-indigo-600 rounded-2xl hover:bg-indigo-600 hover:text-white transition-all shadow-sm border border-indigo-100"
             title="Excel Import"
           >
-            {importing ? "⏳" : "📤"}
+            📤
           </button>
           <a 
             href="/api/products/export" 
@@ -113,6 +76,7 @@ export const Navbar = ({ onAddProduct, onRefreshProducts }: NavbarProps) => {
             📥
           </a>
         </div>
+
         <button 
           onClick={onAddProduct}
           className="flex-1 md:flex-none px-4 md:px-6 py-3.5 md:py-4 text-xs md:text-sm font-black text-white bg-indigo-600 rounded-2xl hover:bg-indigo-700 transition-all active:scale-95 shadow-lg shadow-indigo-100 flex items-center justify-center gap-2"

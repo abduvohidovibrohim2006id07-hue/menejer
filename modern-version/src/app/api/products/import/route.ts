@@ -35,11 +35,15 @@ export const POST = withGateway(async (req) => {
 
     // Media links processing
     const rasmText = row['Rasm havolalari'] || '';
-    const videoText = row['Video havolalari'] || '';
+    const videoText = row['Video havolasi'] || row['Video havolalari'] || '';
     
-    const imagesArray = rasmText.split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
-    const videosArray = videoText.split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
+    const imagesArray = rasmText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
+    const videosArray = videoText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
     
+    // local_images is not stored in DB directly anymore, but we can keep it here for the upsert 
+    // if the DB schema still has it or if we want to trigger some server-side logic.
+    // However, looking at products/route.ts, we usually delete it before upsert.
+    // But for import, let's keep it if they are providing new links.
     const local_images = [...imagesArray, ...videosArray];
 
     let rowStatus = row['Status'] || 'active';
@@ -47,7 +51,7 @@ export const POST = withGateway(async (req) => {
     // Duplicate check
     if (brand && model && color) {
       const isDuplicate = (allExistingProducts || []).some((p: any) => {
-        if (p.id === id) return false;
+        if (p.id.toString() === id.toString()) return false;
         return normalize(p.brand) === brand && normalize(p.model) === model && normalize(p.color) === color;
       });
 
@@ -56,7 +60,7 @@ export const POST = withGateway(async (req) => {
       }
     }
 
-    productsToUpsert.push({
+    const toUpsert: any = {
       id: id,
       name: row['Nomi'] || '',
       name_ru: row['Nomi RU'] || '',
@@ -64,20 +68,32 @@ export const POST = withGateway(async (req) => {
       brand: row['Brend'] || '',
       category: row['Kategoriya'] || '',
       color: row['Rang'] || '',
-      price: row['Narx']?.toString() || '0',
+      price: Number(row['Narx']) || 0,
+      price_retail: Number(row['Chakana Narx']) || Number(row['Narx']) || 0,
       status: rowStatus,
-      marketplaces: (row['Sotuv bozorlari'] || '').split(',').map((m: string) => m.trim()).filter((m: string) => m !== ''),
+      marketplaces: (row['Sotuv bozorlari'] || '').toString().split(',').map((m: string) => m.trim()).filter((m: string) => m !== ''),
       description_short: row['Qisqa Tavsif'] || '',
       description_full: row['To\'liq Tavsif'] || '',
       description_short_ru: row['Qisqa Tavsif RU'] || '',
       description_full_ru: row['To\'liq Tavsif RU'] || '',
-      length_mm: row['Uzunligi (mm)']?.toString() || '0',
-      width_mm: row['Kengligi (mm)']?.toString() || '0',
-      height_mm: row['Balandligi (mm)']?.toString() || '0',
-      weight_g: row['Vazni (gr)']?.toString() || '0',
-      local_images: local_images,
+      length_mm: Number(row['Uzunligi (mm)']) || 0,
+      width_mm: Number(row['Kengligi (mm)']) || 0,
+      height_mm: Number(row['Balandligi (mm)']) || 0,
+      weight_g: Number(row['Vazni (gr)']) || 0,
+      barcode: row['Shtrixkod'] || row['Barcode'] || null,
+      sku: row['SKU'] || null,
+      sku_uzum: row['SKU Uzum'] || null,
+      sku_yandex: row['SKU Yandex'] || null,
+      group_sku: row['Guruh SKU'] || row['Group SKU'] || null,
       updated_at: new Date().toISOString(),
+    };
+
+    // Clean up empty strings for unique fields to prevent constraint violations
+    ['barcode', 'sku', 'sku_uzum', 'sku_yandex', 'group_sku'].forEach(field => {
+       if (toUpsert[field] === '') toUpsert[field] = null;
     });
+
+    productsToUpsert.push(toUpsert);
   }
 
   if (productsToUpsert.length > 0) {
@@ -90,3 +106,4 @@ export const POST = withGateway(async (req) => {
 
   return { success: true, count: productsToUpsert.length };
 });
+

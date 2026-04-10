@@ -17,6 +17,7 @@ const MarketManager = dynamic(() => import("@/components/MarketManager").then(mo
 const NotesManager = dynamic(() => import("@/components/NotesManager").then(mod => ({ default: mod.NotesManager })), { ssr: false });
 const GroupModal = dynamic(() => import("@/components/GroupModal").then(mod => ({ default: mod.GroupModal })), { ssr: false });
 const AccountingManager = dynamic(() => import("@/components/AccountingManager").then(mod => ({ default: mod.AccountingManager })), { ssr: false });
+const ImportModal = dynamic(() => import("@/components/ImportModal").then(mod => ({ default: mod.ImportModal })), { ssr: false });
 
 
 // Hooks & Store
@@ -36,8 +37,10 @@ export default function Home() {
   const [mounted, setMounted] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGroupModalOpen, setIsGroupModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<any>(null);
   const [showExportOptions, setShowExportOptions] = useState(false);
+
 
   // Zustand Store
   const {
@@ -120,6 +123,7 @@ export default function Home() {
           setIsModalOpen(true);
         }} 
         onRefreshProducts={() => fetchData(true)}
+        onImportClick={() => setIsImportModalOpen(true)}
       />
       
       <div className="max-w-7xl mx-auto px-6 mt-10 space-y-8">
@@ -369,6 +373,12 @@ export default function Home() {
         onClose={() => setIsGroupModalOpen(false)}
         selectedIds={selectedIds}
         onSuccess={() => { fetchData(true); clearSelection(); }}
+      />
+
+      <ImportModal 
+        isOpen={isImportModalOpen}
+        onClose={() => setIsImportModalOpen(false)}
+        onSuccess={() => fetchData(true)}
       />
 
       {selectedIds.size > 0 && (
