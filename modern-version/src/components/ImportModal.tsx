@@ -9,9 +9,10 @@ interface ImportModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  categories: { id: string | number; name: string }[];
 }
 
-export const ImportModal = ({ isOpen, onClose, onSuccess }: ImportModalProps) => {
+export const ImportModal = ({ isOpen, onClose, onSuccess, categories }: ImportModalProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [importing, setImporting] = useState(false);
   const [dragActive, setDragActive] = useState(false);
@@ -20,6 +21,7 @@ export const ImportModal = ({ isOpen, onClose, onSuccess }: ImportModalProps) =>
   if (!isOpen) return null;
 
   const handleDownloadTemplate = () => {
+    // Sheet 1: Product Template
     const headers = [
       'ID', 'Guruh SKU', 'SKU', 'SKU Uzum', 'SKU Yandex', 'Shtrixkod', 
       'Kategoriya', 'Brend', 'Model', 'Rang', 'Nomi', 'Nomi RU', 
@@ -29,12 +31,14 @@ export const ImportModal = ({ isOpen, onClose, onSuccess }: ImportModalProps) =>
       'Balandligi (mm)', 'Vazni (gr)'
     ];
     
+    const sampleCategory = categories.length > 0 ? categories[0].name : 'Elektronika';
+
     // Sample row
     const data = [
       headers,
       [
         'PROD-001', 'GROUP-A', 'SKU-001', 'UZUM-001', 'YANDEX-001', '2026000001',
-        'Elektronika', 'Samsung', 'S24 Ultra', 'Titanium', 'Smartfon', 'Смартфон',
+        sampleCategory, 'Samsung', 'S24 Ultra', 'Titanium', 'Smartfon', 'Смартфон',
         '15000000', '16000000', 'active', 'uzum,yandex',
         'https://example.com/img1.jpg', '', 'Yaxshi smartfon', 'Batafsil ma\'lumot...',
         'Хороший смартфон', 'Подробная информация...', '160', '75', '8', '200'
@@ -42,12 +46,20 @@ export const ImportModal = ({ isOpen, onClose, onSuccess }: ImportModalProps) =>
     ];
 
     const worksheet = XLSX.utils.aoa_to_sheet(data);
+    
+    // Sheet 2: Categories Reference
+    const catHeaders = ['Kategoriya ID', 'Kategoriya Nomi'];
+    const catRows = categories.map(c => [c.id, c.name]);
+    const catSheet = XLSX.utils.aoa_to_sheet([catHeaders, ...catRows]);
+
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Shablon");
+    XLSX.utils.book_append_sheet(workbook, catSheet, "Kategoriyalar");
     
     XLSX.writeFile(workbook, "mahsulotlar_import_shabloni.xlsx");
-    toast.success("Shablon yuklab olindi");
+    toast.success("Shablon yuklab olindi (2 ta list mavjud)");
   };
+
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault();

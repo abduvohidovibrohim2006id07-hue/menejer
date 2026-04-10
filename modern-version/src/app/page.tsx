@@ -379,6 +379,7 @@ export default function Home() {
         isOpen={isImportModalOpen}
         onClose={() => setIsImportModalOpen(false)}
         onSuccess={() => fetchData(true)}
+        categories={categories}
       />
 
       {selectedIds.size > 0 && (
