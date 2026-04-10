@@ -16,22 +16,42 @@ export const POST = withGateway(async (req) => {
 
   if (!data || data.length === 0) throw { message: 'Excel bo\'sh yoki noto\'g\'ri format', status: 400 };
 
-  // Fetch existing products for duplicate check
-  const { data: allExistingProducts } = await supabase
+  // Fetch all existing products to determine max ID and for duplicate checks
+  const { data: allExistingProducts, error: fetchError } = await supabase
     .from('products')
     .select('id, brand, model, color');
+  
+  if (fetchError) throw { message: fetchError.message, status: 500 };
+
+  // Determine starting numeric ID
+  const existingIds = (allExistingProducts || [])
+    .map(p => parseInt(String(p.id)) || 0)
+    .filter(id => !isNaN(id) && id > 0 && id < 1000000000); // Filter out massive IDs (like Uzum 17-digit IDs)
+  
+  let nextId = existingIds.length > 0 ? Math.max(...existingIds) + 1 : 10001;
 
   const normalize = (val: any) => (val || '').toString().trim().toLowerCase().replace(/\s+/g, '');
 
   const productsToUpsert: any[] = [];
+  const today = new Date();
+  const datePart = today.toISOString().slice(2, 10).replace(/-/g, ''); // YYMMDD
 
   for (const row of data) {
-    const id = row['ID']?.toString();
-    if (!id) continue;
+    let id = row['ID']?.toString().trim();
+    
+    // Auto-generate ID if missing or "new"
+    if (!id || id.toLowerCase() === 'yangi' || id.toLowerCase() === 'new') {
+      id = nextId.toString();
+      nextId++;
+    }
 
     const brand = normalize(row['Brend']);
     const model = normalize(row['Model']);
     const color = normalize(row['Rang']);
+
+    const rawBrand = (row['Brend'] || '').toString().trim().toUpperCase();
+    const rawModel = (row['Model'] || '').toString().trim().toUpperCase();
+    const rawColor = (row['Rang'] || '').toString().trim().toUpperCase();
 
     // Media links processing
     const rasmText = row['Rasm havolalari'] || '';
@@ -39,11 +59,6 @@ export const POST = withGateway(async (req) => {
     
     const imagesArray = rasmText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
     const videosArray = videoText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '');
-    
-    // local_images is not stored in DB directly anymore, but we can keep it here for the upsert 
-    // if the DB schema still has it or if we want to trigger some server-side logic.
-    // However, looking at products/route.ts, we usually delete it before upsert.
-    // But for import, let's keep it if they are providing new links.
     const local_images = [...imagesArray, ...videosArray];
 
     let rowStatus = row['Status'] || 'active';
@@ -58,6 +73,35 @@ export const POST = withGateway(async (req) => {
       if (isDuplicate) {
         rowStatus = 'quarantine';
       }
+    }
+
+    // Auto-generate Barcode if missing
+    let barcode = row['Shtrixkod'] || row['Barcode'];
+    if (!barcode && id) {
+      let idPart = "";
+      if (/^\d+$/.test(id)) {
+        idPart = id.length > 5 ? id.slice(-5) : id.padStart(5, '0');
+      } else {
+        let hash = 0;
+        for (let i = 0; i < id.length; i++) {
+          hash = ((hash << 5) - hash) + id.charCodeAt(i);
+          hash |= 0; 
+        }
+        idPart = Math.abs(hash % 100000).toString().padStart(5, '0');
+      }
+      barcode = `20${datePart}${idPart}`;
+    }
+
+    // Auto-generate SKUs if missing
+    let skuUzum = row['SKU Uzum'] || null;
+    if (!skuUzum && rawBrand && rawModel) {
+      skuUzum = (rawBrand + rawModel + rawColor).replace(/[^A-Z0-9]/g, '');
+    }
+
+    let skuYandex = row['SKU Yandex'] || null;
+    if (!skuYandex && rawBrand && rawModel) {
+      skuYandex = `${rawBrand}-${rawModel}`;
+      if (rawColor) skuYandex += `-${rawColor}`;
     }
 
     const toUpsert: any = {
@@ -80,15 +124,15 @@ export const POST = withGateway(async (req) => {
       width_mm: Number(row['Kengligi (mm)']) || 0,
       height_mm: Number(row['Balandligi (mm)']) || 0,
       weight_g: Number(row['Vazni (gr)']) || 0,
-      barcode: row['Shtrixkod'] || row['Barcode'] || null,
+      barcode: barcode || null,
       sku: row['SKU'] || null,
-      sku_uzum: row['SKU Uzum'] || null,
-      sku_yandex: row['SKU Yandex'] || null,
+      sku_uzum: skuUzum,
+      sku_yandex: skuYandex,
       group_sku: row['Guruh SKU'] || row['Group SKU'] || null,
       updated_at: new Date().toISOString(),
     };
 
-    // Clean up empty strings for unique fields to prevent constraint violations
+    // Clean up empty strings for unique fields
     ['barcode', 'sku', 'sku_uzum', 'sku_yandex', 'group_sku'].forEach(field => {
        if (toUpsert[field] === '') toUpsert[field] = null;
     });
@@ -106,4 +150,3 @@ export const POST = withGateway(async (req) => {
 
   return { success: true, count: productsToUpsert.length };
 });
-
