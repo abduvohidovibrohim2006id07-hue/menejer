@@ -63,7 +63,8 @@ export const GET = withGateway(async (req) => {
     row[12] = data.description_short || '';
     row[19] = images;
     row[22] = data.color || '';
-    row[24] = Number(data.price_retail) || Number(data.price) || 0;
+    row[24] = Number(data.price) || 0;
+
     row[26] = Number(data.weight_g) || 0;
     row[27] = Number(data.height_mm) || 0;
     row[28] = Number(data.width_mm) || 0;

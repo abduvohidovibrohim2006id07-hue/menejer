@@ -134,16 +134,18 @@ export const useProductsFiltering = (allProducts: any[]) => {
           const timeA = new Date(a.created_at || a.updated_at || 0).getTime();
           const timeB = new Date(b.created_at || b.updated_at || 0).getTime();
           if (timeA !== timeB) return timeB - timeA;
-          return 0;
+          // Secondary fallback to ID if dates are exactly the same
+          return (Number(b.id) || 0) - (Number(a.id) || 0);
         });
       } else if (sortBy === 'oldest') {
         result.sort((a: any, b: any) => {
           const timeA = new Date(a.created_at || a.updated_at || 0).getTime();
           const timeB = new Date(b.created_at || b.updated_at || 0).getTime();
           if (timeA !== timeB) return timeA - timeB;
-          return 0;
+          return (Number(a.id) || 0) - (Number(b.id) || 0);
         });
-      } else if (sortBy === 'name-asc') {
+      }
+ else if (sortBy === 'name-asc') {
         result.sort((a: any, b: any) => (a.name || '').localeCompare(b.name || ''));
       } else if (sortBy === 'name-desc') {
         result.sort((a: any, b: any) => (b.name || '').localeCompare(a.name || ''));
