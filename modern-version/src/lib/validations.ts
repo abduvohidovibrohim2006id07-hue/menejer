@@ -28,7 +28,9 @@ export const productSchema = z.object({
   sku_uzum: z.string().nullable().optional(),
   sku_yandex: z.string().nullable().optional(),
   group_sku: z.string().nullable().optional(),
+  discount: z.any().transform(val => Number(val) || 0),
   competitors: z.array(z.any()).optional().default([]),
+
   warehouse_data: z.record(z.string(), z.any()).optional().default({}),
 });
 

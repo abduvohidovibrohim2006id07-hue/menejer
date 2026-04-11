@@ -131,14 +131,16 @@ export const POST = withGateway(async (req) => {
       sku_uzum: skuUzum,
       sku_yandex: skuYandex,
       group_sku: row['Guruh SKU'] || row['Group SKU'] || null,
+      discount: Number(row['Chegirma %']) || 0,
       local_images: local_images,
       updated_at: new Date().toISOString(),
     };
 
     // Clean up empty strings for unique fields
-    ['barcode', 'sku_uzum', 'sku_yandex', 'group_sku'].forEach(field => {
+    ['barcode', 'sku_uzum', 'sku_yandex', 'group_sku', 'discount'].forEach(field => {
        if (toUpsert[field] === '') toUpsert[field] = null;
     });
+
 
 
     productsToUpsert.push(toUpsert);
