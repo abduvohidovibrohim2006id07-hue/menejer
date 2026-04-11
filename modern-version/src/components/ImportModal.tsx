@@ -25,7 +25,7 @@ export const ImportModal = ({ isOpen, onClose, onSuccess, categories }: ImportMo
     const headers = [
       'ID', 'Guruh SKU', 'SKU', 'SKU Uzum', 'SKU Yandex', 'Shtrixkod', 
       'Kategoriya', 'Brend', 'Model', 'Rang', 'Nomi', 'Nomi RU', 
-      'Narx', 'Chakana Narx', 'Status', 'Sotuv bozorlari', 
+      'Narx', 'Eski Narx', 'Chakana Narx', 'Status', 'Sotuv bozorlari', 
       'Rasm havolalari', 'Video havolasi', 'Qisqa Tavsif', 'To\'liq Tavsif', 
       'Qisqa Tavsif RU', 'To\'liq Tavsif RU', 'Uzunligi (mm)', 'Kengligi (mm)', 
       'Balandligi (mm)', 'Vazni (gr)'
@@ -39,7 +39,7 @@ export const ImportModal = ({ isOpen, onClose, onSuccess, categories }: ImportMo
       [
         'PROD-001', 'GROUP-A', 'SKU-001', 'UZUM-001', 'YANDEX-001', '2026000001',
         sampleCategory, 'Samsung', 'S24 Ultra', 'Titanium', 'Smartfon', 'Смартфон',
-        '15000000', '16000000', 'active', 'uzum,yandex',
+        '15000000', '20000000', '16000000', 'active', 'uzum,yandex',
         'https://example.com/img1.jpg', '', 'Yaxshi smartfon', 'Batafsil ma\'lumot...',
         'Хороший смартфон', 'Подробная информация...', '160', '75', '8', '200'
       ]

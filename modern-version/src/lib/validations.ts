@@ -5,6 +5,8 @@ export const productSchema = z.object({
   name: z.string().nullable().optional().transform(v => v || '').refine(v => v.length > 0, 'Mahsulot nomi nomi majburiy'),
   name_ru: z.string().nullable().optional(),
   price: z.any().transform(val => Number(val) || 0),
+  old_price: z.any().transform(val => Number(val) || 0),
+
   category: z.string().nullable().optional().transform(v => v || '').refine(v => v.length > 0, 'Kategoriya majburiy'),
   brand: z.string().nullable().optional(),
   model: z.string().nullable().optional(),

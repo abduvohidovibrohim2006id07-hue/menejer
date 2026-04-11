@@ -22,6 +22,7 @@ interface ProductItem {
   name?: string;
   name_ru?: string;
   price?: string | number;
+  old_price?: string | number;
   category?: string;
   brand?: string;
   model?: string;
@@ -66,6 +67,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     name: '',
     name_ru: '',
     price: '',
+    old_price: '',
     category: '',
     brand: '',
     model: '',
@@ -88,6 +90,8 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
     competitors: [],
   });
 
+  const [discount, setDiscount] = useState<string>('');
+
   const [loading, setLoading] = useState(false);
   const [isCatOpen, setIsCatOpen] = useState(false);
 
@@ -98,6 +102,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         name: product.name || '',
         name_ru: product.name_ru || '',
         price: product.price || '',
+        old_price: product.old_price || '',
         category: product.category || '',
         brand: product.brand || '',
         model: product.model || '',
@@ -136,6 +141,7 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         name: '',
         name_ru: '',
         price: '',
+        old_price: '',
         category: '',
         brand: '',
         model: '',
@@ -246,6 +252,31 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
       setLoading(false);
     }
   };
+
+  const handlePriceCalc = (type: 'price' | 'old_price' | 'discount', value: string) => {
+    let newFormData = { ...formData };
+    
+    if (type === 'old_price') {
+      newFormData.old_price = value;
+      const oldPriceNum = parseFloat(value);
+      const discountNum = parseFloat(discount);
+      if (!isNaN(oldPriceNum) && !isNaN(discountNum)) {
+        newFormData.price = Math.round(oldPriceNum * (1 - discountNum / 100));
+      }
+    } else if (type === 'discount') {
+      setDiscount(value);
+      const oldPriceNum = parseFloat(String(formData.old_price));
+      const discountNum = parseFloat(value);
+      if (!isNaN(oldPriceNum) && !isNaN(discountNum)) {
+        newFormData.price = Math.round(oldPriceNum * (1 - discountNum / 100));
+      }
+    } else {
+      newFormData.price = value;
+    }
+    
+    setFormData(newFormData);
+  };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -426,13 +457,40 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
             </div>
 
             <div className="col-span-1">
-              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Narxi (Raqamda)</label>
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Eski Narx</label>
               <input 
                 type="text"
-                placeholder="315000"
+                placeholder="270000"
                 className="w-full p-4 rounded-2xl border border-slate-200 bg-white text-slate-900 font-bold focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
+                value={formData.old_price}
+                onChange={(e) => handlePriceCalc('old_price', e.target.value)}
+              />
+            </div>
+
+            <div className="col-span-1">
+              <label className="block text-xs font-black text-slate-500 uppercase tracking-widest mb-2">Chegirma (%)</label>
+              <input 
+                type="text"
+                placeholder="50"
+                className="w-full p-4 rounded-2xl border border-slate-200 bg-emerald-50 text-emerald-700 font-black focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all shadow-sm"
+                value={discount}
+                onChange={(e) => handlePriceCalc('discount', e.target.value)}
+              />
+            </div>
+
+            <div className="col-span-1">
+              <div className="flex justify-between items-center mb-2">
+                <label className="block text-xs font-black text-slate-500 uppercase tracking-widest">Sotuv Narxi*</label>
+                {formData.old_price && discount && (
+                  <span className="text-[10px] font-black text-emerald-600">-{discount}% qo&apos;llanildi</span>
+                )}
+              </div>
+              <input 
+                type="text"
+                placeholder="135000"
+                className="w-full p-4 rounded-2xl border border-indigo-200 bg-white text-indigo-700 font-black focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all shadow-sm"
                 value={formData.price}
-                onChange={(e) => setFormData({...formData, price: e.target.value})}
+                onChange={(e) => handlePriceCalc('price', e.target.value)}
               />
             </div>
 

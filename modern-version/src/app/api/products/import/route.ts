@@ -114,7 +114,9 @@ export const POST = withGateway(async (req) => {
       category: row['Kategoriya'] || '',
       color: row['Rang'] || '',
       price: Number(row['Narx']) || 0,
+      old_price: Number(row['Eski Narx']) || 0,
       price_retail: Number(row['Chakana Narx']) || Number(row['Narx']) || 0,
+
       status: rowStatus,
       marketplaces: (row['Sotuv bozorlari'] || '').toString().split(',').map((m: string) => m.trim()).filter((m: string) => m !== ''),
       description_short: row['Qisqa Tavsif'] || '',
