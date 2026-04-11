@@ -673,7 +673,37 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                   />
                 </div>
               </div>
+
+              {/* LOGISTICS CALCULATOR DISPLAY */}
+              <div className="mt-6 flex flex-col sm:flex-row gap-4 items-center justify-between p-4 bg-indigo-50/50 rounded-2xl border border-indigo-100/50">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center text-xl">📦</div>
+                  <div>
+                    <h4 className="text-[10px] font-black uppercase text-indigo-400 tracking-widest">Logistika harajati (Uzum)</h4>
+                    <p className="text-sm font-black text-indigo-900">
+                      {(() => {
+                        const l = parseFloat(String(formData.length_mm)) || 0;
+                        const w = parseFloat(String(formData.width_mm)) || 0;
+                        const h = parseFloat(String(formData.height_mm)) || 0;
+                        
+                        if (!l || !w || !h) return "O'lchamlar kiritilmagan (50,000 so'm)";
+                        
+                        const volumeLiters = Math.ceil((l * w * h) / 1000000);
+                        let cost = 5250;
+                        if (volumeLiters > 1) {
+                          cost += (volumeLiters - 1) * 250;
+                        }
+                        return `${Math.min(cost, 50000).toLocaleString()} so'm (${volumeLiters} L)`;
+                      })()}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-[9px] font-bold text-indigo-400 text-right max-w-[200px]">
+                  * 1L gacha 5,250 so&apos;m, keyingi har bir L uchun +250 so&apos;m. Maks: 50,000 so&apos;m.
+                </div>
+              </div>
             </div>
+
 
             {/* STATUS SELECTION */}
             <div className="col-span-1 md:col-span-3 bg-white p-6 rounded-[24px] border border-slate-200">
