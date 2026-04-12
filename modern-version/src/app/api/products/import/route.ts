@@ -131,8 +131,19 @@ export const POST = withGateway(async (req) => {
       sku_uzum: skuUzum,
       sku_yandex: skuYandex,
       group_sku: row['Guruh SKU'] || row['Group SKU'] || null,
-      discount: Number(row['Chegirma %']) || 0,
+      discount: (() => {
+        const val = Number(row['Chegirma %']);
+        if (!isNaN(val) && val > 0) return val;
+        
+        const oldPrice = Number(row['Eski Narx']);
+        const currentPrice = Number(row['Narx']);
+        if (oldPrice > 0 && currentPrice > 0 && oldPrice > currentPrice) {
+          return Math.round(((oldPrice - currentPrice) / oldPrice) * 100);
+        }
+        return 0;
+      })(),
       local_images: local_images,
+
       updated_at: new Date().toISOString(),
     };
 

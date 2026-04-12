@@ -53,6 +53,7 @@ export const GET = withGateway(async (req) => {
       data.name || '',
       data.name_ru || '',
       Number(data.price) || 0,
+      Number(data.old_price) || 0,
       Number(data.price_retail) || 0,
       data.status || 'active',
       (data.marketplaces || []).join(', '),
@@ -74,7 +75,7 @@ export const GET = withGateway(async (req) => {
   const headers = [
     'ID', 'Guruh SKU', 'SKU', 'SKU Uzum', 'SKU Yandex', 'Shtrixkod', 
     'Kategoriya', 'Brend', 'Model', 'Rang', 'Nomi', 'Nomi RU', 
-    'Narx', 'Chakana Narx', 'Status', 'Sotuv bozorlari', 
+    'Narx', 'Eski Narx', 'Chakana Narx', 'Status', 'Sotuv bozorlari', 
     'Rasm havolalari', 'Video havolasi', 'Qisqa Tavsif', 'To\'liq Tavsif', 
     'Qisqa Tavsif RU', 'To\'liq Tavsif RU', 'Uzunligi (mm)', 'Kengligi (mm)', 
     'Balandligi (mm)', 'Vazni (gr)', 'Raqobatchilar', 'Yangilangan sana'
@@ -97,6 +98,7 @@ export const GET = withGateway(async (req) => {
     { wch: 40 }, // Nomi
     { wch: 40 }, // Nomi RU
     { wch: 15 }, // Narx
+    { wch: 15 }, // Eski Narx
     { wch: 15 }, // Chakana Narx
     { wch: 12 }, // Status
     { wch: 25 }, // Sotuv bozorlari
