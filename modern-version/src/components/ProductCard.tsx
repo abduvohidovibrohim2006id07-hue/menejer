@@ -30,6 +30,7 @@ interface Product {
   status?: 'active' | 'quarantine' | 'archive';
   marketplaces?: string[];
   price_retail?: string;
+  old_price?: string | number;
   length_mm?: string | number;
   width_mm?: string | number;
   height_mm?: string | number;
@@ -677,11 +678,33 @@ export const ProductCard = React.memo(({ product, markets = [], onEdit, onDelete
             <div className="shrink-0 flex flex-col items-end gap-1">
               {!product.isGroup && (
                 <>
-                  <span className="bg-emerald-50 text-emerald-600 text-2xl font-black px-6 py-3 rounded-2xl block shadow-sm border border-emerald-100/50">
-                    {Number(product.price).toLocaleString()} so&apos;m
-                  </span>
+                  <div className="flex flex-col items-end">
+                    {(() => {
+                      const currentP = parseFloat(String(product.price)) || 0;
+                      const oldP = parseFloat(String(product.old_price)) || 0;
+                      const hasDiscount = oldP > currentP;
+                      
+                      return (
+                        <>
+                          {hasDiscount && (
+                            <div className="flex items-center gap-2 mb-1">
+                              <span className="text-sm font-bold text-slate-400 line-through">
+                                {oldP.toLocaleString()}
+                              </span>
+                              <span className="bg-red-500 text-white text-[10px] font-black px-2 py-0.5 rounded-lg shadow-sm">
+                                -{Math.round(((oldP - currentP) / oldP) * 100)}%
+                              </span>
+                            </div>
+                          )}
+                          <span className="bg-emerald-50 text-emerald-600 text-2xl font-black px-6 py-3 rounded-2xl block shadow-sm border border-emerald-100/50">
+                            {currentP.toLocaleString()} so&apos;m
+                          </span>
+                        </>
+                      );
+                    })()}
+                  </div>
                   {product.price_retail && (
-                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2 mt-1">
                        Chakana: <span className="text-slate-600">{Number(product.price_retail).toLocaleString()} so&apos;m</span>
                     </span>
                   )}

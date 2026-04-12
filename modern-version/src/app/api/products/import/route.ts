@@ -131,26 +131,15 @@ export const POST = withGateway(async (req) => {
       sku_uzum: skuUzum,
       sku_yandex: skuYandex,
       group_sku: row['Guruh SKU'] || row['Group SKU'] || null,
-      discount: (() => {
-        const val = Number(row['Chegirma %']);
-        if (!isNaN(val) && val > 0) return val;
-        
-        const oldPrice = Number(row['Eski Narx']);
-        const currentPrice = Number(row['Narx']);
-        if (oldPrice > 0 && currentPrice > 0 && oldPrice > currentPrice) {
-          return Math.round(((oldPrice - currentPrice) / oldPrice) * 100);
-        }
-        return 0;
-      })(),
       local_images: local_images,
-
       updated_at: new Date().toISOString(),
     };
 
     // Clean up empty strings for unique fields
-    ['barcode', 'sku_uzum', 'sku_yandex', 'group_sku', 'discount'].forEach(field => {
+    ['barcode', 'sku_uzum', 'sku_yandex', 'group_sku'].forEach(field => {
        if (toUpsert[field] === '') toUpsert[field] = null;
     });
+
 
 
 
