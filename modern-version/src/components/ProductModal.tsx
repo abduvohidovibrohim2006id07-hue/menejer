@@ -699,12 +699,15 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                         return `${Math.min(cost, 50000).toLocaleString()} so'm (${volumeLiters} L)`;
                       })()}
                     </p>
+                  </div>
                 </div>
+
                 <div className="text-[9px] font-bold text-indigo-400 text-right max-w-[200px]">
                   * 1L gacha 5,250 so&apos;m, keyingi har bir L uchun +250 so&apos;m. Maks: 50,000 so&apos;m.
                 </div>
               </div>
             </div>
+
 
             {/* MEDIA MANAGEMENT SECTION */}
             <div className="col-span-1 md:col-span-3 bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm">
