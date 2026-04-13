@@ -63,8 +63,9 @@ export const POST = withGateway(async (req) => {
       try { return encodeURI(decodeURI(trimmed)); } catch (e) { return trimmed; }
     };
 
-    const imagesArray = rasmText.toString().split(';').map(u => u.trim()).filter(u => u !== '').map(cleanMediaUrl);
-    const videosArray = videoText.toString().split(';').map(u => u.trim()).filter(u => u !== '').map(cleanMediaUrl);
+    const imagesArray = rasmText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '').map(cleanMediaUrl);
+    const videosArray = videoText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '').map(cleanMediaUrl);
+
     const local_images = [...imagesArray, ...videosArray];
 
 
