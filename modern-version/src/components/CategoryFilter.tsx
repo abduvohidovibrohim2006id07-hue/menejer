@@ -17,7 +17,8 @@ interface CategoryFilterProps {
 export const CategoryFilter = ({ categories, currentCategory, onSelectCategory, totalCount }: CategoryFilterProps) => {
   return (
     <div className="relative group/nav mb-8">
-      <div className="flex gap-2 overflow-x-auto pb-4 no-scrollbar scroll-smooth items-center">
+      <div className="flex flex-wrap gap-3 items-center">
+
         {/* BARCHASI BUTTON */}
         <button
           onClick={() => onSelectCategory('Barchasi')}
@@ -59,10 +60,8 @@ export const CategoryFilter = ({ categories, currentCategory, onSelectCategory, 
           </div>
         )}
       </div>
-      
-      {/* SHADOW OVERLAYS FOR SCROLLING */}
-      <div className="absolute right-0 top-0 bottom-4 w-12 bg-gradient-to-l from-slate-50 to-transparent pointer-events-none opacity-0 group-hover/nav:opacity-100 transition-opacity" />
     </div>
   );
 };
+
 
