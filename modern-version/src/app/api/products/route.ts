@@ -33,8 +33,6 @@ export const POST = withGateway(async (req) => {
       
       if (existing) {
         targetData = { ...existing, ...data };
-        // Clean up fields that might have come from S3 and shouldn't be in DB
-        delete targetData.local_images;
       }
     }
   } catch (err) {
@@ -46,13 +44,9 @@ export const POST = withGateway(async (req) => {
     throw { message: validated.error.issues.map((e: any) => e.message).join(', '), status: 400 };
   }
 
+
   const { id, ...rest } = validated.data;
-  
-  // local_images is managed via S3 and built dynamically in data-service.ts
-  // We remove it here so we don't store redundant/stale URLs in the database.
-  if ('local_images' in rest) {
-    delete (rest as any).local_images;
-  }
+
 
   let status = rest.status || 'active';
 

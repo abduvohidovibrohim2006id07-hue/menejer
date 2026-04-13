@@ -38,23 +38,30 @@ export async function getProducts() {
     return (productsData || []).map((p: any) => {
       const prefix = `images/${p.id}/`;
       
-      // Images from S3
+      // 1. All images currently in S3 for this product
       const s3Imgs = allKeys
         .filter(key => key.startsWith(prefix))
-        .sort()
         .map(key => `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/${key}`);
       
-      // External images stored in DB (e.g. from Yandex Cloud during import)
-      // We filter out any old/stale S3 links that might be in the DB column to avoid duplicates
-      const dbImgs = Array.isArray(p.local_images) ? p.local_images : [];
-      const externalImgs = dbImgs.filter((url: string) => 
-        url.startsWith('http') && !url.includes(PUBLIC_ENDPOINT)
-      );
+      // 2. Images stored in DB (preserves custom order)
+      const dbImgs = Array.isArray(p.local_images) ? (p.local_images as string[]) : [];
+      
+      // 3. Filter DB images to only keep those that are still valid:
+      // - Either they are external (don't contain PUBLIC_ENDPOINT)
+      // - Or they are S3 links that still exist in the current S3 list
+      const validDbImgs = dbImgs.filter(url => {
+        if (!url.includes(PUBLIC_ENDPOINT)) return true; // External
+        return s3Imgs.includes(url); // Still in S3
+      });
+
+      // 4. Find anything in S3 that ISN'T in the DB list yet (Auto-discovery)
+      const newS3Imgs = s3Imgs.filter(url => !validDbImgs.includes(url));
       
       return {
         ...p,
-        local_images: [...new Set([...externalImgs, ...s3Imgs])]
+        local_images: [...validDbImgs, ...newS3Imgs]
       };
+
     });
 
   } catch (error) {
