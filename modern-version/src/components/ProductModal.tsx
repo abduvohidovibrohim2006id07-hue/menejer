@@ -125,7 +125,9 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         sku_uzum: product.sku_uzum || '',
         sku_yandex: product.sku_yandex || '',
         competitors: product.competitors || [],
+        local_images: product.local_images || [],
       });
+
     } else {
       // Automatic ID generation for NEW product
       let nextId = "10001";
@@ -160,7 +162,9 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
         warehouse_data: {},
         price_retail: '',
         discount: '',
+        local_images: [],
       });
+
     }
   }, [product, isOpen, allProducts]);
 
