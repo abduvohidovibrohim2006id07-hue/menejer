@@ -163,5 +163,47 @@ export const useProductsFiltering = (allProducts: any[]) => {
     return () => clearTimeout(timer);
   }, [allProducts, filterSignature, selectedCategory, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets, sortBy, groupFilter]);
 
-  return { filteredProducts, visibleCount, setVisibleCount };
+  // Dinamik kategoriyalarni hisoblash (Faqat mavjud mahsulotlar bor kategoriyalar)
+  const activeCategories = useMemo(() => {
+    let base = Array.isArray(allProducts) ? [...allProducts] : [];
+
+    // Apply filters (EXCEPT selectedCategory) to see what categories are available in current context
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase().trim();
+      base = base.filter((p: any) => {
+        const pool = [p.name || '', p.name_ru || '', p.brand || '', p.model || '', p.category || '', p.id?.toString() || ''].map(v => v.toLowerCase());
+        return pool.some(v => v.includes(q));
+      });
+    }
+
+    if (statusFilter !== "all") {
+      base = base.filter((p: any) => (p.status || 'active') === statusFilter);
+    }
+
+    if (selectedMarkets.length > 0) {
+      base = base.filter((p: any) => (p.marketplaces || []).some((m: string) => selectedMarkets.includes(m)));
+    } else {
+      base = base.filter((p: any) => (p.marketplaces || []).length === 0);
+    }
+
+    if (brandFilter) base = base.filter((p: any) => p.brand?.toLowerCase().includes(brandFilter.toLowerCase()));
+    if (colorFilter) base = base.filter((p: any) => p.color?.toLowerCase().includes(colorFilter.toLowerCase()));
+    if (minPrice) base = base.filter((p: any) => Number(p.price) >= Number(minPrice));
+    if (maxPrice) base = base.filter((p: any) => Number(p.price) <= Number(maxPrice));
+
+    const catCounts: Record<string, number> = {};
+    base.forEach(p => { 
+      if (p.category) {
+        catCounts[p.category] = (catCounts[p.category] || 0) + 1;
+      }
+    });
+
+    return Object.entries(catCounts)
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => a.name.localeCompare(b.name));
+  }, [allProducts, searchQuery, brandFilter, colorFilter, minPrice, maxPrice, statusFilter, selectedMarkets]);
+
+  return { filteredProducts, visibleCount, setVisibleCount, activeCategories };
 };
+
+

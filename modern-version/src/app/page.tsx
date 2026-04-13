@@ -63,7 +63,8 @@ export default function Home() {
   const isLoadingData = pLoad || cLoad || mLoad;
 
   // Custom Logic Hooks
-  const { filteredProducts, visibleCount, setVisibleCount } = useProductsFiltering(allProducts);
+  const { filteredProducts, visibleCount, setVisibleCount, activeCategories } = useProductsFiltering(allProducts);
+
   const { refreshing, handleUpdate, handleDelete, handleDuplicate, handleBulkDelete, fetchData } = useProductActions(allProducts, mutateProducts, mutateCats, mutateMrkts);
 
   const observerTarget = React.useRef<HTMLDivElement>(null);
@@ -298,10 +299,12 @@ export default function Home() {
             </div>
 
             <CategoryFilter 
-              categories={categories.map((c: any) => c.name)} 
+              categories={activeCategories} 
               currentCategory={selectedCategory} 
               onSelectCategory={(cat) => setFilter('selectedCategory', cat)} 
+              totalCount={allProducts.length}
             />
+
 
             <div className="relative min-h-[400px]">
               {refreshing && (

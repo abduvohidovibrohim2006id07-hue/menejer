@@ -57,9 +57,16 @@ export const POST = withGateway(async (req) => {
     const rasmText = row['Rasm havolalari'] || '';
     const videoText = row['Video havolasi'] || row['Video havolalari'] || '';
     
-    const imagesArray = rasmText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '').map((u: string) => u.startsWith('http') ? encodeURI(u) : u);
-    const videosArray = videoText.toString().split(';').map((u: string) => u.trim()).filter((u: string) => u !== '').map((u: string) => u.startsWith('http') ? encodeURI(u) : u);
+    const cleanMediaUrl = (u: string) => {
+      const trimmed = u.trim();
+      if (!trimmed.startsWith('http')) return trimmed;
+      try { return encodeURI(decodeURI(trimmed)); } catch (e) { return trimmed; }
+    };
+
+    const imagesArray = rasmText.toString().split(';').map(u => u.trim()).filter(u => u !== '').map(cleanMediaUrl);
+    const videosArray = videoText.toString().split(';').map(u => u.trim()).filter(u => u !== '').map(cleanMediaUrl);
     const local_images = [...imagesArray, ...videosArray];
+
 
 
     let rowStatus = row['Status'] || 'active';
