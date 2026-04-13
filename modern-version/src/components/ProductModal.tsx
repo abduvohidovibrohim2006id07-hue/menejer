@@ -699,7 +699,6 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
                         return `${Math.min(cost, 50000).toLocaleString()} so'm (${volumeLiters} L)`;
                       })()}
                     </p>
-                  </div>
                 </div>
                 <div className="text-[9px] font-bold text-indigo-400 text-right max-w-[200px]">
                   * 1L gacha 5,250 so&apos;m, keyingi har bir L uchun +250 so&apos;m. Maks: 50,000 so&apos;m.
@@ -707,6 +706,88 @@ export const ProductModal = ({ isOpen, onClose, product, onSuccess, categories =
               </div>
             </div>
 
+            {/* MEDIA MANAGEMENT SECTION */}
+            <div className="col-span-1 md:col-span-3 bg-white p-6 rounded-[24px] border border-slate-200 shadow-sm">
+              <div className="flex justify-between items-center mb-6">
+                <div>
+                  <label className="block text-xs font-black text-slate-500 uppercase tracking-widest">Rasmlar va Media Tartibi</label>
+                  <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase">Birinchi turgan rasm asosiy bo&apos;ladi</p>
+                </div>
+                <div className="bg-indigo-50 text-indigo-600 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase">
+                  Jami: {(formData.local_images || []).length}
+                </div>
+              </div>
+
+
+              <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+                {(formData.local_images || []).map((url: string, index: number) => {
+                  const isVideo = url.toLowerCase().includes('.mp4');
+                  return (
+                    <div key={index} className="group relative aspect-square bg-slate-50 rounded-2xl border-2 border-slate-100 overflow-hidden hover:border-indigo-400 transition-all shadow-sm">
+                      {isVideo ? (
+                        <div className="w-full h-full flex items-center justify-center bg-slate-900">
+                          <span className="text-xl">📹</span>
+                        </div>
+                      ) : (
+                        <img 
+                          src={url} 
+                          alt={`Media ${index}`} 
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as any).src = 'https://placehold.co/100x100?text=Xato'; }}
+                        />
+                      )}
+                      
+                      {/* OVERLAY CONTROLS */}
+                      <div className="absolute inset-0 bg-indigo-900/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-between p-2 backdrop-blur-[2px]">
+                        <button 
+                          type="button" 
+                          onClick={() => {
+                            const next = (formData.local_images || []).filter((_: any, i: number) => i !== index);
+                            setFormData({...formData, local_images: next});
+                          }}
+                          className="self-end w-6 h-6 bg-red-500 text-white rounded-lg flex items-center justify-center text-xs hover:bg-red-600 transition-colors shadow-lg"
+                        >
+                          ✕
+                        </button>
+                        
+                        <div className="flex justify-between gap-1">
+                          <button 
+                            type="button"
+                            disabled={index === 0}
+                            onClick={() => {
+                              const next = [...(formData.local_images || [])];
+                              [next[index], next[index - 1]] = [next[index - 1], next[index]];
+                              setFormData({...formData, local_images: next});
+                            }}
+                            className="flex-1 py-1 bg-white/20 hover:bg-white/40 text-white rounded-lg text-[10px] font-black disabled:opacity-30 flex items-center justify-center transition-colors"
+                          >
+                            ⬅️
+                          </button>
+                          <button 
+                            type="button"
+                            disabled={index === (formData.local_images || []).length - 1}
+                            onClick={() => {
+                              const next = [...(formData.local_images || [])];
+                              [next[index], next[index + 1]] = [next[index + 1], next[index]];
+                              setFormData({...formData, local_images: next});
+                            }}
+                            className="flex-1 py-1 bg-white/20 hover:bg-white/40 text-white rounded-lg text-[10px] font-black disabled:opacity-30 flex items-center justify-center transition-colors"
+                          >
+                            ➡️
+                          </button>
+                        </div>
+                      </div>
+
+                      {index === 0 && (
+                        <div className="absolute top-1 left-1 bg-emerald-500 text-[8px] text-white px-1.5 py-0.5 rounded-md font-black uppercase shadow-lg">
+                          Asosiy
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
 
             {/* STATUS SELECTION */}
             <div className="col-span-1 md:col-span-3 bg-white p-6 rounded-[24px] border border-slate-200">
