@@ -48,11 +48,16 @@ export async function getProducts() {
       
       // 3. Filter DB images to only keep those that are still valid:
       // - Either they are external (don't contain PUBLIC_ENDPOINT)
-      // - Or they are S3 links that still exist in the current S3 list
+      // - If they are our S3 links but belong to ANOTHER product/folder, we TRUST them
+      // - If they belong to THIS product's folder, verify they still exist in S3
+      const productS3Prefix = `${PUBLIC_ENDPOINT}/${BUCKET_NAME}/images/${p.id}/`;
+      
       const validDbImgs = dbImgs.filter(url => {
         if (!url.includes(PUBLIC_ENDPOINT)) return true; // External
-        return s3Imgs.includes(url); // Still in S3
+        if (!url.startsWith(productS3Prefix)) return true; // Belongs to different folder/ID - Trust it
+        return s3Imgs.includes(url); // Belongs to this product - Verify it's still in S3
       });
+
 
       // 4. Find anything in S3 that ISN'T in the DB list yet (Auto-discovery)
       const newS3Imgs = s3Imgs.filter(url => !validDbImgs.includes(url));
